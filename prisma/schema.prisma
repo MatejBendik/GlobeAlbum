@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  globe         Globe?
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+
+model Account {
+  id                     String    @id
+  accountId              String
+  providerId             String
+  userId                 String
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken            String?
+  refreshToken           String?
+  idToken                String?
+  accessTokenExpiresAt   DateTime?
+  refreshTokenExpiresAt  DateTime?
+  scope                  String?
+  password               String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  @@index([identifier])
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+}
+
+model Globe {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username    String   @unique
+  displayName String
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  places      Place[]
+}
+
+model Place {
+  id                String   @id @default(cuid())
+  globeId           String
+  globe             Globe    @relation(fields: [globeId], references: [id], onDelete: Cascade)
+  name              String
+  sourceCountry     String
+  countryOverride   String?
+  latitude          Float
+  longitude         Float
+  providerId        String?
+  coverPhotoId      String?
+  createdAt         DateTime @default(now())
+  visits            Visit[]
+  @@unique([globeId, providerId])
+  @@index([globeId])
+}
+
+model Visit {
+  id        String    @id @default(cuid())
+  placeId   String
+  place     Place     @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  startDate DateTime? @db.Date
+  endDate   DateTime? @db.Date
+  createdAt DateTime  @default(now())
+  photos    Photo[]
+  @@index([placeId])
+}
+
+enum PhotoStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+model Photo {
+  id           String      @id @default(cuid())
+  visitId      String
+  visit        Visit       @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  caption      String      @default("")
+  status       PhotoStatus @default(PENDING)
+  thumbnailKey String
+  displayKey   String
+  totalBytes   Int         @default(0)
+  createdAt    DateTime    @default(now())
+  upload       UploadIntent?
+  @@index([visitId, status])
+}
+
+model UploadIntent {
+  id             String   @id @default(cuid())
+  photoId        String   @unique
+  photo          Photo    @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  sourceKey      String   @unique
+  expectedBytes  Int
+  reservedBytes  Int
+  retainedBytes  Int      @default(0)
+  processingMonth String
+  leaseToken     String?
+  leaseExpiresAt DateTime?
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  @@index([expiresAt])
+}
+
+model Usage {
+  id             String @id
+  accountedBytes BigInt @default(0)
+}
+
+model MonthlyUsage {
+  id              String @id
+  transformations Int    @default(0)
+}
+
+model CleanupJob {
+  id           String   @id @default(cuid())
+  keys         String[]
+  releaseBytes BigInt   @default(0)
+  notBefore    DateTime @default(now())
+  attempts     Int      @default(0)
+  lastError    String?
+  leaseToken   String?
+  leaseUntil   DateTime?
+  createdAt    DateTime @default(now())
+  @@index([notBefore])
+}
+
+model RetiredUsername {
+  username String @id
+}
+
+model RequestWindow {
+  id        String   @id
+  count     Int      @default(1)
+  expiresAt DateTime
+  @@index([expiresAt])
+}

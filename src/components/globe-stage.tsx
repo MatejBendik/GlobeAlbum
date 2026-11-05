@@ -1,0 +1,122 @@
+"use client";
+import dynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
+import { Globe2, LocateFixed, Pause, Play, List } from "lucide-react";
+import type { PlaceDto } from "@/lib/types";
+import { Button } from "./ui/button";
+const Renderer = dynamic(() => import("./globe-renderer"), {
+  ssr: false,
+  loading: () => (
+    <div className="globe-loading">
+      <div className="globe-loading-sphere" />
+      <span>Bringing your world together</span>
+    </div>
+  ),
+});
+export function GlobeStage({
+  places,
+  selectedId,
+  onSelect,
+  hero = false,
+}: {
+  places: PlaceDto[];
+  selectedId?: string;
+  onSelect: (id: string) => void;
+  hero?: boolean;
+}) {
+  const container = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [supported, setSupported] = useState<boolean | null>(null);
+  const [rotating, setRotating] = useState(false);
+  const [reset, setReset] = useState(0);
+  useEffect(() => {
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("webgl2");
+    setSupported(!!context);
+    context?.getExtension("WEBGL_lose_context")?.loseContext();
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setRotating(!media.matches);
+    const change = () => setRotating(!media.matches);
+    media.addEventListener("change", change);
+    return () => media.removeEventListener("change", change);
+  }, []);
+  useEffect(() => {
+    if (!container.current) return;
+    const observer = new ResizeObserver(([entry]) =>
+      setSize({
+        width: Math.round(entry.contentRect.width),
+        height: Math.round(entry.contentRect.height),
+      }),
+    );
+    observer.observe(container.current);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <div
+      ref={container}
+      className={`globe-stage ${hero ? "hero-stage" : ""}`}
+      aria-label="Interactive travel globe"
+    >
+      <div className="globe-glow" />
+      {supported && size.width > 0 ? (
+        <Renderer
+          key={reset}
+          {...size}
+          places={places}
+          selectedId={selectedId}
+          onSelect={onSelect}
+          rotating={rotating}
+          onFailure={() => setSupported(false)}
+        />
+      ) : supported === false ? (
+        <div className="globe-unavailable">
+          <Globe2 size={64} strokeWidth={0.6} />
+          <h3>Your places are still here.</h3>
+          <p>Use the place list to explore every gallery.</p>
+          <List size={20} />
+        </div>
+      ) : (
+        <div className="globe-loading">
+          <div className="globe-loading-sphere" />
+        </div>
+      )}
+      {!hero && (
+        <>
+          <div className="stage-topline">
+            <span>
+              <span className="live-dot" />
+              THE WORLD, THROUGH YOUR EYES
+            </span>
+            <span>3D VIEW</span>
+          </div>
+          <div className="globe-controls">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="stage-button"
+              aria-label={rotating ? "Pause rotation" : "Start rotation"}
+              onClick={() => setRotating(!rotating)}
+            >
+              {rotating ? <Pause /> : <Play />}
+            </Button>
+            <span />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="stage-button"
+              aria-label="Reset globe view"
+              onClick={() => setReset(reset + 1)}
+            >
+              <LocateFixed />
+            </Button>
+          </div>
+          <div className="stage-caption">
+            Drag to explore <span>·</span> Scroll to zoom <span>·</span> Select
+            a place
+          </div>
+          <span className="stage-coordinate">48° 51′ N &nbsp; 2° 21′ E</span>
+        </>
+      )}
+    </div>
+  );
+}
