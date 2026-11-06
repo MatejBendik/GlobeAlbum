@@ -172,6 +172,14 @@ model RetiredUsername {
   username String @id
 }
 
+// Prevent stale managed sessions from recreating deleted application accounts.
+// A null authDeletedAt is durable operator work for Neon identity removal.
+model DeletedIdentity {
+  userId        String   @id
+  createdAt     DateTime @default(now())
+  authDeletedAt DateTime?
+}
+
 model RequestWindow {
   id        String   @id
   count     Int      @default(1)

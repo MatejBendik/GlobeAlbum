@@ -36,6 +36,12 @@ export default defineConfig({
   ],
   webServer: [
     {
+      command: "node --import tsx tests/e2e/auth-stub.ts",
+      url: "http://127.0.0.1:8788/health",
+      reuseExistingServer: false,
+      env: { GLOBEALBUM_AUTH_TEST_STUB: "1", TEST_DATABASE_URL: database },
+    },
+    {
       command: "node --import tsx tests/e2e/storage-stub.ts",
       url: "http://127.0.0.1:8787/health",
       reuseExistingServer: false,
@@ -49,10 +55,9 @@ export default defineConfig({
       env: {
         DATABASE_URL: database,
         DIRECT_URL: database,
-        BETTER_AUTH_URL: TEST_ORIGIN,
-        BETTER_AUTH_SECRET: TEST_SESSION_SECRET,
-        GOOGLE_CLIENT_ID: "browser-test.apps.googleusercontent.com",
-        GOOGLE_CLIENT_SECRET: "browser-test-only-not-an-oauth-credential",
+        APP_ORIGIN: TEST_ORIGIN,
+        NEON_AUTH_BASE_URL: "http://127.0.0.1:8788/auth",
+        NEON_AUTH_COOKIE_SECRET: TEST_SESSION_SECRET,
         IMAGE_WORKER_URL: "http://127.0.0.1:8787",
         IMAGE_WORKER_SECRET: TEST_SESSION_SECRET,
         GEONAMES_USERNAME: "",

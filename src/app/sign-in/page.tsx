@@ -4,6 +4,7 @@ import { ArrowLeft, Globe2 } from "lucide-react";
 import { authConfigured, currentUser } from "@/lib/auth";
 import { Brand } from "@/components/brand";
 import { SignInButton } from "@/components/sign-in-button";
+import { EmailAuthForm } from "@/components/email-auth-form";
 
 export default async function SignInPage() {
   if (await currentUser()) redirect("/studio");
@@ -31,6 +32,11 @@ export default async function SignInPage() {
           Your memories start private.
         </p>
         <SignInButton enabled={authConfigured()} />
+        <span className="muted text-xs">or use your email</span>
+        <EmailAuthForm mode="sign-in" enabled={authConfigured()} />
+        <p className="text-sm">
+          New here? <Link href="/sign-up">Create an account</Link>
+        </p>
         <Link href="/demo" className="auth-example">
           Just looking? Explore an example →
         </Link>

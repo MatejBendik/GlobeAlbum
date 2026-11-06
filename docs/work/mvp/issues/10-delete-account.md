@@ -2,7 +2,7 @@
 
 Type: task
 Status: ready-for-agent
-Execution: implemented; browser/domain verification complete
+Execution: application revocation verified; managed identity automation gated
 
 ## What to build
 
@@ -14,13 +14,19 @@ Delete an account and revoke its content, as a complete end-to-end user behavior
 
 ## Acceptance criteria
 
-- [x] Confirmed account deletion removes sessions and blocks owned/public data immediately.
+- [x] Confirmed account deletion signs out and blocks owned/public data immediately, including stale managed cookies.
+- [ ] Managed identity cleanup runs automatically through a supported provider operation; currently operator CLI work.
 - [x] Durable object cleanup survives deletion of the user and repeated execution.
 - [x] Late upload completion cannot revive an account or photo.
 
 ## Validation evidence
 
-Updated 2026-11-05. Desktop/mobile browser tests delete an account, remove its sessions and deny later studio access. PostgreSQL tests retain independent cleanup jobs and reject late completion after deletion; an in-flight completion/deletion race is also covered. Actual Cloudflare cleanup batches succeeded after disposable users were removed.
+Updated 2026-11-06. Local browser/domain tests and the real Neon smoke remove
+application ownership, retain cleanup/fence records and prevent identity
+resynchronization. Managed `/delete-user` returns 404 on this branch. Operator
+`auth:cleanup` successfully removed disposable managed identities through Neon
+CLI and verified absence. Its manual scheduling remains a beta gate. Historical
+local self-hosted session-removal evidence is superseded by managed Auth.
 
 See [verification and release gates](../../../validation.md). Unchecked criteria remain pending, even when their code exists.
 

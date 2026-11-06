@@ -105,7 +105,7 @@ const environment = resolve(root, ".env.local");
 if (!existsSync(environment)) {
   writeFileSync(
     environment,
-    `DATABASE_URL=${base}globealbum_dev\nDIRECT_URL=${base}globealbum_dev\nBETTER_AUTH_URL=http://localhost:3000\nBETTER_AUTH_SECRET=${randomBytes(32).toString("hex")}\n`,
+    `DATABASE_URL=${base}globealbum_dev\nDIRECT_URL=${base}globealbum_dev\nAPP_ORIGIN=http://127.0.0.1:3000\nNEON_AUTH_COOKIE_SECRET=${randomBytes(32).toString("hex")}\n`,
     { mode: 0o600 },
   );
 }

@@ -25,7 +25,7 @@ if (new URL(process.env.DATABASE_URL!).hostname !== "127.0.0.1")
   throw new Error("Use a local metadata database for this smoke test.");
 const userId = `cloud-smoke-${randomUUID()}`;
 const reports: string[] = [];
-const origin = new URL(process.env.BETTER_AUTH_URL!).origin;
+const origin = new URL(process.env.APP_ORIGIN!).origin;
 const db = getDb();
 const skipHeic = process.argv.includes("--skip-heic");
 const expectedPhotos = skipHeic ? 1 : 2;

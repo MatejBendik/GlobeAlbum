@@ -2,7 +2,7 @@
 
 ## Working rules
 
-- Current phase: implementation, explicitly authorized after approval of the MVP specification and 11-ticket plan. Local dependencies, code, documentation, and verification are authorized. The user subsequently authorized creating the required free Cloudflare resources using CLI or browser. Do not enable paid plans, purchase anything, or deploy to Vercel without a separate instruction.
+- Current phase: implementation, explicitly authorized after approval of the MVP specification and 11-ticket plan. Local dependencies, code, documentation, and verification are authorized. The user subsequently authorized the required Cloudflare resources and linking/provisioning Postgres and managed Auth in the existing Neon project, including email/password registration. Do not enable paid plans, purchase anything, or deploy to Vercel without a separate instruction.
 - Communicate with the user in Slovak. Write code identifiers and technical documentation in English.
 - Preserve existing work. Inspect relevant files before changing them.
 - Commit coherent, verified increments and push to `origin/main`; the user explicitly authorized local Git and GitHub CLI. Keep local secrets and runtime data ignored.

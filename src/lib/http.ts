@@ -21,7 +21,7 @@ export function handleError(error: unknown) {
   return json({ error: "Something went wrong. Please try again." }, 500);
 }
 export function assertSameOrigin(request: Request) {
-  const configured = process.env.BETTER_AUTH_URL;
+  const configured = process.env.APP_ORIGIN;
   if (
     !configured ||
     request.headers.get("origin") !== new URL(configured).origin

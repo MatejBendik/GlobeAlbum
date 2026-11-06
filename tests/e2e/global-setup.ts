@@ -28,7 +28,7 @@ export default async function setup() {
     adapter: new PrismaPg({ connectionString: database }),
   });
   try {
-    await db.$executeRaw`TRUNCATE TABLE "User", "CleanupJob", "RetiredUsername", "Usage", "MonthlyUsage", "RequestWindow", "RateLimit" CASCADE`;
+    await db.$executeRaw`TRUNCATE TABLE "User", "CleanupJob", "RetiredUsername", "DeletedIdentity", "Usage", "MonthlyUsage", "RequestWindow", "RateLimit" CASCADE`;
   } finally {
     await db.$disconnect();
   }

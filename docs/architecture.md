@@ -1,6 +1,6 @@
 # Application architecture
 
-Implemented design, 2026-11-05. Product scope remains defined by the
+Implemented design, updated 2026-11-06. Product scope remains defined by the
 [approved specification](work/mvp/spec.md).
 
 ## Boundaries
@@ -23,7 +23,10 @@ a small display budget; this is visual deconfliction, not geographic clustering.
 
 `User → Globe → Place → Visit → Photo`
 
-Prisma includes Better Auth's session/account tables, plus upload intents,
+Managed Neon Auth owns identities and sessions in `neon_auth`. The application
+maintains a private `public.User` ownership record from verified SDK sessions.
+Historical application-hosted auth tables remain unused; no destructive auth-table
+migration was applied. Prisma also manages upload intents,
 shared byte accounting, monthly transformation reservations, durable cleanup
 jobs, throttling windows, and retired usernames. Country overrides remain
 separate from source data. Dates are nullable PostgreSQL date columns.
@@ -33,6 +36,27 @@ Mutations take a transaction-scoped advisory lock. Serializing writes is a
 deliberate small-beta simplification that protects place/visit/photo caps and
 shared capacity. Revisit this coarse lock when measured throughput warrants it.
 External storage calls run outside database transactions.
+
+## Managed authentication
+
+The same-origin `/api/auth/[...path]` proxy uses `@neon/auth/next/server`;
+Client Components use `@neon/auth/next`, without a second auth server or adapter.
+`src/proxy.ts` handles SDK OAuth/session middleware and optimistic page protection.
+All API handlers and Server Actions independently authenticate and authorize.
+Email/password and Google use the same managed identity and application ownership.
+Credentials never enter application tables or public profile DTOs.
+
+A 60-second SDK cookie cache avoids checking the provider on every page request.
+Account deletion writes a `DeletedIdentity` fence under the same transaction lock
+as ownership synchronization. It prevents stale managed sessions from recreating
+an application account. Logical deletion and publication revocation commit before
+provider calls. The branch currently returns 404 for self-deletion: pending
+provider cleanup is retained and the operator uses `npm run auth:cleanup -- --confirm`.
+This is an explicit beta operations gate, not a completed automated cleanup flow.
+
+Prisma uses a small shared `pg.Pool` with the Neon pooled runtime URL; Vercel's
+`attachDatabasePool` coordinates idle connections in Fluid Compute. The direct
+migration connection is selected independently, never as an ordinary build step.
 
 ## Photo flow
 
@@ -61,7 +85,7 @@ See [ADR 0004](adr/0004-bound-worker-capabilities.md) for the bounded upload gat
 Every profile starts private. Only the owner can mutate it. An anonymous read
 requires current publication; the public projection excludes email, visit dates,
 upload identifiers, and storage keys. Coordinates and corrected country names
-are intentionally public for published places. Google account data is never
+are intentionally public for published places. Provider account data is never
 automatically copied into the public display name.
 
 All R2 objects are private. After authorization, processed variants receive

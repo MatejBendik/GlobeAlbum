@@ -7,6 +7,7 @@ Resume interrupted work from the [implementation checkpoint](work/mvp/progress.m
 - [Product specification](work/mvp/spec.md): audience, value, scenarios and exact scope.
 - [Architecture](architecture.md): boundaries, data model, photo flow and privacy.
 - [Setup and operations](setup.md): credentials, local PostgreSQL, Cloudflare and release steps.
+- [Neon setup changes](neon-setup.md): project link, skills/MCP installation, auth amendment and real-service evidence.
 - [Verification](validation.md): observed results, HEIC blocker and outstanding release gates.
 - [Stack rationale](research/stack.md), [globe/geography](research/globe-and-geography.md), [cost model](research/costs.md).
 - [Delivery tickets](work/mvp/issues/): acceptance evidence, separate from triage readiness.

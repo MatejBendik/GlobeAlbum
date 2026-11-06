@@ -43,7 +43,7 @@ beforeAll(() => {
 
 beforeEach(async () => {
   await getDb()
-    .$executeRaw`TRUNCATE TABLE "User", "CleanupJob", "RetiredUsername", "Usage", "MonthlyUsage", "RequestWindow" CASCADE`;
+    .$executeRaw`TRUNCATE TABLE "User", "CleanupJob", "RetiredUsername", "DeletedIdentity", "Usage", "MonthlyUsage", "RequestWindow" CASCADE`;
   for (const id of ["alice", "bob"]) {
     await getDb().user.create({
       data: { id, name: id, email: `${id}@example.test`, emailVerified: true },
@@ -333,6 +333,17 @@ describe("atomic upload reservations", () => {
     expect(
       await getDb().user.findUnique({ where: { id: "alice" } }),
     ).toBeNull();
+    expect(
+      await domain.syncIdentity({
+        id: "alice",
+        name: "Alice",
+        email: "alice@example.test",
+        emailVerified: true,
+      }),
+    ).toBeNull();
+    expect(
+      await getDb().deletedIdentity.findUnique({ where: { userId: "alice" } }),
+    ).toMatchObject({ authDeletedAt: null });
     expect(await getDb().cleanupJob.count()).toBe(1);
     expect((await getDb().cleanupJob.findFirstOrThrow()).keys).toHaveLength(3);
     await expect(domain.finishUpload("alice", upload.uploadId)).rejects.toThrow(

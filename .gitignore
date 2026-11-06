@@ -16,3 +16,4 @@ src/generated/prisma/
 .dev.vars*
 !.dev.vars.example
 worker/worker-configuration.d.ts
+.neon

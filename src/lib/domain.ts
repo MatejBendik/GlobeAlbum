@@ -29,6 +29,28 @@ export async function locked<T>(
     { maxWait: 10_000, timeout: 20_000 },
   );
 }
+// Only call with an identity obtained from the managed Auth SDK.
+export async function syncIdentity(user: {
+  id: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+}) {
+  return locked(async (tx) => {
+    if (await tx.deletedIdentity.findUnique({ where: { userId: user.id } }))
+      return null;
+    const data = {
+      name: user.name,
+      email: user.email,
+      emailVerified: user.emailVerified,
+    };
+    return tx.user.upsert({
+      where: { id: user.id },
+      create: { id: user.id, ...data },
+      update: data,
+    });
+  });
+}
 function dates(startDate: string, endDate: string) {
   return {
     startDate: startDate ? new Date(startDate) : null,
@@ -690,6 +712,11 @@ export async function deleteVisit(userId: string, id: string) {
 }
 export async function deleteAccount(userId: string) {
   return locked(async (tx) => {
+    await tx.deletedIdentity.upsert({
+      where: { userId },
+      create: { userId },
+      update: {},
+    });
     const globe = await tx.globe.findUnique({ where: { userId } });
     const photos = await tx.photo.findMany({
       where: { visit: { place: { globe: { userId } } } },

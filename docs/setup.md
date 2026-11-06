@@ -1,50 +1,96 @@
 # Development and service setup
 
-Updated: 2026-11-05. No application deployment to Vercel has been performed.
+Updated: 2026-11-06. No application deployment to Vercel has been performed.
 
-## Environment
+## Neon project and environment
 
-Copy `.env.example` to `.env.local` only when it does not already exist.
-Keep all credentials out of Git and chat. Environment values are server-only;
-none of these secrets uses a `NEXT_PUBLIC_` prefix.
+The user's existing project `bitter-river-07504050` in
+`org-weathered-sunset-98035505` is linked to `production`
+(`br-holy-frost-b9ekoysr`). `neon.ts` declares Postgres and managed Auth.
+No second project or paid upgrade was created. Full installation changes and
+verification outputs: [Neon setup log](neon-setup.md).
 
-| Variable                                   | Purpose                                                                           |
-| ------------------------------------------ | --------------------------------------------------------------------------------- |
-| `DATABASE_URL`                             | PostgreSQL runtime URL; Neon pooled URL in hosted environments                    |
-| `DIRECT_URL`                               | Separate migration connection, used by Prisma CLI                                 |
-| `BETTER_AUTH_SECRET`                       | Random authentication signing secret, at least 32 characters                      |
-| `BETTER_AUTH_URL`                          | Exact application origin, including development hostname                          |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google web OAuth client                                                           |
-| `IMAGE_WORKER_URL`                         | Deployed image Worker URL                                                         |
-| `IMAGE_WORKER_SECRET`                      | Shared server/Worker capability and control secret, at least 32 random characters |
-| `CRON_SECRET`                              | Random bearer secret for maintenance                                              |
-| `GEONAMES_USERNAME`                        | GeoNames account with free web services enabled                                   |
+Use Node 24. Preserve `.env.local`; `neon deploy` merges service variables into it.
+For a new checkout, copy `.env.example` only if no environment file exists, then
+link the existing project and run `neon deploy`. Complete CLI login in the browser
+when requested. `.neon`, credentials, backups and test artifacts are ignored.
 
-Use `http://127.0.0.1:3000` consistently for local development. The application's
-origin and the Worker's `APP_ORIGIN` must match exactly; `localhost` is a
-different origin. Update both together when changing hosts or deploying.
+| Variable                                  | Purpose                                                                 |
+| ----------------------------------------- | ----------------------------------------------------------------------- |
+| `DATABASE_URL`                            | Neon pooled runtime connection                                          |
+| `DATABASE_URL_UNPOOLED`                   | Direct Prisma migration/operations connection                           |
+| `NEON_BRANCH`                             | Branch selected by Neon CLI                                             |
+| `NEON_AUTH_BASE_URL`                      | Server-only managed Auth endpoint                                       |
+| `NEON_AUTH_JWKS_URL`                      | Pulled service metadata; not needed for cookie-based app authentication |
+| `NEON_AUTH_COOKIE_SECRET`                 | Locally generated random signing secret, at least 32 characters         |
+| `APP_ORIGIN`                              | Exact application origin, locally `http://127.0.0.1:3000`               |
+| `DIRECT_URL`                              | Optional explicit local/CI migration override; normally leave unset     |
+| `IMAGE_WORKER_URL`, `IMAGE_WORKER_SECRET` | Private image Worker endpoint and shared capability secret              |
+| `CRON_SECRET`                             | Bearer secret for scheduled maintenance                                 |
+| `GEONAMES_USERNAME`                       | GeoNames account with free web services enabled                         |
 
-## Google sign-in
+Runtime uses Prisma 7 and `pg`, maximum five connections per app instance, with
+Vercel pool lifecycle integration. Review aggregate concurrency against Neon limits.
+Prisma CLI prioritizes `DIRECT_URL`, then `DATABASE_URL_UNPOOLED`, then
+`DATABASE_URL`. A stale local `DIRECT_URL` can migrate the wrong database; remove
+it when switching to Neon, while keeping explicit isolated-test overrides.
+Review and apply `npm run db:deploy` as a separate operation. Builds only generate
+the client. The initial and identity-fence migrations were applied to the empty
+`public` schema; the existing managed `neon_auth` schema was preserved.
 
-Create/configure a Google OAuth web client in the user's Google Cloud project.
-Set the consent screen, authorized app origin, and redirect URI:
-`{BETTER_AUTH_URL}/api/auth/callback/google`.
-External Google consent-screen testing restrictions are separate from the
-application's open registration policy. Complete the required Google publishing
-configuration before calling registration open to everyone.
-No application email provider is needed for this Google-only flow.
+## Managed sign-in
 
-The sign-in page intentionally disables sign-in when credentials are absent.
-Do not add fake accounts or paste secrets into committed examples.
+The app uses `@neon/auth` for Google and email/password sign-up/sign-in.
+Passwords and sessions are managed by Neon, not by the app's Prisma adapter.
+No direct Google credentials are needed in Next.js environment variables.
+Register exact application origins with Neon Auth; the local origin above was
+added using `neon neon-auth domain add http://127.0.0.1:3000`.
+Keep this origin identical to the Worker's `APP_ORIGIN`.
 
-## Database
+Current branch configuration: email/password enabled, registration open, email
+verification not required, no signup email. Shared SMTP and Google credentials
+are development facilities. Before production configure own Google OAuth app,
+custom SMTP, a deliberate verification/recovery flow and the actual deployment
+origin. Configure providers in Neon; use the callback URL supplied by Neon,
+not the old application-hosted Better Auth callback. Real Google consent was
+not exercised during this setup. Do not enable verification without adding and
+testing the corresponding UI. Password reset is a remaining release task.
 
-Use an existing/local PostgreSQL for development. Production targets Neon Free.
-Use the Neon pooled hostname at runtime; configure the direct migration URL
-separately. Review and apply `npm run db:deploy` as an explicit release step.
-Ordinary builds only generate the Prisma client, never apply migrations.
-Local Prisma driver pool maximum is five connections per application instance;
-validate aggregate concurrency against the selected Neon plan before release.
+## Real-service verification
+
+After `npm run build` succeeds, run `npm start`. In another terminal use:
+
+```sh
+npm run verify:neon -- --confirm
+```
+
+This opt-in smoke requires the local loopback app and real Neon env variables.
+It creates one disposable managed email identity and globe, verifies sessions,
+persistence, publication and revocation, and deletes its own identity through
+CLI. It never resets the remote database. Test artifacts remain ignored; it
+removes temporary credentials after successful provider cleanup. This is separate
+from `npm test` and Playwright's isolated local service fakes.
+
+## Managed identity deletion
+
+Application deletion immediately hides/removes ownership data and leaves a
+`DeletedIdentity` row. This fence is checked when synchronizing every authenticated
+identity, including stale cookies. Its `authDeletedAt = NULL` records pending
+provider deletion. The current managed `/delete-user` endpoint returns 404.
+The app attempts deletion, signs out, and retains work on provider failure.
+
+Until a supported automated path is wired, an authenticated operator reviews
+pending rows and runs:
+
+```sh
+npm run auth:cleanup -- --confirm
+```
+
+This script checks CLI branch/database alignment, removes only identities from
+pending deletion rows through Neon CLI, verifies absence in `neon_auth`, and marks
+completion. It keeps the opaque fence and retired usernames. No Neon control-plane
+API key is stored in the application or Vercel. This operator requirement must be
+resolved/accepted before beta; daily R2 maintenance does not drain this queue.
 
 ## Existing Cloudflare resources
 
@@ -96,7 +142,7 @@ the one-day bucket lifecycle provides a second cleanup path.
 
 Vercel is the approved Next.js host. Do not silently switch hosts or buy Pro.
 Resolve Hobby's non-commercial eligibility, configure production-only secrets,
-Google callbacks, Neon connections, Worker origin, cron, and usage monitoring,
+Neon trusted origins, production OAuth/SMTP, connections, Worker origin, cron, and usage monitoring,
 then run the release checks. Deployment requires a separate user instruction.
 
 Primary references, verified 2026-11-05:

@@ -1,7 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import { ZodError } from "zod";
 import { requireUser, getAuth } from "@/lib/auth";
 import * as domain from "@/lib/domain";
@@ -67,7 +66,8 @@ export async function deleteVisitAction(visitId: string) {
   return execute((id) => domain.deleteVisit(id, visitId));
 }
 export async function signOutAction() {
-  await getAuth().api.signOut({ headers: await headers() });
+  const { error } = await getAuth().signOut();
+  if (error) throw new Error("Could not sign out. Please try again.");
   redirect("/");
 }
 export async function deleteAccountAction(
@@ -78,7 +78,20 @@ export async function deleteAccountAction(
     if (!globe || confirmation !== globe.username)
       throw new Error("Confirmation does not match.");
     await domain.deleteAccount(userId);
-    await getAuth().api.signOut({ headers: await headers() });
+    // Logical deletion and the identity fence commit before contacting Neon.
+    // The managed service currently does not expose self-deletion on this branch;
+    // DeletedIdentity retains durable operator work if it rejects this request.
+    try {
+      const { error } = await getAuth().deleteUser({});
+      if (!error)
+        await getDb().deletedIdentity.update({
+          where: { userId },
+          data: { authDeletedAt: new Date() },
+        });
+    } catch {
+      // Access stays revoked; provider cleanup is retried by the operator.
+    }
+    await getAuth().signOut();
   });
   if (result.error) return result;
   redirect("/");

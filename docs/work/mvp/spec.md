@@ -1,7 +1,7 @@
 # GlobeAlbum MVP specification
 
 Status: approved; implementation authorized by the user. Subsequent instructions authorize the required Cloudflare resources. Purchases, paid upgrades and Vercel deployment remain separate.
-Approved and researched: 2026-11-05.
+Approved and researched: 2026-11-05. Auth scope amended by explicit user instruction on 2026-11-06; see [ADR 0005](../../adr/0005-managed-neon-auth.md).
 
 ## Problem Statement
 
@@ -9,11 +9,11 @@ Travelers need an engaging way to present selected travel memories geographicall
 
 ## Solution
 
-One personal globe per account, private until explicitly published. Open Google registration leads to onboarding (immutable profile slug and editable display name), then the editor. A light English interface surrounds a dark dotted globe. Visitors explore photo postcards, dots, a complete place list and one combined gallery per place.
+One personal globe per account, private until explicitly published. Open Google or email/password registration through managed Neon Auth leads to onboarding (immutable profile slug and editable display name), then the editor. A light English interface surrounds a dark dotted globe. Visitors explore photo postcards, dots, a complete place list and one combined gallery per place.
 
 ## User Stories
 
-1. As a traveler, I want to register with Google without an invitation.
+1. As a traveler, I want to register with Google or email/password without an invitation.
 2. As a new user, I want to choose my fixed profile URL and editable display name, then receive a private globe.
 3. As an owner, I want to search cities or manually enter a missing city with a country and coordinates.
 4. As an owner, I want repeat visits under one place, with optional dates or date ranges.
@@ -39,11 +39,11 @@ One personal globe per account, private until explicitly published. Open Google 
 
 ### Stack and boundaries
 
-Next.js App Router and TypeScript on Vercel Node runtime; Tailwind CSS and selected shadcn-compatible primitives; Zod; React Hook Form for editor forms; Neon PostgreSQL and Prisma 7; Better Auth Google-only; private R2; Cloudflare Images through a small Worker; react-globe.gl; GeoNames search. No Zustand or TanStack Query initially. Keep one design-token system; AlignUI is visual inspiration, not a second component system.
+Next.js App Router and TypeScript on Vercel Node runtime; Tailwind CSS and selected shadcn-compatible primitives; Zod; React Hook Form for editor forms; Neon PostgreSQL and Prisma 7; managed Neon Better Auth via `@neon/auth` (Google plus email/password); private R2; Cloudflare Images through a small Worker; react-globe.gl; GeoNames search. No Zustand or TanStack Query initially. Keep one design-token system; AlignUI is visual inspiration, not a second component system.
 
 Server Components perform initial reads through server-only access functions. Client Components own interaction, gestures and upload progress. Server Actions handle metadata mutations; Route Handlers handle auth, upload control and lazy galleries. Every operation independently checks identity, ownership or publication. Publication-sensitive reads have no persistent cache. Saved changes appear on the next request; no live synchronization.
 
-Use pooled database runtime access and a separate direct migration connection. Generation/build does not apply production migrations.
+Use pooled database runtime access (`DATABASE_URL`) and a separate direct migration connection (`DATABASE_URL_UNPOOLED`; `DIRECT_URL` is an explicit local/CI override). Neon owns `neon_auth`; application ownership records remain in `public`. Managed session cookies cache for up to 60 seconds; a database identity-deletion fence denies deleted accounts immediately. Provider identity cleanup remains durable operator work until an automated supported removal path is available. Generation/build does not apply production migrations.
 
 ### Domain and privacy
 

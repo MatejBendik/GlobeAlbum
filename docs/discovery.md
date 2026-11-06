@@ -8,6 +8,13 @@ Subsequent user instructions authorize implementation, dependencies, regular com
 
 On 2026-11-05 real Cloudflare HEIC operations failed with internal error 9516 while PNG succeeded. The user explicitly confirmed retaining Cloudflare and keeping working HEIC as a beta release gate. See [verification evidence](validation.md). No processor replacement is approved.
 
+On 2026-11-06 the user explicitly requested the existing Neon project
+`bitter-river-07504050`, branch `production`, Postgres plus managed Auth, and
+email/password registration in addition to Google. This supersedes Google-only
+application-hosted authentication. No paid upgrade or Vercel deployment is
+included. See [ADR 0005](adr/0005-managed-neon-auth.md) and the
+[Neon setup change log](neon-setup.md) for actual CLI changes and limitations.
+
 The original discovery record below is retained for history, not as current requirements.
 
 ---

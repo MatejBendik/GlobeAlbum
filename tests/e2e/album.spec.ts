@@ -1,9 +1,9 @@
 import { test, expect, type BrowserContext } from "@playwright/test";
-import { createHmac, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../src/generated/prisma/client";
-import { TEST_ORIGIN, TEST_SESSION_SECRET } from "./constants";
+import { TEST_ORIGIN } from "./constants";
 
 const db = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.TEST_DATABASE_URL! }),
@@ -23,23 +23,18 @@ async function account(context: BrowserContext, onboarded = false) {
       emailVerified: true,
     },
   });
-  const token = randomUUID();
-  await db.session.create({
-    data: {
-      id: randomUUID(),
-      token,
-      userId: id,
-      expiresAt: new Date(Date.now() + 3_600_000),
-    },
+  const response = await fetch("http://127.0.0.1:8788/test/session", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId: id }),
   });
-  const signature = createHmac("sha256", TEST_SESSION_SECRET)
-    .update(token)
-    .digest("base64");
+  const { token } = await response.json();
   await context.addCookies([
     {
-      name: "better-auth.session_token",
-      value: encodeURIComponent(`${token}.${signature}`),
-      url: TEST_ORIGIN,
+      name: "__Secure-neon-auth.session_token",
+      value: token,
+      secure: true,
+      url: TEST_ORIGIN.replace("http:", "https:"),
       httpOnly: true,
       sameSite: "Lax",
     },
@@ -380,10 +375,39 @@ test("browses repeated-visit photos, edits a caption and deletes the account", a
     .click();
   await expect(page).toHaveURL(TEST_ORIGIN + "/");
   expect(await db.user.findUnique({ where: { id: owner.id } })).toBeNull();
-  expect(await db.session.count({ where: { userId: owner.id } })).toBe(0);
+  expect(
+    await db.deletedIdentity.findUnique({ where: { userId: owner.id } }),
+  ).toMatchObject({ authDeletedAt: null });
   await page.goto("/studio");
   await expect(page).toHaveURL(/sign-in/);
   expect(browserErrors).toEqual([]);
+});
+
+test("validates email signup and reports the managed invalid-password response", async ({
+  page,
+}) => {
+  await page.goto("/sign-up");
+  let signups = 0;
+  page.on("request", (request) => {
+    if (request.url().includes("/api/auth/sign-up/email")) signups++;
+  });
+  await page.getByLabel("Name", { exact: true }).fill("Jamie");
+  await page.getByLabel("Email", { exact: true }).fill("invalid-email");
+  await page.getByLabel("Password", { exact: true }).fill("short");
+  await page
+    .getByRole("button", { name: "Create account", exact: true })
+    .click();
+  await expect(page.getByText("Enter a valid email address.")).toBeVisible();
+  await expect(page.getByText("Use at least 8 characters.")).toBeVisible();
+  expect(signups).toBe(0);
+  await page.goto("/sign-in");
+  await page.getByLabel("Email", { exact: true }).fill("jamie@example.test");
+  await page.getByLabel("Password", { exact: true }).fill("wrong-password");
+  await page.getByRole("button", { name: "Sign in with email" }).click();
+  await expect(page.getByText("Email or password is incorrect.")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Sign in with email" }),
+  ).toBeEnabled();
 });
 
 test("renders the landing page and example without horizontal overflow", async ({

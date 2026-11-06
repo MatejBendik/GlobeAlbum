@@ -5,8 +5,9 @@ Checks below distinguish actual cloud behavior from test fixtures and emulation.
 
 ## Observed evidence
 
-Local verification on 2026-11-06: 28 Vitest tests and all 12 Playwright scenarios
-(desktop/mobile Chromium) passed. Application and Worker type checks passed.
+Local verification on 2026-11-06: 28 Vitest tests and 12 Playwright album scenarios
+(desktop/mobile Chromium) passed. Two additional email-form scenarios passed in
+a focused desktop/mobile run after being added. Application and Worker type checks passed.
 The gallery gesture test now supplies complete touch events and asserts that
 the browser reports no uncaught errors.
 
@@ -18,18 +19,18 @@ duplicate cancellation cleanup and its incorrect unfinished-upload warning.
 The test double binds only to localhost, requires explicit test mode, and does
 not decode images or replace the separate real Cloudflare verification.
 
-| Boundary                  | Evidence                                                                                                                   | Limit                                                                                                   |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| PostgreSQL domain         | Real isolated local PostgreSQL integration suite                                                                           | Not a Neon production connection                                                                        |
-| Ownership and publication | Cross-account mutations denied; private/public DTOs; hide denies new reads                                                 | Open visitor tabs are intentionally not live-updated                                                    |
-| Capacity                  | Concurrent reservations enforce 50 pending/ready photo slots; global/monthly rollback                                      | Provider-wide billing is still outside these app counters                                               |
-| Browser journey           | Desktop and Pixel Chromium emulation: onboarding, private globe, manual place, repeat visit, publish, anonymous view, hide | Sessions are seeded using Better Auth's normal database/cookie contract; Google itself is not exercised |
-| Form size validation      | Selecting a 20,000,001-byte file shows the Zod/RHF error without `/api/uploads` requests                                   | Browser checks supplement server enforcement                                                            |
-| WebGL fallback            | Disabled WebGL retains search, list and place gallery                                                                      | Physical GPU/browser testing outstanding                                                                |
-| R2/Images PNG             | Actual private upload, replay rejection, decode/re-encode, idempotent finish and signed display read                       | Small synthetic fixture, not a large mobile photograph                                                  |
-| Byte constraints          | Actual wrong-size and short streamed requests rejected with no stored source                                               | Cloudflare edge may reject before the Worker's FixedLengthStream                                        |
-| Privacy                   | Processed WebP has no EXIF/XMP chunks; no-store headers; expired links denied; hide prevents new grants                    | Explicit orientation/GPS fixtures still required                                                        |
-| HEIC                      | Two real files tested against `/info` and `/transform`; both return internal error `9516`                                  | **Release blocker**; support/cause unresolved                                                           |
+| Boundary                  | Evidence                                                                                                                   | Limit                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| PostgreSQL domain         | Real isolated local PostgreSQL integration suite                                                                           | Concurrency suite uses isolated local DB; separate real Neon smoke passes                   |
+| Ownership and publication | Cross-account mutations denied; private/public DTOs; hide denies new reads                                                 | Open visitor tabs are intentionally not live-updated                                        |
+| Capacity                  | Concurrent reservations enforce 50 pending/ready photo slots; global/monthly rollback                                      | Provider-wide billing is still outside these app counters                                   |
+| Browser journey           | Desktop and Pixel Chromium emulation: onboarding, private globe, manual place, repeat visit, publish, anonymous view, hide | Uses managed SDK with guarded local Auth contract fake; real Google itself is not exercised |
+| Form size validation      | Selecting a 20,000,001-byte file shows the Zod/RHF error without `/api/uploads` requests                                   | Browser checks supplement server enforcement                                                |
+| WebGL fallback            | Disabled WebGL retains search, list and place gallery                                                                      | Physical GPU/browser testing outstanding                                                    |
+| R2/Images PNG             | Actual private upload, replay rejection, decode/re-encode, idempotent finish and signed display read                       | Small synthetic fixture, not a large mobile photograph                                      |
+| Byte constraints          | Actual wrong-size and short streamed requests rejected with no stored source                                               | Cloudflare edge may reject before the Worker's FixedLengthStream                            |
+| Privacy                   | Processed WebP has no EXIF/XMP chunks; no-store headers; expired links denied; hide prevents new grants                    | Explicit orientation/GPS fixtures still required                                            |
+| HEIC                      | Two real files tested against `/info` and `/transform`; both return internal error `9516`                                  | **Release blocker**; support/cause unresolved                                               |
 
 Local reports/screenshots live in ignored `.local/verification/`. Browser traces
 can contain session cookies and remain ignored under `test-results/`.
@@ -40,6 +41,23 @@ Actual maintenance runs processed all 23 durable cleanup jobs after disposable
 users were deleted. The final queue was empty and accounted storage returned to
 zero. Unexpired reservations remained accounted until their capability/lease
 safety windows elapsed; scheduling deletion alone never releases bytes.
+
+## Real Neon evidence (2026-11-06)
+
+Build and service setup output is recorded in [the Neon change log](neon-setup.md).
+The production-build app started with `npm start` against the real branch.
+`npm run verify:neon -- --confirm` exercises browser signup, current-user read,
+reload, private onboarding, persisted city checked independently with SQL,
+sign-out, invalid-password feedback, returning sign-in and publication/hiding.
+These use actual managed Auth and pooled Neon Postgres, not the local doubles.
+The direct Prisma migrations also succeeded. Test identities are physically
+removed through Neon CLI; retained opaque fences prevent stale-session reuse.
+
+Managed `/delete-user` returns an empty 404. App access/data revocation is
+immediate; `DeletedIdentity.authDeletedAt` remains null until operator CLI
+cleanup succeeds. The operator command was verified against disposable managed
+identities. Automated provider cleanup is an outstanding beta gate, alongside
+Google consent and production email verification/recovery/SMTP.
 
 ## HEIC failure record
 
@@ -83,7 +101,9 @@ Sources verified 2026-11-05:
 
 - [ ] Resolve the HEIC provider failure; rerun full cloud smoke successfully.
 - [ ] Verify real Google registration, returning session, sign-out and account deletion.
-- [ ] Verify Neon pooled runtime connection, direct migrations and concurrency.
+- [x] Verify real Neon pooled runtime reads/writes and direct migrations.
+- [ ] Measure Neon connection/concurrency behavior under representative hosted load.
+- [ ] Resolve/accept the managed identity cleanup operating requirement and verify production SMTP, email verification and password recovery.
 - [ ] Enable/test the user's GeoNames account and attribution with live search.
 - [ ] Exercise iPhone HEIC/JPEG, orientation, GPS/EXIF removal, a near-20 MB file,
       invalid/corrupt files, WebP/APNG animation rejection, interrupted transfers,

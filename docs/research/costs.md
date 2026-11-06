@@ -4,8 +4,10 @@ Prices checked: 2026-11-05. USD before tax, exchange rates, retries, domains and
 unrelated account usage. Examples are not purchases or approved upgrades.
 
 Required services: Vercel Next.js/functions/cron, Neon PostgreSQL, R2 Standard,
-Images-enabled Worker, Google OAuth configuration, GeoNames search account.
-No separate email provider is needed for Google-only auth. Domain ~$12/year is
+Images-enabled Worker, managed Neon Auth, Google OAuth configuration and GeoNames search account.
+Auth scope changed on 2026-11-06: shared SMTP is a development facility;
+production custom SMTP is required. Its cost and managed Auth growth allowances
+are not included in the original estimates and must be checked before release. Domain ~$12/year is
 the user's estimate, not a verified renewal quote.
 
 | Service     | Included / starting point                                                              | Growth constraint                                                                  |
