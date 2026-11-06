@@ -1169,19 +1169,11 @@ select:focus-visible {
   margin-top: 32px;
 }
 .hero-primary {
-  background: linear-gradient(#f6f4ec, #e0ded4);
-  border-color: #e8e5da;
-  color: #32332f;
-  box-shadow:
-    inset 0 1px 0 white,
-    0 2px 3px #0005;
   font-size: 12px;
   height: 44px;
   padding: 0 17px;
 }
-.hero-primary:hover {
-  background: #f7f6ef;
-}
+
 .hero-secondary {
   font-size: 10px;
   display: flex;
@@ -1206,9 +1198,6 @@ select:focus-visible {
   bottom: 0;
   left: 39%;
   right: -6%;
-}
-.hero-stage {
-  background: radial-gradient(ellipse, #202632 0%, #101217 70%);
 }
 .hero-stage .photo-marker {
   width: 77px;
@@ -1842,7 +1831,8 @@ body,
   color: var(--text-soft);
 }
 .fancy-button,
-.hero-primary {
+.hero-primary,
+.hero-primary:hover {
   background: linear-gradient(var(--primary), var(--primary-end));
   color: var(--on-primary);
   border-color: var(--primary-end);
@@ -1850,8 +1840,7 @@ body,
     inset 0 1px 0 var(--highlight),
     0 2px 4px #0002;
 }
-.fancy-button:hover,
-.hero-primary:hover {
+.fancy-button:not(.hero-primary):hover {
   background: var(--primary);
 }
 .brand-symbol,
@@ -1864,8 +1853,19 @@ body,
     0 1px 2px #00000008;
 }
 .home-hero {
-  background: var(--canvas);
+  background: radial-gradient(
+    ellipse at 72% 48%,
+    var(--canvas-mid) 0%,
+    var(--canvas) 48%,
+    var(--canvas-edge) 100%
+  );
   color: var(--text);
+}
+.home-hero .hero-stage {
+  background: transparent;
+}
+.home-hero .globe-glow {
+  display: none;
 }
 .home-header {
   border-color: var(--line);

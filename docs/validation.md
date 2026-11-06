@@ -42,6 +42,15 @@ users were deleted. The final queue was empty and accounted storage returned to
 zero. Unexpired reservations remained accounted until their capability/lease
 safety windows elapsed; scheduling deletion alone never releases bytes.
 
+## Landing appearance follow-up (2026-11-06)
+
+The hero now paints one continuous theme-aware background beneath its navbar,
+copy and globe; the globe layer is transparent. The primary landing CTA keeps
+identical fill/shadow on hover, including its signed-in “Open your globe” label.
+Production build passed. Focused browser checks and screenshots covered light
+and dark at desktop/mobile widths, comparing hover styles over 12 frames per
+variant. This CSS-only follow-up did not rerun the domain/full browser suites.
+
 ## Globe workspace, appearance and navigation (2026-11-06)
 
 The full desktop/mobile suite passed all 26 scenarios after adding direct
