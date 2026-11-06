@@ -1,4 +1,5 @@
 "use client";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +10,10 @@ import { COUNTRIES, countryName } from "@/lib/countries";
 import { addPlaceAction, addVisitAction, editVisitAction } from "@/app/actions";
 import { Button } from "./ui/button";
 import type { VisitDto } from "@/lib/types";
+const LocationPicker = dynamic(() => import("./location-picker"), {
+  ssr: false,
+  loading: () => <p className="field-hint">Loading map…</p>,
+});
 type SearchPlace = {
   name: string;
   providerId: string;
@@ -24,11 +29,19 @@ export function PlaceForm({ onDone }: { onDone: () => void }) {
     z.output<typeof placeSchema>
   >({
     resolver: zodResolver(placeSchema),
-    defaultValues: { name: "", country: "", startDate: "", endDate: "" },
+    defaultValues: {
+      name: "",
+      country: "",
+      latitude: Number.NaN,
+      longitude: Number.NaN,
+      startDate: "",
+      endDate: "",
+    },
   });
   const [query, setQuery] = useState(""),
     [results, setResults] = useState<SearchPlace[]>([]),
     [manual, setManual] = useState(false),
+    [mapOpen, setMapOpen] = useState(false),
     [searchError, setSearchError] = useState(""),
     [pending, setPending] = useState(false),
     [error, setError] = useState("");
@@ -70,6 +83,7 @@ export function PlaceForm({ onDone }: { onDone: () => void }) {
     setQuery("");
     setResults([]);
     setManual(true);
+    setMapOpen(false);
   }
   return (
     <form onSubmit={form.handleSubmit(submit)} className="form-stack">
@@ -85,6 +99,10 @@ export function PlaceForm({ onDone }: { onDone: () => void }) {
               onChange: (event) => {
                 setQuery(event.target.value);
                 form.setValue("providerId", undefined);
+                form.setValue("latitude", Number.NaN);
+                form.setValue("longitude", Number.NaN);
+                setManual(false);
+                setMapOpen(false);
               },
             })}
           />
@@ -120,9 +138,12 @@ export function PlaceForm({ onDone }: { onDone: () => void }) {
           <Button
             type="button"
             variant="secondary"
-            onClick={() => setManual(true)}
+            onClick={() => {
+              setManual(true);
+              setMapOpen(true);
+            }}
           >
-            Enter a place manually
+            Choose location on a map
           </Button>
         </>
       )}
@@ -144,47 +165,49 @@ export function PlaceForm({ onDone }: { onDone: () => void }) {
               </p>
             )}
           </div>
-          <div className="field-row">
-            <div className="field">
-              <label htmlFor="place-latitude">Latitude</label>
-              <input
-                id="place-latitude"
-                type="number"
-                min={-90}
-                max={90}
-                step="any"
-                placeholder="48.8566"
-                {...form.register("latitude", { valueAsNumber: true })}
-              />
-              {form.formState.errors.latitude && (
-                <p className="form-error">Enter a latitude from −90 to 90.</p>
-              )}
-            </div>
-            <div className="field">
-              <label htmlFor="place-longitude">Longitude</label>
-              <input
-                id="place-longitude"
-                type="number"
-                min={-180}
-                max={180}
-                step="any"
-                placeholder="2.3522"
-                {...form.register("longitude", { valueAsNumber: true })}
-              />
-              {form.formState.errors.longitude && (
-                <p className="form-error">
-                  Enter a longitude from −180 to 180.
-                </p>
-              )}
-            </div>
-          </div>
-          <DateFields
-            start={form.register("startDate")}
-            end={form.register("endDate")}
-          />
-          {form.formState.errors.endDate && (
+          {mapOpen ? (
+            <LocationPicker
+              value={
+                Number.isFinite(form.watch("latitude")) &&
+                Number.isFinite(form.watch("longitude"))
+                  ? {
+                      latitude: form.watch("latitude"),
+                      longitude: form.watch("longitude"),
+                    }
+                  : undefined
+              }
+              onChange={(point) => {
+                form.setValue("latitude", point.latitude, {
+                  shouldValidate: true,
+                });
+                form.setValue("longitude", point.longitude, {
+                  shouldValidate: true,
+                });
+                form.setValue("providerId", undefined);
+              }}
+            />
+          ) : (
+            <>
+              <p className="field-hint">
+                Location found. You can adjust it on the map.
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setMapOpen(true)}
+              >
+                Adjust location on map
+              </Button>
+            </>
+          )}
+          {(form.formState.errors.latitude ||
+            form.formState.errors.longitude) && (
+            <p className="form-error">Choose the city location on the map.</p>
+          )}
+          <DateFields start={form.register("startDate")} />
+          {form.formState.errors.startDate && (
             <p className="form-error">
-              {form.formState.errors.endDate.message}
+              {form.formState.errors.startDate.message}
             </p>
           )}
           {error && (
@@ -208,31 +231,15 @@ export function PlaceForm({ onDone }: { onDone: () => void }) {
     </form>
   );
 }
-function DateFields({
-  start,
-  end,
-}: {
-  start: React.ComponentProps<"input">;
-  end: React.ComponentProps<"input">;
-}) {
+function DateFields({ start }: { start: React.ComponentProps<"input"> }) {
   return (
-    <div>
-      <div className="field-row">
-        <div className="field">
-          <label htmlFor="visit-start">
-            Visit date <span className="optional">optional</span>
-          </label>
-          <input id="visit-start" type="date" {...start} />
-        </div>
-        <div className="field">
-          <label htmlFor="visit-end">
-            End date <span className="optional">optional</span>
-          </label>
-          <input id="visit-end" type="date" {...end} />
-        </div>
-      </div>
+    <div className="field">
+      <label htmlFor="visit-start">
+        Visit date <span className="optional">optional</span>
+      </label>
+      <input id="visit-start" type="date" {...start} />
       <p className="field-hint">
-        Dates are private, even when your globe is published.
+        Your visit date stays private, even when your globe is published.
       </p>
     </div>
   );
@@ -255,7 +262,7 @@ export function VisitForm({
     defaultValues: {
       placeId,
       startDate: visit?.startDate ?? "",
-      endDate: visit?.endDate ?? "",
+      endDate: "",
     },
   });
   const [error, setError] = useState(""),
@@ -273,12 +280,9 @@ export function VisitForm({
         else onDone();
       })}
     >
-      <DateFields
-        start={form.register("startDate")}
-        end={form.register("endDate")}
-      />
-      {form.formState.errors.endDate && (
-        <p className="form-error">{form.formState.errors.endDate.message}</p>
+      <DateFields start={form.register("startDate")} />
+      {form.formState.errors.startDate && (
+        <p className="form-error">{form.formState.errors.startDate.message}</p>
       )}
       {error && (
         <p role="alert" className="form-error">

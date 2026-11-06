@@ -1,6 +1,6 @@
 # Synthetic image fixtures
 
-`tiny.png` is a generated 2×2 RGB image. `static.heic` was encoded from it
+`tiny.png` is a generated 2×2 RGB image. `tiny.jpeg` is its JPEG conversion through macOS `sips`, used to verify actual JPEG decoding and previews. `static.heic` was encoded from it
 using macOS `sips`. They contain no personal photographs or GPS data.
 
 These fixtures verify ingestion and format conversion. They do not establish

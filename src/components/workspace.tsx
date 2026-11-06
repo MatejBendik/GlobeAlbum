@@ -231,7 +231,7 @@ export function Workspace({
                 {query
                   ? "Try another city or country."
                   : owner
-                    ? "Add a city you have visited. Photographs can come later."
+                    ? "Add a city you have visited. Photos can come later."
                     : "This collection is waiting for its first place."}
               </p>
               {owner && !query && (
@@ -245,7 +245,8 @@ export function Workspace({
           <div className="sidebar-footer">
             <ImageIcon size={15} />
             <span>
-              {globe.photoCount} photographs{owner ? ` / ${LIMITS.photos}` : ""}
+              {globe.photoCount} {globe.photoCount === 1 ? "photo" : "photos"}
+              {owner ? ` / ${LIMITS.photos}` : ""}
             </span>
             {owner && (
               <span className="photo-quota-bar">
@@ -330,7 +331,7 @@ export function Workspace({
           <div className="privacy-note">
             <LockKeyhole size={16} />
             <p>
-              Your email and visit dates stay private. Photographs may remain
+              Your email and visit dates stay private. Photos may remain
               accessible through existing links for up to 60 seconds after
               hiding.
             </p>
@@ -410,8 +411,8 @@ function SettingsForm({
       <div className="danger-zone">
         <h3>Delete account</h3>
         <p>
-          This permanently removes your globe, visits and photographs. There is
-          no undo.
+          This permanently removes your globe, visits and photos. There is no
+          undo.
         </p>
         <label htmlFor="delete-confirmation">
           Type <strong>{globe.username}</strong> to confirm

@@ -15,6 +15,14 @@ application-hosted authentication. No paid upgrade or Vercel deployment is
 included. See [ADR 0005](adr/0005-managed-neon-auth.md) and the
 [Neon setup change log](neon-setup.md) for actual CLI changes and limitations.
 
+On 2026-11-06 the user requested a read-only globe-address preview generated from
+the display name, removing latitude/longitude inputs and replacing date ranges
+with one optional visit date. They also requested photo/photos copy, previews,
+and fixes for rejected uploads and reselecting a file after removal. A manual
+map pin is the implementation choice for missing cities; search still uses
+GeoNames. Both app and Worker accept the two same-port HTTP loopback aliases
+when configured locally, while hosted origins retain exact matching.
+
 The original discovery record below is retained for history, not as current requirements.
 
 ---

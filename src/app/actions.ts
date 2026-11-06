@@ -6,6 +6,11 @@ import { requireUser, getAuth } from "@/lib/auth";
 import * as domain from "@/lib/domain";
 import { errorMessage } from "@/lib/errors";
 import { getDb } from "@/lib/db";
+import {
+  profileAddressBase,
+  availableProfileAddress,
+} from "@/lib/profile-address";
+import { displayNameSchema } from "@/lib/validation";
 import type { ActionResult } from "@/lib/types";
 
 async function execute(
@@ -23,6 +28,30 @@ async function execute(
           ? error.issues[0]?.message
           : errorMessage(error),
     };
+  }
+}
+export async function previewProfileAction(name: string) {
+  try {
+    await requireUser();
+    const base = profileAddressBase(displayNameSchema.parse(name));
+    const [globes, retired] = await Promise.all([
+      getDb().globe.findMany({
+        where: { username: { startsWith: base.slice(0, 20) } },
+        select: { username: true },
+      }),
+      getDb().retiredUsername.findMany({
+        where: { username: { startsWith: base.slice(0, 20) } },
+        select: { username: true },
+      }),
+    ]);
+    return {
+      username: availableProfileAddress(
+        base,
+        new Set([...globes, ...retired].map((row) => row.username)),
+      ),
+    };
+  } catch {
+    return { error: "Could not check your globe address. Please try again." };
   }
 }
 export async function onboardingAction(

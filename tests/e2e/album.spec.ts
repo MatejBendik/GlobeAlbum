@@ -8,6 +8,15 @@ import { TEST_ORIGIN } from "./constants";
 const db = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.TEST_DATABASE_URL! }),
 });
+test.beforeEach(async ({ page }) => {
+  // Never fetch community map tiles from browser automation.
+  await page.route("https://tile.openstreetmap.org/**", (route) =>
+    route.fulfill({
+      contentType: "image/png",
+      body: readFileSync("tests/fixtures/tiny.png"),
+    }),
+  );
+});
 test.afterAll(async () => {
   await db.$disconnect();
 });
@@ -55,7 +64,13 @@ test("creates a private collection, adds a visit, publishes and hides it", async
   await page.goto("/studio");
   await expect(page).toHaveURL(/onboarding/);
   await page.getByLabel("What should we call you?").fill("Jamie's globe");
-  await page.getByLabel("Your globe address").fill(owner.username);
+  const address = page.getByLabel("Your globe address");
+  await expect(address).toHaveAttribute("readonly", "");
+  await expect(address).toHaveValue(/^jamie-s-globe(?:-\d+)?$/);
+  owner.username = await address.inputValue();
+  await expect(
+    page.getByText(`${TEST_ORIGIN}/u/${owner.username}`, { exact: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Create my globe" }).click();
   await expect(page).toHaveURL(/studio/);
   await expect(
@@ -64,10 +79,13 @@ test("creates a private collection, adds a visit, publishes and hides it", async
   await page.getByRole("button", { name: "Add place", exact: true }).click();
   const add = page.getByRole("dialog");
   await add.getByLabel("City or town").fill("Paris");
-  await add.getByRole("button", { name: "Enter a place manually" }).click();
+  await add.getByRole("button", { name: "Choose location on a map" }).click();
   await add.getByLabel("Country or territory").selectOption("FR");
-  await add.getByLabel("Latitude").fill("48.8566");
-  await add.getByLabel("Longitude").fill("2.3522");
+  await expect(add.locator('input[type="number"]')).toHaveCount(0);
+  await expect(add.locator('input[type="date"]')).toHaveCount(1);
+  await add
+    .getByRole("button", { name: "Use map center", exact: true })
+    .click();
   await add.getByRole("button", { name: "Add place", exact: true }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(page.locator(".collection-stats")).toHaveText(
@@ -82,7 +100,7 @@ test("creates a private collection, adds a visit, publishes and hides it", async
   await visit.getByLabel(/Visit date/).fill("2024-06-01");
   await visit.getByRole("button", { name: "Add visit", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "2024-06-01 0 photographs" }),
+    page.getByRole("button", { name: "2024-06-01 0 photos" }),
   ).toBeVisible();
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Share globe", exact: true }).click();
@@ -143,21 +161,19 @@ test("validates file size through the form before creating an upload", async ({
     },
   });
   await page.goto(`/studio?place=${place.id}`);
-  await page
-    .getByRole("button", { name: "Add photographs", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Add photos", exact: true }).click();
   let uploadRequests = 0;
   page.on("request", (request) => {
     if (new URL(request.url()).pathname === "/api/uploads") uploadRequests++;
   });
-  await page.getByLabel("Choose photographs").setInputFiles({
+  await page.getByLabel("Choose photos").setInputFiles({
     name: "too-large.jpg",
     mimeType: "image/jpeg",
     buffer: Buffer.alloc(20_000_001),
   });
   await expect(page.getByRole("alert")).toContainText("20 MB");
   await page
-    .getByRole("button", { name: "Upload photographs", exact: true })
+    .getByRole("button", { name: "Upload photos", exact: true })
     .click();
   expect(uploadRequests).toBe(0);
   expect(
@@ -211,11 +227,9 @@ test("uploads a batch, cancels a transfer and retries a failed file", async ({
     }
   });
   await page.goto(`/studio?place=${place.id}`);
-  await page
-    .getByRole("button", { name: "Add photographs", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Add photos", exact: true }).click();
   const buffer = readFileSync("tests/fixtures/tiny.png");
-  await page.getByLabel("Choose photographs").setInputFiles(
+  await page.getByLabel("Choose photos").setInputFiles(
     ["retry.png", "cancel.png", "keep.png"].map((name) => ({
       name,
       mimeType: "image/png",
@@ -223,7 +237,7 @@ test("uploads a batch, cancels a transfer and retries a failed file", async ({
     })),
   );
   await page
-    .getByRole("button", { name: "Upload photographs", exact: true })
+    .getByRole("button", { name: "Upload photos", exact: true })
     .click();
   try {
     await blocked;
@@ -341,9 +355,9 @@ test("browses repeated-visit photos, edits a caption and deletes the account", a
   );
   await page.goto(`/studio?place=${place.id}`);
   await expect(page.getByLabel("A little context")).toHaveValue("First visit");
-  await page.getByRole("button", { name: "Next photograph" }).click();
+  await page.getByRole("button", { name: "Next photo" }).click();
   await expect(page.getByLabel("A little context")).toHaveValue("Second visit");
-  await page.getByRole("button", { name: "Previous photograph" }).focus();
+  await page.getByRole("button", { name: "Previous photo" }).focus();
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByLabel("A little context")).toHaveValue("First visit");
   await page.locator(".gallery-image").dispatchEvent("touchstart", {
@@ -354,7 +368,7 @@ test("browses repeated-visit photos, edits a caption and deletes the account", a
     changedTouches: [{ identifier: 0, clientX: 80 }],
   });
   await expect(page.getByLabel("A little context")).toHaveValue("Second visit");
-  await page.getByRole("button", { name: "Previous photograph" }).click();
+  await page.getByRole("button", { name: "Previous photo" }).click();
   await page.getByLabel("A little context").fill("A new memory");
   await page.getByRole("button", { name: "Save caption" }).click();
   await expect
@@ -443,4 +457,143 @@ test("renders the landing page and example without horizontal overflow", async (
     path: `.local/verification/globe-${testInfo.project.name}.png`,
     fullPage: true,
   });
+});
+
+test("removes a failed JPEG and selects the same file again without closing", async ({
+  page,
+  context,
+}) => {
+  const owner = await account(context, true);
+  const globe = await db.globe.findUniqueOrThrow({
+    where: { userId: owner.id },
+  });
+  const place = await db.place.create({
+    data: {
+      globeId: globe.id,
+      name: "Paris",
+      sourceCountry: "FR",
+      latitude: 48.85,
+      longitude: 2.35,
+      visits: { create: {} },
+    },
+  });
+  let rejected = false;
+  await page.route("**/api/uploads", async (route) => {
+    if (!rejected) {
+      rejected = true;
+      return route.fulfill({
+        status: 403,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "This request origin is not allowed." }),
+      });
+    }
+    return route.continue();
+  });
+  await page.goto(`/studio?place=${place.id}`);
+  await page.getByRole("button", { name: "Add photos", exact: true }).click();
+  const file = {
+    name: "same.jpeg",
+    mimeType: "image/jpeg",
+    buffer: readFileSync("tests/fixtures/tiny.jpeg"),
+  };
+  await page.getByLabel("Choose photos").setInputFiles(file);
+  await expect(page.getByAltText("Preview of same.jpeg")).toBeVisible();
+  await expect(
+    page.getByText("1 photo selected", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Upload photos", exact: true })
+    .click();
+  await expect(
+    page.getByText("This request origin is not allowed.", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Remove same.jpeg", exact: true })
+    .click();
+  await expect(
+    page.getByText("This request origin is not allowed.", { exact: true }),
+  ).not.toBeVisible();
+  await page.getByLabel("Choose photos").setInputFiles(file);
+  await expect(page.getByAltText("Preview of same.jpeg")).toBeVisible();
+  await expect(
+    page.getByText("1 photo selected", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Upload photos", exact: true })
+    .click();
+  await expect(
+    page.getByText("Added to your globe", { exact: true }),
+  ).toBeVisible();
+});
+
+test("finds city coordinates automatically and accepts one optional visit date", async ({
+  page,
+  context,
+}) => {
+  const owner = await account(context, true);
+  await page.route("**/api/places/search?**", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        places: [
+          {
+            name: "Krompachy",
+            providerId: "724443",
+            country: "SK",
+            region: "Košice",
+            latitude: 48.9145,
+            longitude: 20.8751,
+          },
+        ],
+      }),
+    }),
+  );
+  await page.goto("/studio");
+  await page.getByRole("button", { name: "Add place", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("City or town").fill("Krompachy");
+  await dialog.getByRole("button", { name: /Krompachy.*Košice/ }).click();
+  await expect(dialog.locator('input[type="number"]')).toHaveCount(0);
+  await expect(dialog.locator('input[type="date"]')).toHaveCount(1);
+  await expect(dialog.getByLabel("Visit date", { exact: false })).toHaveValue(
+    "",
+  );
+  await dialog.getByRole("button", { name: "Add place", exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  const place = await db.place.findFirstOrThrow({
+    where: { name: "Krompachy", globe: { userId: owner.id } },
+    include: { visits: true },
+  });
+  expect(place.latitude).toBe(48.9145);
+  expect(place.longitude).toBe(20.8751);
+  expect(place.visits[0].startDate).toBeNull();
+  expect(place.visits[0].endDate).toBeNull();
+});
+
+test("waits for the address form to become interactive before accepting a name", async ({
+  page,
+  context,
+}) => {
+  await account(context);
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(/\/_next\/static\/.*\.js(?:\?|$)/, async (route) => {
+    await gate;
+    try {
+      await route.continue();
+    } catch {}
+  });
+  try {
+    await page.goto("/onboarding", { waitUntil: "commit" });
+    await expect(page.getByLabel("What should we call you?")).toBeVisible();
+    await expect(page.getByLabel("What should we call you?")).toBeDisabled();
+  } finally {
+    release();
+  }
+  await page.getByLabel("What should we call you?").fill("Matej Bendík");
+  await expect(page.getByLabel("Your globe address")).toHaveValue(
+    /^matej-bendik(?:-\d+)?$/,
+  );
 });

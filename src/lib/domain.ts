@@ -262,7 +262,7 @@ export async function selectCover(
         where: { id: photoId, status: "READY", visit: { placeId } },
       }))
     )
-      throw new AppError("Choose a ready photograph from this place.", 404);
+      throw new AppError("Choose a ready photo from this place.", 404);
     return tx.place.update({
       where: { id: placeId },
       data: { coverPhotoId: photoId },
@@ -513,7 +513,7 @@ export async function finishUpload(userId: string, id: string) {
       );
     if (upload.leaseExpiresAt && upload.leaseExpiresAt.getTime() > Date.now())
       throw new AppError(
-        "This photograph is already being processed. Try again shortly.",
+        "This photo is already being processed. Try again shortly.",
         409,
       );
     const month = utcMonth();
@@ -570,7 +570,7 @@ export async function finishUpload(userId: string, id: string) {
     if (!response.ok)
       throw new AppError(
         response.status === 422
-          ? "This photograph could not be decoded, is animated or exceeds image limits."
+          ? "This photo could not be decoded, is animated or exceeds image limits."
           : "Processing is temporarily unavailable. Retry this upload.",
         response.status === 422 ? 422 : 503,
         "PROCESSING",
@@ -581,10 +581,7 @@ export async function finishUpload(userId: string, id: string) {
     ]);
     const totalBytes = thumbnailBytes + displayBytes;
     if (!thumbnailBytes || !displayBytes || totalBytes > LIMITS.variantBytes)
-      throw new AppError(
-        "Processed photograph exceeds the size allowance.",
-        422,
-      );
+      throw new AppError("Processed photo exceeds the size allowance.", 422);
     await locked(async (tx) => {
       const current = await tx.uploadIntent.findFirst({
         where: { id, leaseToken, photo: { status: "PROCESSING" } },

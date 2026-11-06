@@ -5,11 +5,11 @@ Checks below distinguish actual cloud behavior from test fixtures and emulation.
 
 ## Observed evidence
 
-Local verification on 2026-11-06: 28 Vitest tests and 12 Playwright album scenarios
-(desktop/mobile Chromium) passed. Two additional email-form scenarios passed in
-a focused desktop/mobile run after being added. Application and Worker type checks passed.
-The gallery gesture test now supplies complete touch events and asserts that
-the browser reports no uncaught errors.
+Current local verification on 2026-11-06: 42 Vitest tests and all 20 Playwright
+scenarios (desktop/mobile Chromium) passed. This includes read-only generated
+addresses, cold-load readiness, automatic city coordinates, manual map selection,
+one optional visit date, local JPEG previews and selecting the same file after
+removing a failed upload. Application and Worker type checks passed.
 
 The additional desktop/mobile batch-upload scenarios exercise real application
 handlers and PostgreSQL against a local storage/processing test double. A batch
@@ -41,6 +41,44 @@ Actual maintenance runs processed all 23 durable cleanup jobs after disposable
 users were deleted. The final queue was empty and accounted storage returned to
 zero. Unexpired reservations remained accounted until their capability/lease
 safety windows elapsed; scheduling deletion alone never releases bytes.
+
+## Form and origin regression evidence (2026-11-06)
+
+The user opened `http://localhost:3000/studio` while app/Worker configuration used
+`http://127.0.0.1:3000`. A failing HTTP boundary test reproduced the exact origin
+error. Actual Worker preflight also returned 403 for localhost and 204 for the
+configured IP. Both now share a same-port HTTP loopback allowlist; hosted origins
+stay exact, and unrelated/forwarded origins are rejected.
+
+A failing browser regression also showed the failed upload's origin error
+remaining visible after X. The error row now disappears after cleanup, and the
+same `.jpeg` file can be selected and uploaded again in the open dialog. Previews
+are local Blob URLs (released on unmount/removal), loaded lazily; unsupported
+browser preview formats display an explicit fallback instead of a broken image.
+
+Real Worker deployment: `0615b2bb-df2b-4bbe-b988-ea785c5f9780`, existing
+`globealbum-images` target and bindings. No service or paid-plan changes.
+After deployment, an actual synthetic JPEG was uploaded with localhost Origin,
+decoded by Cloudflare Images, and returned both private WebP variants. All three
+test objects were physically deleted after the short upload capability expired.
+This establishes JPEG ingestion, not large mobile-file or HEIC compatibility.
+
+Safe real-service output:
+
+```text
+PASS real Worker CORS: localhost and loopback allowed, unrelated origin denied
+PASS actual JPEG upload from localhost origin
+PASS Cloudflare JPEG decoding and both private WebP previews
+PASS physical cleanup of all JPEG test objects after upload expiry
+```
+
+The manual location picker uses Leaflet and visible OpenStreetMap attribution.
+Automated browser tests stub every OSM tile request; their screenshots establish
+layout/interaction, not live tile content. City search is tested with provider
+results at the app boundary; the user's live GeoNames account remains a release
+gate. See [tile policy](https://operations.osmfoundation.org/policies/tiles/) and
+[Wrangler commands](https://developers.cloudflare.com/workers/wrangler/commands/workers/),
+checked 2026-11-06.
 
 ## Real Neon evidence (2026-11-06)
 

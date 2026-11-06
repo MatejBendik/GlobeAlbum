@@ -22,8 +22,8 @@ export default async function OnboardingPage() {
           <br />
           your corner of the world.
         </h1>
-        <p>Just two things, then the globe is yours.</p>
-        <OnboardingForm />
+        <p>Choose your name. We will create your globe link.</p>
+        <OnboardingForm baseUrl={process.env.APP_ORIGIN || ""} />
       </section>
     </main>
   );

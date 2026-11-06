@@ -20,7 +20,7 @@ Find cities and correct country assignments, as a complete end-to-end user behav
 
 ## Validation evidence
 
-Updated 2026-11-05. Server-backed, bounded/throttled GeoNames search and attribution are implemented. Missing search configuration keeps manual entry usable. PostgreSQL tests verify provider-ID reuse and separate country overrides. The user's live GeoNames account has not been configured or tested.
+Updated 2026-11-05. Server-backed, bounded/throttled GeoNames search and attribution are implemented. Missing search configuration keeps the manual map picker usable; no coordinate knowledge is required. Stubbed search results also verify automatic coordinate selection. PostgreSQL tests verify provider-ID reuse and separate country overrides. The user's live GeoNames account has not been configured or tested.
 
 See [verification and release gates](../../../validation.md). Unchecked criteria remain pending, even when their code exists.
 

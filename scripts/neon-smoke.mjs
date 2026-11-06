@@ -28,6 +28,12 @@ const i = {
 const browser = await chromium.launch();
 const context = await browser.newContext();
 const page = await context.newPage();
+await page.route("https://tile.openstreetmap.org/**", (route) =>
+  route.fulfill({
+    contentType: "image/png",
+    body: readFileSync("tests/fixtures/tiny.png"),
+  }),
+);
 const db = new pg.Client({
   connectionString: process.env.DATABASE_URL_UNPOOLED,
 });
@@ -59,10 +65,13 @@ try {
   await page.reload();
   await page.waitForURL("**/onboarding");
   console.log("PASS managed session survives reload");
-  const slug = `neon-test-${randomUUID().slice(0, 8)}`;
+  let slug = "";
   i.slug = slug;
   await page.getByLabel("What should we call you?").fill("Neon test globe");
-  await page.getByLabel("Your globe address").fill(slug);
+  await page.waitForFunction(
+    () => document.querySelector('input[name="username"]')?.value,
+  );
+  slug = await page.getByLabel("Your globe address").inputValue();
   await page
     .getByRole("button", { name: "Create my globe", exact: true })
     .click();
@@ -79,10 +88,13 @@ try {
   await page.getByRole("button", { name: "Add place", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("City or town").fill("Paris");
-  await dialog.getByRole("button", { name: "Enter a place manually" }).click();
+  await dialog
+    .getByRole("button", { name: "Choose location on a map" })
+    .click();
   await dialog.getByLabel("Country or territory").selectOption("FR");
-  await dialog.getByLabel("Latitude").fill("48.8566");
-  await dialog.getByLabel("Longitude").fill("2.3522");
+  await dialog
+    .getByRole("button", { name: "Use map center", exact: true })
+    .click();
   await dialog.getByRole("button", { name: "Add place", exact: true }).click();
   await dialog.waitFor({ state: "hidden" });
   const places = await db.query(

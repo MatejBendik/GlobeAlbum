@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     template: "%s · GlobeAlbum",
   },
   description:
-    "Your travels, photographs and favorite places. One personal globe, ready to share.",
+    "Your travels, photos and favorite places. One personal globe, ready to share.",
   robots: { index: false, follow: false },
 };
 

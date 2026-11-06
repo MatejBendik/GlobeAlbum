@@ -177,13 +177,13 @@ export function PlaceGallery({
                     <ImagePlus size={36} strokeWidth={1} />
                     <h3>
                       {imageError
-                        ? "This photograph could not load."
+                        ? "This photo could not load."
                         : "A place worth remembering."}
                     </h3>
                     <p>
                       {imageError
                         ? "The link may have expired."
-                        : "No photographs here yet."}
+                        : "No photos here yet."}
                     </p>
                     {imageError && (
                       <Button
@@ -204,14 +204,14 @@ export function PlaceGallery({
               <>
                 <button
                   className="gallery-arrow gallery-prev"
-                  aria-label="Previous photograph"
+                  aria-label="Previous photo"
                   onClick={() => next(-1)}
                 >
                   <ChevronLeft />
                 </button>
                 <button
                   className="gallery-arrow gallery-next"
-                  aria-label="Next photograph"
+                  aria-label="Next photo"
                   onClick={() => next(1)}
                 >
                   <ChevronRight />
@@ -232,7 +232,7 @@ export function PlaceGallery({
             <DialogTitle className="gallery-title">{place.name}</DialogTitle>
             <DialogDescription className="muted text-sm">
               {place.visitCount} visit{place.visitCount !== 1 ? "s" : ""} ·{" "}
-              {photos.length} photograph{photos.length !== 1 ? "s" : ""}
+              {photos.length} photo{photos.length !== 1 ? "s" : ""}
             </DialogDescription>
             {demo && <span className="example-label">Example collection</span>}
             {error && (
@@ -269,13 +269,13 @@ export function PlaceGallery({
                   Cover
                 </Button>
                 <ConfirmDialog
-                  title="Delete this photograph?"
-                  description="This permanently removes the photograph from this visit and your shared globe."
+                  title="Delete this photo?"
+                  description="This permanently removes the photo from this visit and your shared globe."
                   trigger={
                     <Button
                       variant="ghost"
                       size="icon"
-                      aria-label="Delete photograph"
+                      aria-label="Delete photo"
                     >
                       <Trash2 />
                     </Button>
@@ -290,7 +290,7 @@ export function PlaceGallery({
                 {photos.map((item, i) => (
                   <button
                     key={item.id}
-                    aria-label={`View photograph ${i + 1}`}
+                    aria-label={`View photo ${i + 1}`}
                     aria-pressed={i === index}
                     onClick={() => {
                       setIndex(i);
@@ -313,14 +313,14 @@ export function PlaceGallery({
                     {gallery.pendingPhotos.map((pending, i) => (
                       <div className="visit-row" key={pending.id}>
                         <span className="field-hint">
-                          Photograph {i + 1} ·{" "}
+                          Photo {i + 1} ·{" "}
                           {pending.status === "PROCESSING"
                             ? "processing"
                             : "waiting"}
                         </span>
                         <ConfirmDialog
                           title="Remove this upload?"
-                          description="This cancels the unfinished photograph. Choose the file again if you want to upload it later."
+                          description="This cancels the unfinished photo. Choose the file again if you want to upload it later."
                           trigger={
                             <Button
                               variant="ghost"
@@ -363,16 +363,14 @@ export function PlaceGallery({
                       <span>
                         {visit.startDate || `Visit ${i + 1}`}
                         <small>
-                          {visit.endDate
-                            ? `to ${visit.endDate}`
-                            : `${visit.photoCount} photographs`}
+                          {`${visit.photoCount} ${visit.photoCount === 1 ? "photo" : "photos"}`}
                         </small>
                       </span>
                     </button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      aria-label={`Add photographs to visit ${i + 1}`}
+                      aria-label={`Add photos to visit ${i + 1}`}
                       onClick={() => {
                         setUploadVisit(visit.id);
                         setUploadOpen(true);
@@ -382,7 +380,7 @@ export function PlaceGallery({
                     </Button>
                     <ConfirmDialog
                       title="Delete this visit?"
-                      description="All photographs in this visit will also be permanently removed. If it is the last visit, the place will disappear from your globe."
+                      description="All photos in this visit will also be permanently removed. If it is the last visit, the place will disappear from your globe."
                       trigger={
                         <Button
                           variant="ghost"
@@ -430,7 +428,7 @@ export function PlaceGallery({
                   disabled={!gallery?.visits?.length || remaining <= 0}
                 >
                   <ImagePlus />
-                  Add photographs
+                  Add photos
                 </Button>
               ) : (
                 <span>Every place has a story.</span>

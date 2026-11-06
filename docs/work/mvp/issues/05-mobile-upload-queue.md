@@ -27,3 +27,9 @@ See [verification and release gates](../../../validation.md). Unchecked criteria
 ## Comments
 
 Approved in discovery; implementation explicitly authorized.
+
+2026-11-06 refinement: use photo/photos throughout UI, show local selection/queue
+previews, and remove failed rows cleanly before reselecting the same file.
+Desktop/mobile regressions pass. Actual JPEG upload and conversion from the
+localhost origin also passed against the deployed Cloudflare Worker; its fixtures
+were physically removed. HEIC remains a separate release blocker.

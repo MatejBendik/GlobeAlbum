@@ -21,3 +21,14 @@ Recorded 2026-11-05.
 
 The visual design and UI source are original to this project. Clerk and AlignUI
 were aesthetic references, not bundled products or claimed affiliations.
+
+Added 2026-11-06: Leaflet 1.9.4 (BSD-2-Clause) and React Leaflet 5.0.0 (MIT)
+power the manual location picker. Standard OpenStreetMap tiles retain visible
+© OpenStreetMap contributors attribution. Browsers fetch only the visible map,
+retain normal caching/Referer behavior, and offer no bulk/offline downloads.
+Automated tests stub all tile requests. Community tile availability has no SLA;
+review capacity/provider choice before public growth. No paid map service was
+created. Sources checked 2026-11-06:
+https://leafletjs.com/reference.html,
+https://react-leaflet.js.org/docs/start-installation/,
+https://operations.osmfoundation.org/policies/tiles/.

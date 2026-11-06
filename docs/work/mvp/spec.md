@@ -14,9 +14,9 @@ One personal globe per account, private until explicitly published. Open Google 
 ## User Stories
 
 1. As a traveler, I want to register with Google or email/password without an invitation.
-2. As a new user, I want to choose my fixed profile URL and editable display name, then receive a private globe.
-3. As an owner, I want to search cities or manually enter a missing city with a country and coordinates.
-4. As an owner, I want repeat visits under one place, with optional dates or date ranges.
+2. As a new user, I want to enter my display name, preview its automatically generated fixed profile URL, then receive a private globe.
+3. As an owner, I want to search cities or locate a missing city on a map and choose its country.
+4. As an owner, I want repeat visits under one place, with one optional date per visit.
 5. As an owner, I want visits without photos to count toward my history.
 6. As an owner, I want to upload JPEG, PNG, WebP and HEIC photographs from mobile.
 7. As an owner, I want upload progress, cancellation and safe retries.
@@ -47,11 +47,24 @@ Use pooled database runtime access (`DATABASE_URL`) and a separate direct migrat
 
 ### Domain and privacy
 
-User -> Globe -> Place -> Visit -> Photo. One globe per user. Place is an owned city/town with coordinates, optional provider ID, source country and separate correction. Visit dates are optional date-only values. Photo belongs to a visit and has an optional caption. Upload intents reserve capacity and track quarantine, processing, expiry and completion. Durable cleanup survives account deletion.
+User -> Globe -> Place -> Visit -> Photo. One globe per user. Place is an owned city/town with coordinates, optional provider ID, source country and separate correction. Each visit has one optional date-only value. New date ranges are not accepted; legacy database columns remain preserved. Photo belongs to a visit and has an optional caption. Upload intents reserve capacity and track quarantine, processing, expiry and completion. Durable cleanup survives account deletion.
 
 Counts use unique places with visits and distinct effective country codes, including separately listed territories. Display a compact line such as "50 places in 23 countries" with an explanation of territories. Public DTOs contain no email, visit dates, credentials or original metadata.
 
+Onboarding derives an immutable slug from the display name and shows a read-only address preview. Accent normalization and collision suffixes keep it valid and unique; changes to the display name after onboarding do not change the URL.
+
 Public access uses an immutable profile slug. Publish/hide applies to the entire globe. Hiding does not rotate its address. Exclude profiles from indexing. There is no invitation gate or admin invitation UI.
+
+### Place entry and photo selection
+
+The user confirmed these refinements on 2026-11-06: no coordinate inputs, one
+optional visit date, and photo/photos throughout the interface. GeoNames results
+supply coordinates automatically. Missing places use a lazily loaded Leaflet map
+with an explicitly selected point and country; keyboard users can pan/zoom and
+choose the map center. No city is assigned invented default coordinates.
+Photo selection and queue entries show local previews where the browser supports
+the format. Failed rows can be removed and the same file selected again without
+closing the dialog. Revoke local preview URLs when no longer displayed.
 
 ### Globe and galleries
 

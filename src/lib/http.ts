@@ -1,5 +1,6 @@
 import "server-only";
 import { ZodError } from "zod";
+import { isAllowedAppOrigin } from "./origins";
 import { AppError } from "./errors";
 
 export const NO_STORE = {
@@ -21,10 +22,8 @@ export function handleError(error: unknown) {
   return json({ error: "Something went wrong. Please try again." }, 500);
 }
 export function assertSameOrigin(request: Request) {
-  const configured = process.env.APP_ORIGIN;
   if (
-    !configured ||
-    request.headers.get("origin") !== new URL(configured).origin
+    !isAllowedAppOrigin(request.headers.get("origin"), process.env.APP_ORIGIN)
   )
     throw new AppError("This request origin is not allowed.", 403, "ORIGIN");
 }

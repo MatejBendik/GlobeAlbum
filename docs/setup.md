@@ -45,7 +45,10 @@ Passwords and sessions are managed by Neon, not by the app's Prisma adapter.
 No direct Google credentials are needed in Next.js environment variables.
 Register exact application origins with Neon Auth; the local origin above was
 added using `neon neon-auth domain add http://127.0.0.1:3000`.
-Keep this origin identical to the Worker's `APP_ORIGIN`.
+Keep the Worker's `APP_ORIGIN` aligned. With an HTTP loopback origin, both
+`localhost` and `127.0.0.1` at the same port are accepted by the app and Worker;
+hosted origins remain exact. Changing to a production origin still requires
+updating both configurations.
 
 Current branch configuration: email/password enabled, registration open, email
 verification not required, no signup email. Shared SMTP and Google credentials

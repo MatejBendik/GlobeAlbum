@@ -6,9 +6,11 @@ this checkpoint records execution state for resuming interrupted work.
 ## Verified locally
 
 - Application and Worker TypeScript checks pass; production Next.js build passes.
-- 28 Vitest tests pass against the isolated local PostgreSQL test database.
-- 12 album Playwright scenarios pass across desktop and Pixel Chromium emulation;
-  two new email-form/error scenarios also pass in a focused run.
+- 42 Vitest tests pass against the isolated local PostgreSQL test database.
+- 20 Playwright scenarios pass across desktop and Pixel Chromium emulation.
+- Globe URLs are generated from display names with a read-only preview; visits
+  have one optional date, and missing cities are positioned on a map.
+- JPEG previews, removal/reselection and the localhost upload regression are covered.
 - The three-file upload scenario covers an injected failure, cancellation,
   successful transfer and retry, resulting in exactly two ready photographs.
 - Cancellation cleanup now shares one promise between the button and aborted
@@ -24,6 +26,8 @@ this checkpoint records execution state for resuming interrupted work.
 - Actual PNG processing, immutable upload, bounded image links and physical
   cleanup passed on 2026-11-05. A 2026-11-06 repeat again completed PNG but failed
   at HEIC with application status 503. Earlier provider diagnostics recorded 9516.
+- Real JPEG upload from localhost, conversion and private WebP reads passed after
+  deploying Worker `0615b2bb-df2b-4bbe-b988-ea785c5f9780`; test objects removed.
 - **Confirmed:** keep Cloudflare; functioning HEIC remains mandatory before beta.
 - Neon production is linked and migrated; real managed email signup/session and
   persisted globe/place flows pass. User explicitly added email/password alongside

@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     if (query.length < 2 || query.length > 100) return json({ places: [] });
     if (!process.env.GEONAMES_USERNAME)
       throw new AppError(
-        "Place search is not configured. You can still add a place manually.",
+        "Place search is unavailable. Choose the location on the map.",
         503,
       );
     await locked(async (tx) => {
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
     });
     if (!response.ok)
       throw new AppError(
-        "Place search is unavailable. Add the place manually or try again.",
+        "Place search is unavailable. Choose the location on the map or try again.",
         503,
       );
     const result = resultSchema.parse(await response.json());

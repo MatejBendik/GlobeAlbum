@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,6 +11,7 @@ import {
   Loader2,
   ImagePlus,
 } from "lucide-react";
+import { LIMITS } from "@/lib/limits";
 import { photoUploadSchemaFor, PHOTO_ACCEPT } from "@/lib/validation";
 import { deletePhotoAction } from "@/app/actions";
 import { Button } from "./ui/button";
@@ -43,6 +44,36 @@ async function api<T>(
   const value = await response.json();
   if (!response.ok) throw new Error(value.error ?? "Upload failed.");
   return value;
+}
+function PhotoPreview({ file }: { file: File }) {
+  const [url, setUrl] = useState("");
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (file.size > LIMITS.fileBytes) return;
+    const value = URL.createObjectURL(file);
+    setUrl(value);
+    setFailed(false);
+    return () => URL.revokeObjectURL(value);
+  }, [file]);
+  return url && !failed ? (
+    <img
+      src={url}
+      alt={`Preview of ${file.name}`}
+      loading="lazy"
+      decoding="async"
+      className="upload-preview"
+      onError={() => setFailed(true)}
+    />
+  ) : (
+    <span
+      className="upload-preview upload-preview-fallback"
+      role="img"
+      aria-label={`Preview unavailable for ${file.name}`}
+      title="This browser cannot preview this format."
+    >
+      <ImagePlus size={22} />
+    </span>
+  );
 }
 export function UploadForm({
   visitId,
@@ -191,9 +222,11 @@ export function UploadForm({
     cancelled.current.add(item.id);
     requests.current.get(item.id)?.abort();
     controllers.current.get(item.id)?.abort();
-    update(item.id, { status: "cancelled" });
+    update(item.id, { status: "cancelled", error: undefined });
     try {
       await removeRemote(item.id);
+      if (item.status === "error")
+        setItems((current) => current.filter((row) => row.id !== item.id));
     } catch {
       update(item.id, {
         error:
@@ -214,10 +247,10 @@ export function UploadForm({
           render={({ field }) => (
             <label className="upload-dropzone">
               <ImagePlus size={26} strokeWidth={1.4} />
-              <strong>Choose photographs</strong>
+              <strong>Choose photos</strong>
               <span>JPEG, PNG, WebP or HEIC · up to 20 MB each</span>
               <input
-                aria-label="Choose photographs"
+                aria-label="Choose photos"
                 type="file"
                 accept={PHOTO_ACCEPT}
                 multiple
@@ -242,16 +275,43 @@ export function UploadForm({
           </p>
         )}
         {form.watch("files").length > 0 && (
-          <p className="text-sm">
-            {form.watch("files").length} photographs selected
-          </p>
+          <div className="selected-photos">
+            <p className="text-sm">
+              {form.watch("files").length}{" "}
+              {form.watch("files").length === 1 ? "photo" : "photos"} selected
+            </p>
+            {form.watch("files").map((file, index) => (
+              <div
+                className="selected-photo"
+                key={`${file.name}:${file.lastModified}:${index}`}
+              >
+                <PhotoPreview file={file} />
+                <span className="truncate">{file.name}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label={`Remove selected ${file.name}`}
+                  onClick={() =>
+                    form.setValue(
+                      "files",
+                      form.getValues("files").filter((_, i) => i !== index),
+                      { shouldValidate: true },
+                    )
+                  }
+                >
+                  <X />
+                </Button>
+              </div>
+            ))}
+          </div>
         )}
         <Button
           type="submit"
           disabled={busy || remaining <= 0 || !form.watch("files").length}
         >
           {busy ? <Loader2 className="animate-spin" /> : <UploadCloud />}
-          {busy ? "Uploading photographs…" : "Upload photographs"}
+          {busy ? "Uploading photos…" : "Upload photos"}
         </Button>
       </form>
       {items.length > 0 && (
@@ -259,6 +319,7 @@ export function UploadForm({
           {items.map((item) => (
             <li key={item.id}>
               <div className="upload-item-main">
+                <PhotoPreview file={item.file} />
                 <span className="truncate">{item.file.name}</span>
                 {item.status === "done" ? (
                   <Check className="text-green-700" size={16} />
@@ -319,10 +380,10 @@ export function UploadForm({
                   {
                     queued: "Waiting…",
                     uploading: `Uploading ${item.progress}%`,
-                    processing: "Preparing your photograph…",
+                    processing: "Preparing your photo…",
                     done: "Added to your globe",
                     cancelled: "Cancelled",
-                    error: "Could not upload this photograph.",
+                    error: "Could not upload this photo.",
                   }[item.status]}
               </p>
             </li>

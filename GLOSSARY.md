@@ -14,7 +14,7 @@ _Avoid_: visit, destination when the meaning is the persistent city record.
 
 ## Visit
 
-One recorded occurrence of being at a place, with an optional date or date range and zero or more photos.
+One recorded occurrence of being at a place, with one optional visit date and zero or more photos.
 
 _Avoid_: trip, journey.
 

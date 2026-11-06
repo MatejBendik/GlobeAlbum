@@ -1,3 +1,4 @@
+import { isAllowedAppOrigin } from "../src/lib/origins";
 import { z } from "zod";
 import { verifyUploadGrant, verifyMediaGrant } from "../src/lib/upload-grant";
 import { LIMITS } from "../src/lib/limits";
@@ -90,12 +91,13 @@ export default {
     }
     if (url.pathname === "/upload") {
       const cors = {
-        "Access-Control-Allow-Origin": env.APP_ORIGIN,
+        "Access-Control-Allow-Origin":
+          request.headers.get("origin") || env.APP_ORIGIN,
         "Access-Control-Allow-Methods": "PUT, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
         Vary: "Origin",
       };
-      if (request.headers.get("origin") !== env.APP_ORIGIN)
+      if (!isAllowedAppOrigin(request.headers.get("origin"), env.APP_ORIGIN))
         return reply({ error: "Origin not allowed." }, 403);
       if (request.method === "OPTIONS")
         return new Response(null, { status: 204, headers: cors });

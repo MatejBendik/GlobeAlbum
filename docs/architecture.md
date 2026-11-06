@@ -29,7 +29,7 @@ Historical application-hosted auth tables remain unused; no destructive auth-tab
 migration was applied. Prisma also manages upload intents,
 shared byte accounting, monthly transformation reservations, durable cleanup
 jobs, throttling windows, and retired usernames. Country overrides remain
-separate from source data. Dates are nullable PostgreSQL date columns.
+separate from source data. The visit date is nullable. Historical end-date columns are retained; new requests only accept one date.
 Globe uniqueness and provider-place uniqueness also have database constraints.
 
 Mutations take a transaction-scoped advisory lock. Serializing writes is a
@@ -57,6 +57,20 @@ This is an explicit beta operations gate, not a completed automated cleanup flow
 Prisma uses a small shared `pg.Pool` with the Neon pooled runtime URL; Vercel's
 `attachDatabasePool` coordinates idle connections in Fluid Compute. The direct
 migration connection is selected independently, never as an ordinary build step.
+
+## Form boundaries
+
+The globe address is derived from a normalized display name, checked against
+active and retired slugs, and previewed read-only. Uniqueness is still enforced
+under the creation transaction; a concurrent collision requires a refreshed preview.
+City search resolves coordinates; the manual fallback uses a lazy Leaflet map
+with a selected point, not numeric coordinate entry. OSM tiles are requested
+only when the map is open, with visible attribution and browser caching.
+
+The same pure origin allowlist is shared by Next upload routes and the Worker.
+Only a configured HTTP loopback origin admits `localhost`/`127.0.0.1` aliases at
+the same port. Production app origins stay exact; forwarded hosts are not trusted.
+CORS responses echo only an approved request origin and vary by Origin.
 
 ## Photo flow
 

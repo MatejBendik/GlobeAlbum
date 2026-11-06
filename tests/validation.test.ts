@@ -58,8 +58,19 @@ describe("upload form validation", () => {
 });
 
 describe("visit and location validation", () => {
-  it("allows unknown dates but rejects impossible or reversed dates", () => {
+  it("allows one optional visit date but rejects impossible dates and ranges", () => {
     expect(visitSchema.parse({ placeId: "paris" }).startDate).toBe("");
+    expect(
+      visitSchema.safeParse({ placeId: "paris", startDate: "2026-03-01" })
+        .success,
+    ).toBe(true);
+    expect(
+      visitSchema.safeParse({
+        placeId: "paris",
+        startDate: "2026-03-01",
+        endDate: "2026-03-02",
+      }).success,
+    ).toBe(false);
     expect(
       visitSchema.safeParse({ placeId: "paris", startDate: "2026-02-30" })
         .success,

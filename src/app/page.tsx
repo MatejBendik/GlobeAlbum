@@ -35,7 +35,7 @@ export default function HomePage() {
               little moments.
             </h2>
             <p>
-              The places you have been. The photographs you love.
+              The places you have been. The photos you love.
               <br className="desktop-break" /> Together on a globe that is
               entirely yours.
             </p>
@@ -88,8 +88,7 @@ export default function HomePage() {
             <div>
               <h3>Keep the moments.</h3>
               <p>
-                Add a few photographs and the little details you want to
-                remember.
+                Add a few photos and the little details you want to remember.
               </p>
             </div>
           </article>

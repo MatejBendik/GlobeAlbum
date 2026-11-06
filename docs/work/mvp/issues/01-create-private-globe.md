@@ -34,3 +34,8 @@ See [verification and release gates](../../../validation.md). Unchecked criteria
 ## Comments
 
 Approved in discovery; implementation explicitly authorized.
+
+2026-11-06 form refinement: the display name generates a normalized, read-only
+address preview, with collision suffixes including retired slugs. The database
+still enforces uniqueness atomically. Cold-load browser coverage ensures typing
+starts only once the preview logic is ready; failed checks can be retried.
