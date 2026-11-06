@@ -21,7 +21,7 @@ Verify and prepare the public beta, as a complete end-to-end user behavior.
 
 ## Validation evidence
 
-Updated 2026-11-06. The production build, type checks, 28 Vitest tests and all 10 browser scenarios pass. Browser verification covers desktop and mobile emulation; see docs/validation.md for current command evidence and remaining gates. Real HEIC, Google, Neon, GeoNames, physical devices, deployment cron and Vercel eligibility remain open. Cloudflare resources are authorized and deployed; Vercel application deployment and paid upgrades are not performed.
+Updated 2026-11-06. The production build, type checks, 28 Vitest tests and all 12 browser scenarios pass. Browser verification covers desktop and mobile emulation; see docs/validation.md for current command evidence and remaining gates. Real HEIC, Google, Neon, GeoNames, physical devices, deployment cron and Vercel eligibility remain open. Cloudflare resources are authorized and deployed; Vercel application deployment and paid upgrades are not performed.
 
 See [verification and release gates](../../../validation.md). Unchecked criteria remain pending, even when their code exists.
 

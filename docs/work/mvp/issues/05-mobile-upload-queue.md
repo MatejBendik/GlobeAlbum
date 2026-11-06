@@ -2,7 +2,7 @@
 
 Type: task
 Status: ready-for-agent
-Execution: implemented; transfer and physical-device verification outstanding
+Execution: implemented; physical-device verification outstanding
 
 ## What to build
 
@@ -14,13 +14,13 @@ Upload multiple photos from mobile, as a complete end-to-end user behavior.
 
 ## Acceptance criteria
 
-- [ ] Multiple selected files show individual progress, cancellation, errors and retry.
-- [ ] Cancellation/retry cannot create duplicate ready photos or bypass reservations.
+- [x] Multiple selected files show individual progress, cancellation, errors and retry.
+- [x] Cancellation/retry cannot create duplicate ready photos or bypass reservations.
 - [ ] A physical-device upload is recorded separately from browser emulation.
 
 ## Validation evidence
 
-Updated 2026-11-05. The RHF/Zod form validates every selected file and remaining slots before requests; desktop/mobile tests prove rejection above 20 MB without creating an intent. Queue progress, cancellation, per-file retries and interrupted-upload removal are implemented. Full interrupted multi-file/physical-device flows remain open.
+Updated 2026-11-06. Desktop/mobile browser tests upload a three-file batch, inject a connection failure, cancel a held transfer, retry the failed file and verify exactly two ready photos. They exercise real application handlers and PostgreSQL with a local storage/processing test double; they do not establish Cloudflare conversion or physical-device compatibility. A regression test caught duplicate cleanup during cancellation; both callers now share one operation. The >20 MB RHF/Zod rejection test creates no upload intent. Physical-device checks remain open.
 
 See [verification and release gates](../../../validation.md). Unchecked criteria remain pending, even when their code exists.
 

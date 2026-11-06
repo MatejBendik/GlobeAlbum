@@ -5,10 +5,18 @@ Checks below distinguish actual cloud behavior from test fixtures and emulation.
 
 ## Observed evidence
 
-Local verification on 2026-11-06: 28 Vitest tests and all 10 Playwright scenarios
+Local verification on 2026-11-06: 28 Vitest tests and all 12 Playwright scenarios
 (desktop/mobile Chromium) passed. Application and Worker type checks passed.
 The gallery gesture test now supplies complete touch events and asserts that
 the browser reports no uncaught errors.
+
+The additional desktop/mobile batch-upload scenarios exercise real application
+handlers and PostgreSQL against a local storage/processing test double. A batch
+with one network failure, one cancellation and one successful transfer finishes
+with exactly two ready photos after retry. These tests exposed and now prevent
+duplicate cancellation cleanup and its incorrect unfinished-upload warning.
+The test double binds only to localhost, requires explicit test mode, and does
+not decode images or replace the separate real Cloudflare verification.
 
 | Boundary                  | Evidence                                                                                                                   | Limit                                                                                                   |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
@@ -56,6 +64,12 @@ does **not** resolve the provider failure.
 before beta. No alternative processor, paid plan, client conversion, or original
 fallback has been introduced. Reproduce with the full cloud-smoke command before
 declaring this resolved. Do not silently skip dimension checks to bypass it.
+
+Rechecked on 2026-11-06 with the full cloud-smoke command: PNG again completed;
+the HEIC step still failed with application status 503. The exact provider code
+above was captured during the earlier diagnostic; this recheck does not claim a
+new provider-code observation. Disposable metadata was deleted and object cleanup
+was queued using the normal capability-expiry safety window.
 
 Sources verified 2026-11-05:
 

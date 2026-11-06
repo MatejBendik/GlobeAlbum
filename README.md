@@ -47,6 +47,8 @@ erase its contents. Stop the ordinary Next.js dev server before browser tests
 or a production build; Next owns its build directory. Install the test browser
 once with `npx playwright install chromium`. Browser sessions in tests are seeded
 in the test database, not obtained through Google.
+Browser upload tests use a local storage/processing test double on port 8787;
+real Cloudflare decoding remains a separate opt-in smoke test and release gate.
 
 The opt-in cloud smoke writes disposable fixtures to the configured R2 bucket:
 

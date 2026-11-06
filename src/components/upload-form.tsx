@@ -66,6 +66,7 @@ export function UploadForm({
   const controllers = useRef(new Map<string, AbortController>()),
     requests = useRef(new Map<string, XMLHttpRequest>()),
     remotes = useRef(new Map<string, Remote>()),
+    removals = useRef(new Map<string, Promise<void>>()),
     cancelled = useRef(new Set<string>());
   function update(id: string, patch: Partial<Item>) {
     setItems((current) =>
@@ -73,11 +74,20 @@ export function UploadForm({
     );
   }
   async function removeRemote(id: string) {
+    const pending = removals.current.get(id);
+    if (pending) return pending;
     const remote = remotes.current.get(id);
-    if (remote) {
-      const result = await deletePhotoAction(remote.photoId);
+    if (!remote) return;
+    // Cancellation and the aborted request share one cleanup operation.
+    const removal = deletePhotoAction(remote.photoId).then((result) => {
       if (result.error) throw new Error(result.error);
       remotes.current.delete(id);
+    });
+    removals.current.set(id, removal);
+    try {
+      await removal;
+    } finally {
+      removals.current.delete(id);
     }
   }
   async function process(item: Item) {

@@ -2,6 +2,7 @@
 
 Phase: implementation, authorized after approval of the MVP and 11 tickets.
 Beta remains gated by the checks in [validation](validation.md).
+Resume interrupted work from the [implementation checkpoint](work/mvp/progress.md).
 
 - [Product specification](work/mvp/spec.md): audience, value, scenarios and exact scope.
 - [Architecture](architecture.md): boundaries, data model, photo flow and privacy.

@@ -172,6 +172,97 @@ test("validates file size through the form before creating an upload", async ({
   ).toBe(0);
 });
 
+test("uploads a batch, cancels a transfer and retries a failed file", async ({
+  page,
+  context,
+}) => {
+  const owner = await account(context, true);
+  const globe = await db.globe.findUniqueOrThrow({
+    where: { userId: owner.id },
+  });
+  const place = await db.place.create({
+    data: {
+      globeId: globe.id,
+      name: "Paris",
+      sourceCountry: "FR",
+      latitude: 48.85,
+      longitude: 2.35,
+      visits: { create: {} },
+    },
+  });
+  const browserErrors: string[] = [];
+  page.on("pageerror", (error) => browserErrors.push(error.message));
+  let attempts = 0;
+  let notifyBlocked!: () => void;
+  let releaseBlocked!: () => void;
+  const blocked = new Promise<void>((resolve) => {
+    notifyBlocked = resolve;
+  });
+  const released = new Promise<void>((resolve) => {
+    releaseBlocked = resolve;
+  });
+  await page.route(/^http:\/\/127\.0\.0\.1:8787\/upload\?/, async (route) => {
+    if (route.request().method() !== "PUT") return route.continue();
+    attempts++;
+    if (attempts === 1) return route.abort("failed");
+    if (attempts === 2) {
+      notifyBlocked();
+      await released;
+    }
+    try {
+      await route.continue();
+    } catch {
+      /* The cancelled XHR may already be gone. */
+    }
+  });
+  await page.goto(`/studio?place=${place.id}`);
+  await page
+    .getByRole("button", { name: "Add photographs", exact: true })
+    .click();
+  const buffer = readFileSync("tests/fixtures/tiny.png");
+  await page.getByLabel("Choose photographs").setInputFiles(
+    ["retry.png", "cancel.png", "keep.png"].map((name) => ({
+      name,
+      mimeType: "image/png",
+      buffer,
+    })),
+  );
+  await page
+    .getByRole("button", { name: "Upload photographs", exact: true })
+    .click();
+  try {
+    await blocked;
+    await expect(page.getByText("Uploading 0%", { exact: true })).toBeVisible();
+    await page
+      .getByRole("button", { name: "Cancel cancel.png", exact: true })
+      .click();
+  } finally {
+    releaseBlocked();
+  }
+  await expect(
+    page.getByText("Added to your globe", { exact: true }),
+  ).toHaveCount(1);
+  const retry = page.getByRole("button", {
+    name: "Retry retry.png",
+    exact: true,
+  });
+  await expect(retry).toBeEnabled();
+  await retry.click();
+  await expect(
+    page.getByText("Added to your globe", { exact: true }),
+  ).toHaveCount(2);
+  await expect(page.getByText("Cancelled", { exact: true })).toBeVisible();
+  expect(
+    await db.photo.count({ where: { visit: { placeId: place.id } } }),
+  ).toBe(2);
+  expect(
+    await db.photo.count({
+      where: { visit: { placeId: place.id }, status: "READY" },
+    }),
+  ).toBe(2);
+  expect(browserErrors).toEqual([]);
+});
+
 test("keeps all places accessible without WebGL", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.addInitScript(() => {
