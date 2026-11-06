@@ -18,29 +18,35 @@ export function GlobeStage({
   selectedId,
   onSelect,
   hero = false,
+  onUnavailable,
 }: {
   places: PlaceDto[];
   selectedId?: string;
   onSelect: (id: string) => void;
   hero?: boolean;
+  onUnavailable?: () => void;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [supported, setSupported] = useState<boolean | null>(null);
   const [rotating, setRotating] = useState(false);
   const [reset, setReset] = useState(0);
-  const handleFailure = useCallback(() => setSupported(false), []);
+  const handleFailure = useCallback(() => {
+    setSupported(false);
+    onUnavailable?.();
+  }, [onUnavailable]);
   useEffect(() => {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("webgl2");
     setSupported(!!context);
+    if (!context) onUnavailable?.();
     context?.getExtension("WEBGL_lose_context")?.loseContext();
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     setRotating(!media.matches);
     const change = () => setRotating(!media.matches);
     media.addEventListener("change", change);
     return () => media.removeEventListener("change", change);
-  }, []);
+  }, [onUnavailable]);
   useEffect(() => {
     if (!container.current) return;
     const observer = new ResizeObserver(([entry]) =>

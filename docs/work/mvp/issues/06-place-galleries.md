@@ -27,3 +27,7 @@ See [verification and release gates](../../../validation.md). Unchecked criteria
 ## Comments
 
 Approved in discovery; implementation explicitly authorized.
+
+2026-11-06 refinement: clicking a landing postcard immediately opens its example
+place gallery on the current page, with no second click on the place-note link.
+This is verified from the photo area on desktop and mobile with reduced motion.

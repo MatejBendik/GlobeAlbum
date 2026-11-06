@@ -1,3 +1,4 @@
+import { navigationViewer } from "@/lib/navigation-viewer";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { readGlobe } from "@/lib/domain";
@@ -13,7 +14,7 @@ export default async function PublicGlobePage({
   if (!globe) notFound();
   return (
     <Suspense>
-      <Workspace globe={globe} />
+      <Workspace globe={globe} viewer={await navigationViewer()} />
     </Suspense>
   );
 }

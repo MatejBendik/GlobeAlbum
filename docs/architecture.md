@@ -19,6 +19,30 @@ The dynamically imported renderer loads separately and retains the complete
 HTML place list as a fallback. Postcard placement uses projected distances and
 a small display budget; this is visual deconfliction, not geographic clustering.
 
+## Presentation and navigation
+
+The workspace is a full-viewport globe with overlaid title/counts, primary owner
+actions and a nonmodal right-hand places panel. The panel is normally closed;
+WebGL fallback opens the complete HTML list. Escape restores focus to its trigger.
+Landing postcards reuse the same gallery immediately on selection.
+
+`next-themes` provides a light default and persisted explicit light/dark choice
+under `globealbum-theme`. Semantic CSS colors cover surfaces/text/controls and
+Three.js receives actual theme-specific material, point and atmosphere colors.
+Photos are never globally color-filtered. Reduced-motion preferences disable
+rotation/entrance motion; panel and menu transitions stay short.
+
+Server pages resolve minimal navigation-viewer data from the verified managed
+session. The account menu uses Radix keyboard/focus handling and performs sign-out
+through the existing Server Action. Settings use `/studio?settings=profile`;
+resource authorization stays inside the server operations. The public decorative
+land-dot JSON is explicitly public in the SDK middleware allowlist.
+
+Primary references verified 2026-11-06:
+https://github.com/pacocoursey/next-themes,
+https://www.radix-ui.com/primitives/docs/components/dropdown-menu,
+and installed Next.js layout/authentication guides.
+
 ## Data model
 
 `User → Globe → Place → Visit → Photo`

@@ -3,7 +3,15 @@ import { auth } from "@/lib/auth-server";
 export default auth.middleware({
   loginUrl: "/sign-in",
   // Resource-level authorization remains inside every API and Server Action.
-  publicRoutes: ["/", "/demo", "/u", "/sign-in", "/sign-up", "/api"],
+  publicRoutes: [
+    "/",
+    "/demo",
+    "/u",
+    "/sign-in",
+    "/sign-up",
+    "/api",
+    "/land-dots.json",
+  ],
 });
 export const config = {
   matcher: [

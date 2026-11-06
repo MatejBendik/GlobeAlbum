@@ -2,23 +2,35 @@ import Link from "next/link";
 import { ArrowRight, ArrowUpRight, MapPin, Camera, Send } from "lucide-react";
 import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
+import { navigationViewer } from "@/lib/navigation-viewer";
+import { AccountMenu } from "@/components/account-menu";
+import { ThemeToggle } from "@/components/theme-provider";
 import { HeroGlobe } from "@/components/hero-globe";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const viewer = await navigationViewer();
   return (
     <main className="home-page">
       <section className="home-hero">
         <header className="home-header">
-          <Brand dark />
+          <Brand />
           <nav aria-label="Main navigation">
-            <Link className="home-nav-link" href="/demo">
-              Explore an example <ArrowUpRight size={14} />
-            </Link>
-            <Button asChild variant="secondary">
-              <Link href="/sign-in">
-                Make it yours <ArrowRight />
-              </Link>
-            </Button>
+            <ThemeToggle />
+            {viewer ? (
+              <AccountMenu viewer={viewer} />
+            ) : (
+              <>
+                {" "}
+                <Link className="home-nav-link" href="/demo">
+                  Explore an example <ArrowUpRight size={14} />
+                </Link>
+                <Button asChild variant="secondary">
+                  <Link href="/sign-in">
+                    Make it yours <ArrowRight />
+                  </Link>
+                </Button>
+              </>
+            )}
           </nav>
         </header>
         <div className="hero-content">
@@ -41,8 +53,9 @@ export default function HomePage() {
             </p>
             <div className="hero-actions">
               <Button asChild size="lg" className="hero-primary">
-                <Link href="/sign-in">
-                  Create your globe <ArrowUpRight />
+                <Link href={viewer ? "/studio" : "/sign-in"}>
+                  {viewer ? "Open your globe" : "Create your globe"}{" "}
+                  <ArrowUpRight />
                 </Link>
               </Button>
               <Link href="/demo" className="hero-secondary">
@@ -104,8 +117,9 @@ export default function HomePage() {
       <footer className="home-footer">
         <Brand />
         <span>Made for a life well travelled.</span>
-        <Link href="/sign-in">
-          Start your collection <ArrowUpRight size={15} />
+        <Link href={viewer ? "/studio" : "/sign-in"}>
+          {viewer ? "Open your globe" : "Start your collection"}{" "}
+          <ArrowUpRight size={15} />
         </Link>
       </footer>
     </main>

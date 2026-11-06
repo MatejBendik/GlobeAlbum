@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -18,12 +19,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
         <a className="skip-link" href="#main-content">
           Skip to content
         </a>
-        <div id="main-content">{children}</div>
+        <ThemeProvider>
+          <div id="main-content">{children}</div>
+        </ThemeProvider>
       </body>
     </html>
   );

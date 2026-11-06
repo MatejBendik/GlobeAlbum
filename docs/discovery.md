@@ -23,6 +23,13 @@ map pin is the implementation choice for missing cities; search still uses
 GeoNames. Both app and Worker accept the two same-port HTTP loopback aliases
 when configured locally, while hosted origins retain exact matching.
 
+On 2026-11-06 the user additionally authorized a full-width centered globe,
+a closable floating places panel, direct landing-photo galleries, full light/dark
+switching (default light, including a white globe), and authenticated account
+navigation. This explicitly supersedes the original deferred-theme decision.
+The selected browser preference is local; no new account/database setting or
+service provisioning is required.
+
 The original discovery record below is retained for history, not as current requirements.
 
 ---

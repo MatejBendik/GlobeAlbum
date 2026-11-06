@@ -91,6 +91,7 @@ test("creates a private collection, adds a visit, publishes and hides it", async
   await expect(page.locator(".collection-stats")).toHaveText(
     "1 place in 1 country",
   );
+  await page.getByRole("button", { name: /My places/ }).click();
   await page.getByRole("button", { name: /Paris France/ }).click();
   await expect(
     page.getByRole("heading", { name: "Paris", exact: true }),
@@ -380,7 +381,8 @@ test("browses repeated-visit photos, edits a caption and deletes the account", a
     )
     .toBe(1);
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Profile settings" }).click();
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await page.getByRole("menuitem", { name: "Profile settings" }).click();
   await page
     .getByLabel(`Type ${owner.username} to confirm`)
     .fill(owner.username);
@@ -596,4 +598,94 @@ test("waits for the address form to become interactive before accepting a name",
   await expect(page.getByLabel("Your globe address")).toHaveValue(
     /^matej-bendik(?:-\d+)?$/,
   );
+});
+
+test("opens the landing photo directly and keeps places in a floating panel", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const marker = page
+    .locator('.hero-globe-composition .photo-marker[data-facing="true"]')
+    .first();
+  await expect(marker).toBeVisible();
+  await marker.click({ position: { x: 25, y: 20 } });
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(
+    page.getByRole("dialog").locator(".gallery-main-image"),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.goto("/demo");
+  await expect(page.locator(".place-sidebar")).toHaveCount(0);
+  await expect(
+    page.getByLabel("Place list", { exact: true }),
+  ).not.toBeVisible();
+  const stage = await page.locator(".globe-workspace").boundingBox();
+  expect(stage!.width).toBeGreaterThan(
+    (page.viewportSize()?.width || 0) * 0.95,
+  );
+  await page.getByRole("button", { name: /Places/ }).click();
+  const panel = page.getByLabel("Place list", { exact: true });
+  await expect(panel).toBeVisible();
+  await expect(panel.locator(".place-row")).toHaveCount(6);
+  await page.keyboard.press("Escape");
+  await expect(panel).not.toBeVisible();
+  await expect(page.getByRole("button", { name: /Places/ })).toBeFocused();
+});
+
+test("switches the whole globe between light and dark and remembers the preference", async ({
+  page,
+}, testInfo) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/demo");
+  const land = await page.request.get("/land-dots.json");
+  expect(land.headers()["content-type"]).toContain("application/json");
+  expect((await land.json()).length).toBeGreaterThan(100);
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator('[data-globe-theme="light"]')).toBeVisible();
+  await page.screenshot({
+    path: `.local/verification/light-${testInfo.project.name}.png`,
+  });
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator('[data-globe-theme="dark"]')).toBeVisible();
+  await page.screenshot({
+    path: `.local/verification/dark-${testInfo.project.name}.png`,
+  });
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.getByRole("button", { name: "Switch to light mode" }).click();
+  await page.getByRole("button", { name: /Places/ }).click();
+  await page.getByRole("button", { name: /Paris France/ }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("shows account navigation when signed in and signs out from the dropdown", async ({
+  page,
+  context,
+}) => {
+  await account(context, true);
+  await page.goto("/");
+  await expect(
+    page.getByRole("link", { name: "Make it yours" }),
+  ).not.toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Explore an example" }),
+  ).not.toBeVisible();
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await expect(page.getByRole("menuitem", { name: "My globe" })).toBeVisible();
+  await page.getByRole("menuitem", { name: "Profile settings" }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Profile settings" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await page.getByRole("menuitem", { name: "Sign out", exact: true }).click();
+  await expect(page).toHaveURL(TEST_ORIGIN + "/");
+  await expect(
+    page.getByRole("button", { name: "Account menu" }),
+  ).not.toBeVisible();
+  await expect(page.getByRole("link", { name: "Make it yours" })).toBeVisible();
 });

@@ -11,7 +11,14 @@ export default async function StudioPage() {
   if (!globe) redirect("/onboarding");
   return (
     <Suspense>
-      <Workspace globe={globe} owner />
+      <Workspace
+        globe={globe}
+        owner
+        viewer={{
+          displayName: globe.displayName,
+          profileHref: globe.published ? `/u/${globe.username}` : null,
+        }}
+      />
     </Suspense>
   );
 }

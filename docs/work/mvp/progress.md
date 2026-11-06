@@ -7,7 +7,11 @@ this checkpoint records execution state for resuming interrupted work.
 
 - Application and Worker TypeScript checks pass; production Next.js build passes.
 - 42 Vitest tests pass against the isolated local PostgreSQL test database.
-- 20 Playwright scenarios pass across desktop and Pixel Chromium emulation.
+- 26 Playwright scenarios pass across desktop and Pixel Chromium emulation.
+- Full-width centered globe, closable right-hand places list, direct landing-photo
+  galleries and signed-in account navigation are implemented and browser verified.
+- Light is the default, including the actual white globe; dark mode persists per
+  browser. Portrait camera framing fits the globe within a narrow viewport.
 - Globe URLs are generated from display names with a read-only preview; visits
   have one optional date, and missing cities are positioned on a map.
 - JPEG previews, removal/reselection and the localhost upload regression are covered.

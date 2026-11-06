@@ -9,7 +9,7 @@ Travelers need an engaging way to present selected travel memories geographicall
 
 ## Solution
 
-One personal globe per account, private until explicitly published. Open Google or email/password registration through managed Neon Auth leads to onboarding (immutable profile slug and editable display name), then the editor. A light English interface surrounds a dark dotted globe. Visitors explore photo postcards, dots, a complete place list and one combined gallery per place.
+One personal globe per account, private until explicitly published. Open Google or email/password registration through managed Neon Auth leads to onboarding (immutable profile slug and editable display name), then the editor. The English interface defaults to a light theme and white dotted globe; users can switch the entire app to dark mode. Visitors explore photo postcards, dots, a complete place list and one combined gallery per place.
 
 ## User Stories
 
@@ -70,6 +70,24 @@ closing the dialog. Revoke local preview URLs when no longer displayed.
 
 One logical marker per place. Bounded cover postcards plus dots limit visual overlap. Load compact marker DTOs first and gallery metadata on demand. Never preload originals. Retain the complete accessible place list, reduced-motion behavior, keyboard controls and WebGL fallback. Target iOS/Safari 17+ and current Chrome, Edge and Firefox. Test physical devices before claiming mobile validation.
 
+### Globe workspace and navigation refinement
+
+User-confirmed on 2026-11-06: the globe occupies the full workspace instead of
+sharing columns with a permanent left sidebar. The complete place list opens as
+a floating right panel, closes with its button or Escape, and opens automatically
+when WebGL is unavailable. Owner add/share actions remain directly available.
+
+Landing postcards open their place gallery directly. Signed-in navigation shows
+an account dropdown with My globe, Profile settings, public profile when published,
+and Sign out. Anonymous navigation retains the example/registration actions.
+Viewer identity is resolved server-side and includes no email or credentials.
+
+Light is the default for the page, controls, dialogs and actual Three.js globe
+material. Dark mode uses the same semantic palette and navigation. The explicit
+choice persists in this browser across reloads; it does not change publication,
+photo visibility or other users' appearance. Theme switching supersedes its
+original deferred status. Photographs retain their original colors.
+
 ### Photos
 
 Maximum input: 20,000,000 bytes. Accept static JPEG, PNG, WebP, HEIC; reject SVG, RAW, videos and animation. Authenticate -> verify Visit ownership -> atomically reserve account/shared capacity -> signed upload to private quarantine -> verify actual bytes/type/decoding -> create oriented metadata-free WebP thumbnail (up to 320px) and display variant (up to 2560px), without upscaling -> persist actual sizes and mark ready -> remove source. Original retention and EXIF location extraction are out of scope.
@@ -96,7 +114,7 @@ Beta success: at least 5 of the first 10 testers independently add 3 places and 
 
 ## Out of Scope
 
-Payments, paid plans, multiple globes, trips as entities, embedding, original backup, EXIF GPS suggestions, photo editing, manual photo ordering, per-photo visibility, live updates, trash, changing profile URL, invitation management, translations and theme switching.
+Payments, paid plans, multiple globes, trips as entities, embedding, original backup, EXIF GPS suggestions, photo editing, manual photo ordering, per-photo visibility, live updates, trash, changing profile URL, invitation management, translations.
 
 ## Further Notes
 

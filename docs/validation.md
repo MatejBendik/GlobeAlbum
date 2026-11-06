@@ -5,7 +5,7 @@ Checks below distinguish actual cloud behavior from test fixtures and emulation.
 
 ## Observed evidence
 
-Current local verification on 2026-11-06: 42 Vitest tests and all 20 Playwright
+Current local verification on 2026-11-06: 42 Vitest tests and all 26 Playwright
 scenarios (desktop/mobile Chromium) passed. This includes read-only generated
 addresses, cold-load readiness, automatic city coordinates, manual map selection,
 one optional visit date, local JPEG previews and selecting the same file after
@@ -41,6 +41,26 @@ Actual maintenance runs processed all 23 durable cleanup jobs after disposable
 users were deleted. The final queue was empty and accounted storage returned to
 zero. Unexpired reservations remained accounted until their capability/lease
 safety windows elapsed; scheduling deletion alone never releases bytes.
+
+## Globe workspace, appearance and navigation (2026-11-06)
+
+The full desktop/mobile suite passed all 26 scenarios after adding direct
+landing-photo galleries, the floating places panel, persisted light/dark mode,
+and session-aware navigation. Six focused globe/layout scenarios passed again
+after adjusting the perspective camera for portrait viewports. The 42 existing
+Vitest tests also passed. Light/dark screenshots were visually inspected on
+both desktop and Pixel emulation; physical-device/GPU checks remain separate.
+
+Coverage includes image-area postcard clicks (without the place-note link),
+opening/closing the complete right-hand list with Escape/focus restoration,
+WebGL fallback, a light default/white globe, switching the actual renderer to
+dark, preference restoration after reload, and account-menu settings/sign-out.
+Reduced motion makes animated postcard interaction deterministic during tests.
+
+Anonymous requests to `/land-dots.json` now return public decorative JSON instead
+of an Auth redirect. The theme test verifies its content type and land data;
+server-side resource authorization is unchanged. No cloud resources, database
+schema or publishing permissions changed in this UI refinement.
 
 ## Form and origin regression evidence (2026-11-06)
 

@@ -56,3 +56,17 @@ Primary references, checked 2026-11-05:
 
 Open checks: real Google callbacks, Neon runtime pooling, physical-device
 performance, and the HEIC provider error. See [release gates](../validation.md).
+
+## Appearance amendment (2026-11-06)
+
+The user explicitly added theme switching. `next-themes` 0.4.6 manages the
+browser preference and pre-paint theme attribute; semantic authored CSS handles
+both modes without filtering photographs. Radix Dropdown Menu 2.2.1 adds account
+menu keyboard/focus behavior using the existing component style system. These
+are UI dependencies, not additional services or server-data caches. A local
+handwritten theme store/menu could use fewer packages but adds hydration and
+focus-management work. The existing Next/React stack compiles with both.
+
+References checked 2026-11-06:
+https://github.com/pacocoursey/next-themes and
+https://www.radix-ui.com/primitives/docs/components/dropdown-menu.

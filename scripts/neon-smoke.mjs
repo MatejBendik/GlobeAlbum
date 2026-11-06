@@ -165,7 +165,8 @@ try {
   await visitor.close();
   await page.keyboard.press("Escape");
   const savedCookies = await context.cookies();
-  await page.getByRole("button", { name: "Profile settings" }).click();
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await page.getByRole("menuitem", { name: "Profile settings" }).click();
   await page.getByLabel(`Type ${slug} to confirm`).fill(slug);
   await page
     .getByRole("button", { name: "Delete account permanently" })

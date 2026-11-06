@@ -5,11 +5,16 @@ import Link from "next/link";
 import { ArrowUpRight, MapPin } from "lucide-react";
 import { demoGlobe } from "@/lib/demo";
 import { countryName } from "@/lib/countries";
+import { PlaceGallery } from "./place-gallery";
 import { GlobeStage } from "./globe-stage";
 
 export function HeroGlobe() {
   const [selected, setSelected] = useState("paris");
-  const select = useCallback((id: string) => setSelected(id), []);
+  const [preview, setPreview] = useState(false);
+  const select = useCallback((id: string) => {
+    setSelected(id);
+    setPreview(true);
+  }, []);
   const place = demoGlobe.places.find((item) => item.id === selected)!;
 
   return (
@@ -28,6 +33,17 @@ export function HeroGlobe() {
         </span>
         <ArrowUpRight size={16} />
       </Link>
+      {preview && (
+        <PlaceGallery
+          key={selected}
+          place={place}
+          owner={false}
+          demo
+          remaining={0}
+          onClose={() => setPreview(false)}
+          onChanged={() => {}}
+        />
+      )}
       <span className="hero-orbit-label">YOUR MEMORIES, IN ORBIT</span>
     </div>
   );

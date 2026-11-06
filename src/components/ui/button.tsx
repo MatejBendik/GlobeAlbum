@@ -9,9 +9,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "fancy-button text-white",
-        secondary:
-          "border border-neutral-200 bg-white text-neutral-800 shadow-xs hover:bg-neutral-50",
-        ghost: "text-neutral-600 hover:bg-neutral-100",
+        secondary: "button-secondary",
+        ghost: "button-ghost",
         destructive: "bg-red-600 text-white hover:bg-red-700",
       },
       size: {
@@ -24,7 +23,7 @@ const buttonVariants = cva(
     defaultVariants: { variant: "default", size: "default" },
   },
 );
-export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
+export type ButtonProps = React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & { asChild?: boolean };
 export function Button({
   className,

@@ -14,7 +14,7 @@ Explore saved places on the globe, as a complete end-to-end user behavior.
 
 ## Acceptance criteria
 
-- [x] Saved places render on a dark dotted globe with camera interaction.
+- [x] Saved places render on a theme-aware dotted globe with camera interaction.
 - [x] A complete keyboard-accessible list remains usable without WebGL.
 - [ ] Reduced motion and mobile interaction are covered.
 
@@ -27,3 +27,9 @@ See [verification and release gates](../../../validation.md). Unchecked criteria
 ## Comments
 
 Approved in discovery; implementation explicitly authorized.
+
+2026-11-06 user refinement: use the entire workspace for the centered globe;
+move the complete list into a floating right panel, closed initially and opened
+automatically without WebGL. Add persisted light/dark mode with an actual white
+light-mode material. Desktop/mobile interaction, Escape/focus handling, public
+land-dot loading and portrait framing are verified. Physical devices remain gated.

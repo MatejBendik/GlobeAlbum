@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -12,11 +12,15 @@ import {
   MapPin,
   Plus,
   Search,
-  Settings2,
   Share2,
   ImageIcon,
+  List,
+  X,
   LogOut,
 } from "lucide-react";
+import type { NavigationViewer } from "@/lib/navigation-viewer";
+import { AccountMenu } from "./account-menu";
+import { ThemeToggle } from "./theme-provider";
 import type { GlobeDto } from "@/lib/types";
 import { countryName } from "@/lib/countries";
 import {
@@ -42,24 +46,34 @@ export function Workspace({
   globe,
   owner = false,
   demo = false,
+  viewer = null,
 }: {
   globe: GlobeDto;
   owner?: boolean;
   demo?: boolean;
+  viewer?: NavigationViewer | null;
 }) {
   const router = useRouter(),
     params = useSearchParams();
   const [query, setQuery] = useState(""),
     [adding, setAdding] = useState(false),
-    [settings, setSettings] = useState(false),
+    [placesOpen, setPlacesOpen] = useState(false),
     [sharing, setSharing] = useState(false),
     [copied, setCopied] = useState(false),
     [error, setError] = useState(""),
     [pending, setPending] = useState(false);
+  const settings = owner && params.get("settings") === "profile";
+  const listButton = useRef<HTMLButtonElement>(null);
+  const openPlaces = useCallback(() => setPlacesOpen(true), []);
+  function closePlaces() {
+    setPlacesOpen(false);
+    listButton.current?.focus();
+  }
   const selected = params.get("place") ?? undefined;
   const active = globe.places.find((place) => place.id === selected);
   const choose = useCallback(
     (id: string) => {
+      setPlacesOpen(false);
       const next = new URL(window.location.href);
       next.searchParams.set("place", id);
       router.push(`${next.pathname}${next.search}`, { scroll: false });
@@ -70,6 +84,23 @@ export function Workspace({
   function close() {
     const next = new URL(window.location.href);
     next.searchParams.delete("place");
+    router.replace(`${next.pathname}${next.search}`, { scroll: false });
+  }
+  useEffect(() => {
+    if (!placesOpen || active || adding || settings || sharing) return;
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setPlacesOpen(false);
+        listButton.current?.focus();
+      }
+    };
+    document.addEventListener("keydown", keydown);
+    return () => document.removeEventListener("keydown", keydown);
+  }, [placesOpen, active, adding, settings, sharing]);
+  function closeSettings(open: boolean) {
+    if (open) return;
+    const next = new URL(window.location.href);
+    next.searchParams.delete("settings");
     router.replace(`${next.pathname}${next.search}`, { scroll: false });
   }
   const filtered = globe.places.filter((place) =>
@@ -116,14 +147,6 @@ export function Workspace({
                 <span>{globe.published ? "Published" : "Only you"}</span>
               </span>
               <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Profile settings"
-                onClick={() => setSettings(true)}
-              >
-                <Settings2 />
-              </Button>
-              <Button
                 aria-label="Share globe"
                 variant="secondary"
                 onClick={() => setSharing(true)}
@@ -144,134 +167,167 @@ export function Workspace({
                   : "A personal travel collection"}
               </span>
               <Button asChild variant="secondary">
-                <Link href={demo ? "/" : "/sign-in"}>
-                  {demo ? <ArrowLeft /> : <Plus />}
-                  {demo ? "Back home" : "Create your globe"}
+                <Link href={demo ? "/" : viewer ? "/studio" : "/sign-in"}>
+                  {demo ? <ArrowLeft /> : viewer ? <Globe2 /> : <Plus />}
+                  {demo
+                    ? "Back home"
+                    : viewer
+                      ? "My globe"
+                      : "Create your globe"}
                 </Link>
               </Button>
             </>
           )}
+          <ThemeToggle />
+          {viewer && <AccountMenu viewer={viewer} />}
         </div>
       </header>
       <div className="workspace-body">
-        <aside className="place-sidebar">
-          <div className="collection-profile">
+        <section className="globe-workspace" aria-label="Globe view">
+          <GlobeStage
+            places={globe.places}
+            selectedId={selected}
+            onSelect={choose}
+            onUnavailable={openPlaces}
+          />
+          <div className="collection-summary">
             <span className="eyebrow">
               {owner
-                ? "YOUR COLLECTION"
+                ? "YOUR GLOBE"
                 : demo
                   ? "EXAMPLE COLLECTION"
                   : "TRAVEL COLLECTION"}
             </span>
-            <div className="profile-heading">
-              <span className="profile-monogram">
-                {globe.displayName.slice(0, 1).toUpperCase()}
-              </span>
-              <h1>{globe.displayName}</h1>
-            </div>
+            <h1>{globe.displayName}</h1>
             <p className="collection-stats">
               <strong>{globe.places.length}</strong>{" "}
               {globe.places.length === 1 ? "place" : "places"} in{" "}
               <strong>{globe.countryCount}</strong>{" "}
               {globe.countryCount === 1 ? "country" : "countries"}
             </p>
-            <p className="stats-explanation">
-              Including separately listed territories.
-            </p>
           </div>
-          <div className="place-list-header">
-            <h2>Places</h2>
-            <span>{globe.places.length.toString().padStart(2, "0")}</span>
+          <div className="workspace-floating-actions">
+            <Button
+              ref={listButton}
+              variant="secondary"
+              aria-expanded={placesOpen}
+              aria-controls="places-panel"
+              onClick={() => setPlacesOpen((value) => !value)}
+            >
+              <List />
+              {owner ? "My places" : "Places"}
+              <span className="places-count">{globe.places.length}</span>
+            </Button>
           </div>
-          <div className="place-search">
-            <Search size={15} />
-            <input
-              aria-label="Search places"
-              placeholder="Search your places"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-            <kbd>⌘ K</kbd>
-          </div>
-          <nav className="place-list" aria-label="Visited places">
-            {filtered.map((place, index) => (
-              <button
-                key={place.id}
-                className={`place-row ${selected === place.id ? "is-selected" : ""}`}
-                onClick={() => choose(place.id)}
-              >
-                <span className="place-thumbnail">
-                  {place.coverUrl ? (
-                    <img src={place.coverUrl} alt="" loading="lazy" />
-                  ) : (
-                    <MapPin size={20} strokeWidth={1.2} />
-                  )}
-                </span>
-                <span className="place-row-copy">
-                  <strong>{place.name}</strong>
-                  <small>
-                    {countryName(place.country)} <span>·</span>{" "}
-                    {place.photoCount} photo{place.photoCount !== 1 ? "s" : ""}
-                  </small>
-                </span>
-                <span className="place-row-number">
-                  {(index + 1).toString().padStart(2, "0")}
-                </span>
-                <ArrowUpRight size={15} />
-              </button>
-            ))}
-          </nav>
-          {!filtered.length && (
-            <div className="empty-places">
-              <MapPin size={28} strokeWidth={1} />
-              <h3>
-                {query ? "No places found" : "Your story starts somewhere."}
-              </h3>
-              <p>
-                {query
-                  ? "Try another city or country."
-                  : owner
-                    ? "Add a city you have visited. Photos can come later."
-                    : "This collection is waiting for its first place."}
-              </p>
-              {owner && !query && (
-                <Button variant="secondary" onClick={() => setAdding(true)}>
-                  <Plus />
-                  Add your first place
-                </Button>
-              )}
-            </div>
-          )}
-          <div className="sidebar-footer">
-            <ImageIcon size={15} />
-            <span>
-              {globe.photoCount} {globe.photoCount === 1 ? "photo" : "photos"}
-              {owner ? ` / ${LIMITS.photos}` : ""}
-            </span>
-            {owner && (
-              <span className="photo-quota-bar">
-                <span
-                  style={{
-                    width: `${Math.min(100, ((globe.photoSlotsUsed ?? globe.photoCount) / LIMITS.photos) * 100)}%`,
-                  }}
-                />
-              </span>
-            )}
-          </div>
-        </aside>
-        <section className="globe-workspace" aria-label="Globe view">
-          <GlobeStage
-            places={globe.places}
-            selectedId={selected}
-            onSelect={choose}
-          />
           {globe.places.length === 0 && owner && (
             <div className="empty-globe-note">
               <span>THE FIRST PIN IS YOURS</span>
               <p>Where did your journey begin?</p>
+              <Button onClick={() => setAdding(true)}>
+                <Plus />
+                Add your first place
+              </Button>
             </div>
           )}
         </section>
+        {placesOpen && (
+          <aside
+            className="places-panel"
+            id="places-panel"
+            aria-label="Place list"
+          >
+            <div className="places-panel-top">
+              <h2>{owner ? "My places" : "Places"}</h2>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Close places"
+                onClick={closePlaces}
+              >
+                <X />
+              </Button>
+            </div>
+            <p className="stats-explanation">
+              Including separately listed territories.
+            </p>
+            <div className="place-search">
+              <Search size={15} />
+              <input
+                aria-label="Search places"
+                placeholder="Search your places"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+              <kbd>⌘ K</kbd>
+            </div>
+            <nav className="place-list" aria-label="Visited places">
+              {filtered.map((place, index) => (
+                <button
+                  key={place.id}
+                  className={`place-row ${selected === place.id ? "is-selected" : ""}`}
+                  onClick={() => choose(place.id)}
+                >
+                  <span className="place-thumbnail">
+                    {place.coverUrl ? (
+                      <img src={place.coverUrl} alt="" loading="lazy" />
+                    ) : (
+                      <MapPin size={20} strokeWidth={1.2} />
+                    )}
+                  </span>
+                  <span className="place-row-copy">
+                    <strong>{place.name}</strong>
+                    <small>
+                      {countryName(place.country)} <span>·</span>{" "}
+                      {place.photoCount} photo
+                      {place.photoCount !== 1 ? "s" : ""}
+                    </small>
+                  </span>
+                  <span className="place-row-number">
+                    {(index + 1).toString().padStart(2, "0")}
+                  </span>
+                  <ArrowUpRight size={15} />
+                </button>
+              ))}
+            </nav>
+            {!filtered.length && (
+              <div className="empty-places">
+                <MapPin size={28} strokeWidth={1} />
+                <h3>
+                  {query ? "No places found" : "Your story starts somewhere."}
+                </h3>
+                <p>
+                  {query
+                    ? "Try another city or country."
+                    : owner
+                      ? "Add a city you have visited. Photos can come later."
+                      : "This collection is waiting for its first place."}
+                </p>
+                {owner && !query && (
+                  <Button variant="secondary" onClick={() => setAdding(true)}>
+                    <Plus />
+                    Add your first place
+                  </Button>
+                )}
+              </div>
+            )}
+            <div className="places-panel-footer">
+              <ImageIcon size={15} />
+              <span>
+                {globe.photoCount} {globe.photoCount === 1 ? "photo" : "photos"}
+                {owner ? ` / ${LIMITS.photos}` : ""}
+              </span>
+              {owner && (
+                <span className="photo-quota-bar">
+                  <span
+                    style={{
+                      width: `${Math.min(100, ((globe.photoSlotsUsed ?? globe.photoCount) / LIMITS.photos) * 100)}%`,
+                    }}
+                  />
+                </span>
+              )}
+            </div>
+          </aside>
+        )}
       </div>
       {active && (
         <PlaceGallery
@@ -350,7 +406,7 @@ export function Workspace({
           </Button>
         </DialogContent>
       </Dialog>
-      <Dialog open={settings} onOpenChange={setSettings}>
+      <Dialog open={settings} onOpenChange={closeSettings}>
         <DialogContent>
           <DialogTitle className="dialog-title">Profile settings</DialogTitle>
           <DialogDescription className="dialog-description">
