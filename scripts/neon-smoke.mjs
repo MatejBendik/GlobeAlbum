@@ -96,6 +96,7 @@ try {
     .getByRole("button", { name: "Use map center", exact: true })
     .click();
   await dialog.getByRole("button", { name: "Add place", exact: true }).click();
+  await dialog.getByRole("button", { name: "Skip for now" }).click();
   await dialog.waitFor({ state: "hidden" });
   const places = await db.query(
     'select count(*)::int as total from "Place" p join "Globe" g on p."globeId"=g.id where g."userId"=$1',

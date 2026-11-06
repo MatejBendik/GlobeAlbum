@@ -34,7 +34,7 @@ import {
 } from "./ui/dialog";
 import { GlobeStage } from "./globe-stage";
 import { PlaceGallery } from "./place-gallery";
-import { PlaceForm } from "./place-form";
+import { AddPlaceDialog } from "./add-place-dialog";
 
 export function Workspace({
   globe,
@@ -330,22 +330,15 @@ export function Workspace({
           onChanged={changed}
         />
       )}
-      <Dialog open={adding} onOpenChange={setAdding}>
-        <DialogContent>
-          <DialogTitle className="dialog-title">
-            Somewhere you have been.
-          </DialogTitle>
-          <DialogDescription className="dialog-description">
-            Add a place to your globe. A little dot with a story behind it.
-          </DialogDescription>
-          <PlaceForm
-            onDone={() => {
-              setAdding(false);
-              changed();
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+      <AddPlaceDialog
+        open={adding}
+        onOpenChange={setAdding}
+        remaining={Math.max(
+          0,
+          LIMITS.photos - (globe.photoSlotsUsed ?? globe.photoCount),
+        )}
+        onChanged={changed}
+      />
       <Dialog open={sharing} onOpenChange={setSharing}>
         <DialogContent>
           <span className="dialog-icon">

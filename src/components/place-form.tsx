@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,7 +22,15 @@ type SearchPlace = {
   latitude: number;
   longitude: number;
 };
-export function PlaceForm({ onDone }: { onDone: () => void }) {
+export type AddedPlace = { placeId: string; visitId: string; name: string };
+export function PlaceForm({
+  onDone,
+  onBusyChange,
+}: {
+  onDone: (place: AddedPlace) => void;
+  onBusyChange?: (busy: boolean) => void;
+}) {
+  const listId = useId();
   const form = useForm<
     z.input<typeof placeSchema>,
     unknown,
@@ -43,14 +51,19 @@ export function PlaceForm({ onDone }: { onDone: () => void }) {
     [manual, setManual] = useState(false),
     [mapOpen, setMapOpen] = useState(false),
     [searchError, setSearchError] = useState(""),
+    [searching, setSearching] = useState(false),
+    [expanded, setExpanded] = useState(false),
+    [activeIndex, setActiveIndex] = useState(-1),
     [pending, setPending] = useState(false),
     [error, setError] = useState("");
   useEffect(() => {
     if (manual || query.length < 2) {
       setResults([]);
+      setSearching(false);
       return;
     }
     const controller = new AbortController();
+    setSearching(true);
     const timer = setTimeout(() => {
       fetch(`/api/places/search?q=${encodeURIComponent(query)}`, {
         signal: controller.signal,
@@ -58,11 +71,16 @@ export function PlaceForm({ onDone }: { onDone: () => void }) {
         .then(async (response) => {
           const value = await response.json();
           if (!response.ok) throw new Error(value.error);
+          if (controller.signal.aborted) return;
           setSearchError("");
           setResults(value.places);
+          setActiveIndex(-1);
         })
         .catch((error) => {
           if (error.name !== "AbortError") setSearchError(error.message);
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setSearching(false);
         });
     }, 350);
     return () => {
@@ -70,18 +88,33 @@ export function PlaceForm({ onDone }: { onDone: () => void }) {
       controller.abort();
     };
   }, [query, manual]);
+  useEffect(() => {
+    if (expanded && activeIndex >= 0)
+      document
+        .getElementById(`${listId}-${activeIndex}`)
+        ?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex, expanded, listId]);
   async function submit(value: z.output<typeof placeSchema>) {
     setPending(true);
+    onBusyChange?.(true);
     setError("");
     const result = await addPlaceAction(value);
     setPending(false);
+    onBusyChange?.(false);
     if (result.error) setError(result.error);
-    else onDone();
+    else if (result.placeId && result.visitId)
+      onDone({
+        placeId: result.placeId,
+        visitId: result.visitId,
+        name: value.name,
+      });
   }
   function choose(place: SearchPlace) {
     form.reset({ ...form.getValues(), ...place });
     setQuery("");
     setResults([]);
+    setExpanded(false);
+    setSearchError("");
     setManual(true);
     setMapOpen(false);
   }
@@ -94,10 +127,53 @@ export function PlaceForm({ onDone }: { onDone: () => void }) {
           <input
             id="place-name"
             autoComplete="off"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={expanded && results.length > 0}
+            aria-controls={expanded && results.length > 0 ? listId : undefined}
+            aria-activedescendant={
+              expanded && activeIndex >= 0
+                ? `${listId}-${activeIndex}`
+                : undefined
+            }
+            aria-describedby="place-search-status"
+            disabled={pending}
+            onFocus={() => setExpanded(true)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape" && expanded && results.length) {
+                event.preventDefault();
+                event.stopPropagation();
+                setExpanded(false);
+              } else if (
+                (event.key === "ArrowDown" || event.key === "ArrowUp") &&
+                results.length
+              ) {
+                event.preventDefault();
+                setExpanded(true);
+                setActiveIndex((index) =>
+                  event.key === "ArrowDown"
+                    ? (index + 1) % results.length
+                    : (index <= 0 ? results.length : index) - 1,
+                );
+              } else if (
+                event.key === "Enter" &&
+                expanded &&
+                activeIndex >= 0 &&
+                results[activeIndex]
+              ) {
+                event.preventDefault();
+                choose(results[activeIndex]);
+              }
+            }}
             placeholder="Where have you been?"
             {...form.register("name", {
+              onBlur: () => setExpanded(false),
               onChange: (event) => {
                 setQuery(event.target.value);
+                setResults([]);
+                setSearchError("");
+                setActiveIndex(-1);
+                setExpanded(true);
                 form.setValue("providerId", undefined);
                 form.setValue("latitude", Number.NaN);
                 form.setValue("longitude", Number.NaN);
@@ -107,11 +183,25 @@ export function PlaceForm({ onDone }: { onDone: () => void }) {
             })}
           />
         </div>
-        {results.length > 0 && (
-          <ul className="search-results">
-            {results.map((place) => (
-              <li key={place.providerId}>
-                <button type="button" onClick={() => choose(place)}>
+        {expanded && results.length > 0 && (
+          <ul
+            className="search-results"
+            id={listId}
+            role="listbox"
+            aria-label="City suggestions"
+          >
+            {results.map((place, index) => (
+              <li key={place.providerId} role="presentation">
+                <button
+                  type="button"
+                  role="option"
+                  id={`${listId}-${index}`}
+                  aria-selected={activeIndex === index}
+                  tabIndex={-1}
+                  onPointerDown={(event) => event.preventDefault()}
+                  onPointerMove={() => setActiveIndex(index)}
+                  onClick={() => choose(place)}
+                >
                   <MapPin size={16} />
                   <span>
                     {place.name}
@@ -130,11 +220,18 @@ export function PlaceForm({ onDone }: { onDone: () => void }) {
           <p className="form-error">{form.formState.errors.name.message}</p>
         )}
       </div>
+      <p id="place-search-status" className="field-hint" role="status">
+        {searching
+          ? "Finding cities…"
+          : searchError ||
+            (!manual && query.length >= 2 && !results.length
+              ? "No cities found. Choose the location on the map instead."
+              : !manual
+                ? "Start typing to see city suggestions."
+                : "")}
+      </p>
       {!manual && (
         <>
-          <p className="field-hint">
-            {searchError || "Search for a city, or enter a place yourself."}
-          </p>
           <Button
             type="button"
             variant="secondary"

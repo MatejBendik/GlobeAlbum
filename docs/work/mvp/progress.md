@@ -7,7 +7,16 @@ this checkpoint records execution state for resuming interrupted work.
 
 - Application and Worker TypeScript checks pass; production Next.js build passes.
 - 42 Vitest tests pass against the isolated local PostgreSQL test database.
-- 30 Playwright scenarios pass across desktop and Pixel Chromium emulation.
+- 35 Playwright scenarios pass across desktop and Pixel Chromium emulation;
+  the desktop-only pointer-hover case is intentionally skipped on mobile.
+- Shared primary-button hover no longer changes its fill, including login/signup.
+- City autocomplete is keyboard accessible and the user's GeoNames account is
+  configured locally. An opt-in browser run verified actual provider search and
+  selected-city persistence in isolated PostgreSQL.
+- Saving a place leads directly to optional photos in the same dialog. Separate
+  file selections and later batches append photos, with singular/plural copy.
+- Larger 130px postcards retain readable zoom dimensions; visual-only hover
+  enlargement and layer ordering preserve image clicks over dense dot markers.
 - Profile settings are a standalone authenticated `/settings` page, with persisted
   display-name editing, a fixed globe URL, private email and account controls.
   The former modal URL redirects; desktop/mobile and light/dark are verified.

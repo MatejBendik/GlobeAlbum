@@ -74,6 +74,19 @@ CLI. It never resets the remote database. Test artifacts remain ignored; it
 removes temporary credentials after successful provider cleanup. This is separate
 from `npm test` and Playwright's isolated local service fakes.
 
+To verify real GeoNames autocomplete without touching the Neon production data,
+start the isolated local test database and opt in explicitly:
+
+```sh
+GLOBEALBUM_LIVE_GEONAMES_USERNAME=your_username npm run test:e2e -- --project=desktop -g "finds city coordinates"
+```
+
+This routes the browser's search through the application to the actual GeoNames
+service and persists the selected city in local `*_test` PostgreSQL. Auth and
+photo processing remain localhost test doubles. Normal browser runs leave this
+variable unset and use deterministic search fixtures. The provided account was
+verified successfully on 2026-11-06; no paid GeoNames plan was activated.
+
 ## Managed identity deletion
 
 Application deletion immediately hides/removes ownership data and leaves a

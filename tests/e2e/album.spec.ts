@@ -1,4 +1,9 @@
-import { test, expect, type BrowserContext } from "@playwright/test";
+import {
+  test,
+  expect,
+  type BrowserContext,
+  type Locator,
+} from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { PrismaPg } from "@prisma/adapter-pg";
@@ -87,6 +92,10 @@ test("creates a private collection, adds a visit, publishes and hides it", async
     .getByRole("button", { name: "Use map center", exact: true })
     .click();
   await add.getByRole("button", { name: "Add place", exact: true }).click();
+  await expect(
+    add.getByRole("heading", { name: "Add photos to Paris" }),
+  ).toBeVisible();
+  await add.getByRole("button", { name: "Skip for now" }).click();
   await expect(page.getByRole("dialog")).not.toBeVisible();
   await expect(page.locator(".collection-stats")).toHaveText(
     "1 place in 1 country",
@@ -174,7 +183,7 @@ test("validates file size through the form before creating an upload", async ({
   });
   await expect(page.getByRole("alert")).toContainText("20 MB");
   await page
-    .getByRole("button", { name: "Upload photos", exact: true })
+    .getByRole("button", { name: /^Upload photos?$/, exact: true })
     .click();
   expect(uploadRequests).toBe(0);
   expect(
@@ -238,7 +247,7 @@ test("uploads a batch, cancels a transfer and retries a failed file", async ({
     })),
   );
   await page
-    .getByRole("button", { name: "Upload photos", exact: true })
+    .getByRole("button", { name: /^Upload photos?$/, exact: true })
     .click();
   try {
     await blocked;
@@ -504,7 +513,7 @@ test("removes a failed JPEG and selects the same file again without closing", as
     page.getByText("1 photo selected", { exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Upload photos", exact: true })
+    .getByRole("button", { name: /^Upload photos?$/, exact: true })
     .click();
   await expect(
     page.getByText("This request origin is not allowed.", { exact: true }),
@@ -521,7 +530,7 @@ test("removes a failed JPEG and selects the same file again without closing", as
     page.getByText("1 photo selected", { exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("button", { name: "Upload photos", exact: true })
+    .getByRole("button", { name: /^Upload photos?$/, exact: true })
     .click();
   await expect(
     page.getByText("Added to your globe", { exact: true }),
@@ -533,43 +542,76 @@ test("finds city coordinates automatically and accepts one optional visit date",
   context,
 }) => {
   const owner = await account(context, true);
-  await page.route("**/api/places/search?**", (route) =>
-    route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        places: [
-          {
-            name: "Krompachy",
-            providerId: "724443",
-            country: "SK",
-            region: "Košice",
-            latitude: 48.9145,
-            longitude: 20.8751,
-          },
-        ],
+  if (!process.env.GLOBEALBUM_LIVE_GEONAMES_USERNAME)
+    await page.route("**/api/places/search?**", (route) =>
+      route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({
+          places: [
+            {
+              name: "Krompachy",
+              providerId: "724443",
+              country: "SK",
+              region: "Košice",
+              latitude: 48.9145,
+              longitude: 20.8751,
+            },
+          ],
+        }),
       }),
-    }),
-  );
+    );
   await page.goto("/studio");
   await page.getByRole("button", { name: "Add place", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("City or town").fill("Krompachy");
-  await dialog.getByRole("button", { name: /Krompachy.*Košice/ }).click();
+  await expect(
+    dialog.getByRole("listbox", { name: "City suggestions" }),
+  ).toBeVisible();
+  await dialog
+    .getByRole("combobox", { name: "City or town" })
+    .press("ArrowDown");
+  await dialog.getByRole("combobox", { name: "City or town" }).press("Enter");
   await expect(dialog.locator('input[type="number"]')).toHaveCount(0);
   await expect(dialog.locator('input[type="date"]')).toHaveCount(1);
   await expect(dialog.getByLabel("Visit date", { exact: false })).toHaveValue(
     "",
   );
   await dialog.getByRole("button", { name: "Add place", exact: true }).click();
+  await expect(
+    dialog.getByRole("heading", { name: "Add photos to Krompachy" }),
+  ).toBeVisible();
+  await dialog.getByLabel("Choose photos").setInputFiles({
+    name: "new-place.png",
+    mimeType: "image/png",
+    buffer: readFileSync("tests/fixtures/tiny.png"),
+  });
+  await dialog
+    .getByRole("button", { name: "Upload photo", exact: true })
+    .click();
+  await expect(
+    dialog.getByText("Added to your globe", { exact: true }),
+  ).toBeVisible();
+  await dialog.getByRole("button", { name: "Done", exact: true }).click();
   await expect(dialog).not.toBeVisible();
   const place = await db.place.findFirstOrThrow({
     where: { name: "Krompachy", globe: { userId: owner.id } },
     include: { visits: true },
   });
-  expect(place.latitude).toBe(48.9145);
-  expect(place.longitude).toBe(20.8751);
+  expect(place.latitude).toBeCloseTo(48.9145, 3);
+  expect(place.longitude).toBeCloseTo(20.8751, 3);
+  expect(place.sourceCountry).toBe("SK");
+  expect(place.providerId).toMatch(/^\d+$/);
+  if (process.env.GLOBEALBUM_LIVE_GEONAMES_USERNAME)
+    console.info(
+      "PASS live GeoNames search, keyboard selection and PostgreSQL persistence",
+    );
   expect(place.visits[0].startDate).toBeNull();
   expect(place.visits[0].endDate).toBeNull();
+  expect(
+    await db.photo.count({
+      where: { visitId: place.visits[0].id, status: "READY" },
+    }),
+  ).toBe(1);
 });
 
 test("waits for the address form to become interactive before accepting a name", async ({
@@ -774,4 +816,196 @@ test("requires sign-in and onboarding before opening settings", async ({
   await account(context);
   await page.goto("/settings");
   await expect(page).toHaveURL(TEST_ORIGIN + "/onboarding");
+});
+
+test("adds separate photo selections together instead of replacing the first", async ({
+  page,
+  context,
+}) => {
+  const owner = await account(context, true);
+  const globe = await db.globe.findUniqueOrThrow({
+    where: { userId: owner.id },
+  });
+  const place = await db.place.create({
+    data: {
+      globeId: globe.id,
+      name: "Paris",
+      sourceCountry: "FR",
+      latitude: 48.85,
+      longitude: 2.35,
+      visits: { create: {} },
+    },
+  });
+  await page.goto(`/studio?place=${place.id}`);
+  await page.getByRole("button", { name: "Add photos", exact: true }).click();
+  const buffer = readFileSync("tests/fixtures/tiny.png");
+  await page
+    .getByLabel("Choose photos")
+    .setInputFiles({ name: "first.png", mimeType: "image/png", buffer });
+  await expect(page.getByText("first.png", { exact: true })).toBeVisible();
+  await page
+    .getByLabel("Choose photos")
+    .setInputFiles({ name: "second.png", mimeType: "image/png", buffer });
+  await expect(page.getByText("first.png", { exact: true })).toBeVisible();
+  await expect(page.getByText("second.png", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("2 photos selected", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Upload photos", exact: true })
+    .click();
+  await expect(
+    page.getByText("Added to your globe", { exact: true }),
+  ).toHaveCount(2);
+  await page
+    .getByLabel("Choose photos")
+    .setInputFiles({ name: "third.png", mimeType: "image/png", buffer });
+  await page.getByRole("button", { name: "Upload photo", exact: true }).click();
+  await expect(
+    page.getByText("Added to your globe", { exact: true }),
+  ).toHaveCount(3);
+  expect(
+    await db.photo.count({
+      where: { visit: { placeId: place.id }, status: "READY" },
+    }),
+  ).toBe(3);
+});
+
+test("keeps primary button fills stable throughout hover", async ({
+  page,
+  context,
+}, testInfo) => {
+  test.setTimeout(90_000);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  test.skip(
+    testInfo.project.name === "mobile",
+    "Pointer hover is verified on desktop.",
+  );
+  async function stable(button: Locator) {
+    await expect(button).toBeVisible();
+    const normal = await button.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { color: style.backgroundColor, image: style.backgroundImage };
+    });
+    await button.hover();
+    const frames = await button.evaluate(async (element) => {
+      const frames = [];
+      for (let i = 0; i < 18; i++) {
+        await new Promise(requestAnimationFrame);
+        const style = getComputedStyle(element);
+        frames.push({
+          color: style.backgroundColor,
+          image: style.backgroundImage,
+        });
+      }
+      return frames;
+    });
+    expect(
+      frames.every((frame) => JSON.stringify(frame) === JSON.stringify(normal)),
+    ).toBe(true);
+  }
+  const owner = await account(context, true);
+  for (const theme of ["light", "dark"]) {
+    await page.goto("/studio");
+    if (theme === "dark")
+      await page.getByRole("button", { name: "Switch to dark mode" }).click();
+    await stable(page.getByRole("button", { name: "Add your first place" }));
+    await stable(page.getByRole("button", { name: "Add place", exact: true }));
+    await page.getByRole("button", { name: "Add place", exact: true }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("City or town").fill("Paris");
+    await dialog
+      .getByRole("button", { name: "Choose location on a map" })
+      .click();
+    await dialog.getByLabel("Country or territory").selectOption("FR");
+    await dialog.getByRole("button", { name: "Use map center" }).click();
+    await stable(
+      dialog.getByRole("button", { name: "Add place", exact: true }),
+    );
+    await dialog
+      .getByRole("button", { name: "Add place", exact: true })
+      .click();
+    await dialog.getByLabel("Choose photos").setInputFiles({
+      name: `${theme}.png`,
+      mimeType: "image/png",
+      buffer: readFileSync("tests/fixtures/tiny.png"),
+    });
+    await stable(
+      dialog.getByRole("button", { name: "Upload photo", exact: true }),
+    );
+    await dialog.getByLabel("Choose photos").setInputFiles({
+      name: `${theme}-more.png`,
+      mimeType: "image/png",
+      buffer: readFileSync("tests/fixtures/tiny.png"),
+    });
+    await stable(
+      dialog.getByRole("button", { name: "Upload photos", exact: true }),
+    );
+    await page.screenshot({
+      path: `.local/verification/add-place-photos-${theme}.png`,
+    });
+    await dialog.getByRole("button", { name: "Skip for now" }).click();
+    await page.goto("/settings");
+    await stable(page.getByRole("button", { name: "Save profile" }));
+    // Keep the next iteration's globe empty without changing the session.
+    await db.place.deleteMany({ where: { globe: { userId: owner.id } } });
+  }
+  await context.clearCookies();
+  for (const path of ["/sign-in", "/sign-up"]) {
+    await page.goto(path);
+    for (const theme of ["light", "dark"]) {
+      await page.evaluate((value) => {
+        localStorage.setItem("globealbum-theme", value);
+      }, theme);
+      await page.reload();
+      await stable(page.getByRole("button", { name: "Continue with Google" }));
+      await stable(
+        page.getByRole("button", {
+          name: path === "/sign-in" ? "Sign in with email" : "Create account",
+          exact: true,
+        }),
+      );
+    }
+  }
+});
+
+test("keeps postcards readable at zoom limits and enlarges them on hover", async ({
+  page,
+}, testInfo) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/demo");
+  const marker = page.locator('.photo-marker[data-facing="true"]').first();
+  await expect(marker).toBeVisible();
+  const initial = await marker.boundingBox();
+  expect(initial!.width).toBeGreaterThanOrEqual(120);
+  const canvas = page.locator(".globe-stage canvas").first();
+  const canvasBounds = await canvas.boundingBox();
+  await page.mouse.move(
+    canvasBounds!.x + 10,
+    canvasBounds!.y + canvasBounds!.height / 2,
+  );
+  await page.mouse.wheel(0, -12000);
+  await expect
+    .poll(async () => (await marker.boundingBox())?.width ?? 0)
+    .toBeGreaterThanOrEqual(120);
+  await page.screenshot({
+    path: `.local/verification/postcards-close-${testInfo.project.name}.png`,
+  });
+  await page.mouse.wheel(0, 12000);
+  await expect
+    .poll(async () => (await marker.boundingBox())?.width ?? 0)
+    .toBeGreaterThanOrEqual(120);
+  if (testInfo.project.name === "desktop") {
+    await page.mouse.move(5, 80);
+    await expect(marker.locator(".marker-card")).toHaveCSS("scale", "1");
+    const image = marker.locator("img");
+    const before = await image.boundingBox();
+    await marker.hover();
+    await expect
+      .poll(async () => (await image.boundingBox())?.width ?? 0)
+      .toBeGreaterThan(before!.width * 1.02);
+  }
+  await page.screenshot({
+    path: `.local/verification/postcards-${testInfo.project.name}.png`,
+  });
 });

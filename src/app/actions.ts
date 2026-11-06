@@ -64,8 +64,14 @@ export async function onboardingAction(
   if (result.error) return result;
   redirect("/studio");
 }
-export async function addPlaceAction(value: unknown) {
-  return execute((id) => domain.addPlace(id, value));
+export async function addPlaceAction(
+  value: unknown,
+): Promise<ActionResult & { placeId?: string; visitId?: string }> {
+  let created: { placeId: string; visitId: string } | undefined;
+  const result = await execute(async (id) => {
+    created = await domain.addPlace(id, value);
+  });
+  return result.success ? { ...result, ...created } : result;
 }
 export async function addVisitAction(value: unknown) {
   return execute((id) => domain.addVisit(id, value));

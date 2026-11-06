@@ -28,6 +28,12 @@ See [verification and release gates](../../../validation.md). Unchecked criteria
 
 Approved in discovery; implementation explicitly authorized.
 
+2026-11-06 postcard refinement: 130px frames replace the original 65px frames,
+with increased projected spacing and hover/focus enlargement. A stable button
+contains the animated visual frame. Photos render above dot hit targets, while
+keyboard-focused dots can still be reached above the photo layer. The complete
+place list remains the dense-collection fallback.
+
 2026-11-06 user refinement: use the entire workspace for the centered globe;
 move the complete list into a floating right panel, closed initially and opened
 automatically without WebGL. Add persisted light/dark mode with an actual white

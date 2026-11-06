@@ -60,7 +60,7 @@ export default defineConfig({
         NEON_AUTH_COOKIE_SECRET: TEST_SESSION_SECRET,
         IMAGE_WORKER_URL: "http://127.0.0.1:8787",
         IMAGE_WORKER_SECRET: TEST_SESSION_SECRET,
-        GEONAMES_USERNAME: "",
+        GEONAMES_USERNAME: process.env.GLOBEALBUM_LIVE_GEONAMES_USERNAME ?? "",
       },
     },
   ],

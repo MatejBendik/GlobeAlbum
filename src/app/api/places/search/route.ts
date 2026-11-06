@@ -6,6 +6,7 @@ import { locked } from "@/lib/domain";
 import { COUNTRY_CODES } from "@/lib/countries";
 import { json, handleError } from "@/lib/http";
 const resultSchema = z.object({
+  status: z.object({ value: z.number(), message: z.string() }).optional(),
   geonames: z
     .array(
       z.object({
@@ -63,6 +64,11 @@ export async function GET(request: Request) {
         503,
       );
     const result = resultSchema.parse(await response.json());
+    if (result.status)
+      throw new AppError(
+        "Place search is temporarily unavailable. Choose the location on the map or try again later.",
+        503,
+      );
     return json({
       places: result.geonames
         .filter((place) => COUNTRY_CODES.has(place.countryCode))

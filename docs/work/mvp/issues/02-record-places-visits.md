@@ -27,3 +27,8 @@ See [verification and release gates](../../../validation.md). Unchecked criteria
 ## Comments
 
 Approved in discovery; implementation explicitly authorized.
+
+2026-11-06 UX refinement: saving a place returns its newly created visit ID and
+advances the same dialog directly to optional photo upload. Skipping preserves
+the place and no-photo visit. The new-visit upload path is browser tested rather
+than rediscovering a marker after saving.

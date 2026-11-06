@@ -15,8 +15,8 @@ export function choosePostcards(markers: ProjectedMarker[], maximum: number) {
     if (
       placed.some(
         (other) =>
-          Math.abs(other.x - marker.x) < 88 &&
-          Math.abs(other.y - marker.y) < 106,
+          Math.abs(other.x - marker.x) < 164 &&
+          Math.abs(other.y - marker.y) < 190,
       )
     )
       continue;

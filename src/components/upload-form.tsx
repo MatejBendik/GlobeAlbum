@@ -93,7 +93,9 @@ export function UploadForm({
     mode: "onChange",
   });
   const [items, setItems] = useState<Item[]>([]),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [batchSize, setBatchSize] = useState(0);
+  const selectedFiles = form.watch("files");
   const controllers = useRef(new Map<string, AbortController>()),
     requests = useRef(new Map<string, XMLHttpRequest>()),
     remotes = useRef(new Map<string, Remote>()),
@@ -201,6 +203,7 @@ export function UploadForm({
     }
   }
   async function submit({ files }: z.infer<typeof schema>) {
+    setBatchSize(files.length);
     setBusy(true);
     onBusyChange?.(true);
     const added = files.map((file) => ({
@@ -258,7 +261,10 @@ export function UploadForm({
                 onBlur={field.onBlur}
                 disabled={busy || remaining <= 0}
                 onChange={(event) => {
-                  field.onChange(Array.from(event.target.files ?? []));
+                  field.onChange([
+                    ...field.value,
+                    ...Array.from(event.target.files ?? []),
+                  ]);
                   event.currentTarget.value = "";
                 }}
               />
@@ -274,13 +280,13 @@ export function UploadForm({
             {fileError}
           </p>
         )}
-        {form.watch("files").length > 0 && (
+        {selectedFiles.length > 0 && (
           <div className="selected-photos">
             <p className="text-sm">
-              {form.watch("files").length}{" "}
-              {form.watch("files").length === 1 ? "photo" : "photos"} selected
+              {selectedFiles.length}{" "}
+              {selectedFiles.length === 1 ? "photo" : "photos"} selected
             </p>
-            {form.watch("files").map((file, index) => (
+            {selectedFiles.map((file, index) => (
               <div
                 className="selected-photo"
                 key={`${file.name}:${file.lastModified}:${index}`}
@@ -308,10 +314,16 @@ export function UploadForm({
         )}
         <Button
           type="submit"
-          disabled={busy || remaining <= 0 || !form.watch("files").length}
+          disabled={busy || remaining <= 0 || !selectedFiles.length}
         >
           {busy ? <Loader2 className="animate-spin" /> : <UploadCloud />}
-          {busy ? "Uploading photos…" : "Upload photos"}
+          {busy
+            ? batchSize === 1
+              ? "Uploading photo…"
+              : "Uploading photos…"
+            : selectedFiles.length === 1
+              ? "Upload photo"
+              : "Upload photos"}
         </Button>
       </form>
       {items.length > 0 && (
@@ -331,6 +343,7 @@ export function UploadForm({
                     disabled={busy}
                     aria-label={`Retry ${item.file.name}`}
                     onClick={async () => {
+                      setBatchSize(1);
                       setBusy(true);
                       onBusyChange?.(true);
                       try {

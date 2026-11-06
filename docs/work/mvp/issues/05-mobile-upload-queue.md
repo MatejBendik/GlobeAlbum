@@ -33,3 +33,9 @@ previews, and remove failed rows cleanly before reselecting the same file.
 Desktop/mobile regressions pass. Actual JPEG upload and conversion from the
 localhost origin also passed against the deployed Cloudflare Worker; its fixtures
 were physically removed. HEIC remains a separate release blocker.
+
+2026-11-06 selection refinement: separate file-picker selections append to the
+existing RHF array; Zod checks the combined pending selection. The regression
+uploads two separately selected photos, then a later one-photo batch, and checks
+that all three ready Photo records remain. Upload labels use singular/plural
+according to selection/batch size. Existing cancellation/retry coverage remains.

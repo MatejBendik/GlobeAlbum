@@ -39,6 +39,33 @@ Published GeoNames free limits are 10,000 credits/day/application and 1,000/hour
 most services consume one credit per request. Treat these as shared provider
 limits in addition to the app's per-user throttle.
 
+## Implementation follow-up — 2026-11-06
+
+The user's own GeoNames username is configured in ignored `.env.local`. A direct
+HTTPS prefix search for `Kosice` returned HTTP 200 and three populated-place
+results, including Slovakia. The application retains the enabled-account,
+eight-result and per-user throttling requirements. A provider `status` error
+inside an HTTP 200 response is treated as unavailable, rather than an empty
+successful search. Autocomplete supports keyboard selection and cancels stale
+requests. Missing-place map selection remains available.
+
+The subsequent opt-in browser test called the real service through the app's
+authenticated search route, chose Krompachy with arrow keys/Enter, persisted
+the selected provider ID/country/coordinates in local PostgreSQL and reached the
+new visit's photo step. Auth and storage used guarded localhost test doubles.
+
+The installed Three.js CSS2DRenderer writes each marker's inline `transform` for
+screen positioning. A stable button wraps a visual postcard; independent `scale`
+and `rotate` on that child avoid competing with positioning or moving the hit target.
+This is a source-code observation, not a claim that postcards scale in world
+units. Their CSS-pixel dimensions remain fixed as the camera zooms.
+
+Primary references checked 2026-11-06:
+
+- https://www.geonames.org/export/geonames-search.html
+- https://github.com/vasturiano/react-globe.gl
+- https://github.com/mrdoob/three.js/blob/r187/examples/jsm/renderers/CSS2DRenderer.js
+
 Primary references:
 
 - https://magicui.design/docs/components/globe

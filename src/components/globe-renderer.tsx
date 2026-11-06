@@ -120,15 +120,19 @@ export default function GlobeRenderer({
       button.className = `globe-marker dot-marker ${selectedId === place.id ? "marker-selected" : ""}`;
       button.setAttribute("aria-label", `Open ${place.name} gallery`);
       if (place.coverUrl) {
+        // Keep the geographic hit target steady while its postcard enlarges.
+        const card = document.createElement("span");
+        card.className = "marker-card";
         const img = document.createElement("img");
         img.alt = "";
         img.loading = "lazy";
         img.draggable = false;
-        button.append(img);
+        card.append(img);
         const label = document.createElement("span");
         label.className = "marker-label";
         label.textContent = place.name;
-        button.append(label);
+        card.append(label);
+        button.append(card);
       }
       {
         const dot = document.createElement("span");

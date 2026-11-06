@@ -16,7 +16,7 @@ describe("dense place markers", () => {
   it("caps postcard count even when no markers overlap", () => {
     const markers = Array.from({ length: 100 }, (_, i) => ({
       id: String(i),
-      x: i * 100,
+      x: i * 200,
       y: 0,
       selected: false,
     }));

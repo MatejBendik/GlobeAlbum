@@ -26,6 +26,18 @@ actions and a nonmodal right-hand places panel. The panel is normally closed;
 WebGL fallback opens the complete HTML list. Escape restores focus to its trigger.
 Landing postcards reuse the same gallery immediately on selection.
 
+Place creation returns only the saved place/visit identifiers to the client.
+A two-step dialog passes the new visit ID directly to the existing upload flow,
+preserving no-photo visits when the user skips. File selection appends to the
+React Hook Form array, so Zod validates the complete pending selection. Successful
+batches remain in the queue while later batches add independent Photo records.
+
+Postcards use a fixed 130px width with CSS `scale`/`rotate` on a visual child;
+Three.js CSS2DRenderer owns the positioning `transform`. Hover/focus enlarges the
+frame without moving its stable button hit target. Projected overlap thresholds
+include the enlarged footprint. Primary-button hover uses the same gradient as
+its resting state to avoid a gradient-to-solid transition flash.
+
 `next-themes` provides a light default and persisted explicit light/dark choice
 under `globealbum-theme`. Semantic CSS colors cover surfaces/text/controls and
 Three.js receives actual theme-specific material, point and atmosphere colors.

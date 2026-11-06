@@ -5,8 +5,9 @@ Checks below distinguish actual cloud behavior from test fixtures and emulation.
 
 ## Observed evidence
 
-Current local verification on 2026-11-06: 42 Vitest tests and all 30 Playwright
-scenarios (desktop/mobile Chromium) passed. This includes read-only generated
+Current local verification on 2026-11-06: 42 Vitest tests and 35 Playwright
+scenarios (desktop/mobile Chromium) passed. One desktop-only pointer-hover
+scenario is intentionally skipped under mobile emulation. This includes read-only generated
 addresses, cold-load readiness, automatic city coordinates, manual map selection,
 one optional visit date, local JPEG previews and selecting the same file after
 removing a failed upload. Application and Worker type checks passed.
@@ -50,6 +51,38 @@ identical fill/shadow on hover, including its signed-in “Open your globe” la
 Production build passed. Focused browser checks and screenshots covered light
 and dark at desktop/mobile widths, comparing hover styles over 12 frames per
 variant. This CSS-only follow-up did not rerun the domain/full browser suites.
+
+## Place/photo UX and shared hover follow-up (2026-11-06)
+
+The full browser run finished with `35 passed (4.4m)`, one intentional mobile
+pointer-hover skip and no failures. The regression loop first reproduced both
+the lost first file selection and changing primary-button fill during hover.
+Fixes append the RHF file array and retain the same gradient in resting/hover
+states. Eighteen-frame samples verify unchanged fills in light/dark on owner,
+profile, single/batch upload, Google sign-in and email sign-in/signup controls.
+
+Separate file selections upload two photos, followed by a later one-photo batch;
+the test verifies three ready PostgreSQL Photo records. The city-entry journey
+uses keyboard autocomplete, saves the place, immediately uploads to its new visit
+inside the same dialog and verifies the persisted association. Skipping the photo
+step preserves a no-photo visit in the main account journey.
+
+Globe tests check readable 130px postcard hit targets at both zoom extremes and
+visual enlargement on hover. A stable button wraps the enlarged frame; this
+prevents a moving hit area from losing image clicks. Photo layering prevents dot
+targets from blocking postcard interaction at maximum zoom-out. Landing-image
+clicks, dense-marker selection and the complete place-list fallback still pass.
+Light/dark upload-dialog and desktop/mobile globe screenshots were inspected.
+
+An additional opt-in desktop run with
+`GLOBEALBUM_LIVE_GEONAMES_USERNAME` called the actual GeoNames service through
+the app, selected Krompachy by keyboard and persisted its provider ID, country
+and coordinates in isolated local PostgreSQL. That live-service case passed;
+Auth and photo conversion remained guarded localhost doubles. The normal suite
+uses deterministic search fixtures. No new real Cloudflare processing, real
+Google consent or physical-device result is claimed by this UX change.
+The 42 Vitest tests also passed after the marker-spacing update. The production
+build, including TypeScript, completed successfully without database migrations.
 
 ## Standalone profile settings (2026-11-06)
 
@@ -187,7 +220,7 @@ Sources verified 2026-11-05:
 - [x] Verify real Neon pooled runtime reads/writes and direct migrations.
 - [ ] Measure Neon connection/concurrency behavior under representative hosted load.
 - [ ] Resolve/accept the managed identity cleanup operating requirement and verify production SMTP, email verification and password recovery.
-- [ ] Enable/test the user's GeoNames account and attribution with live search.
+- [x] Enable/test the user's GeoNames account and attribution with live search.
 - [ ] Exercise iPhone HEIC/JPEG, orientation, GPS/EXIF removal, a near-20 MB file,
       invalid/corrupt files, WebP/APNG animation rejection, interrupted transfers,
       cancellation and retry on representative physical devices.

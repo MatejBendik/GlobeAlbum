@@ -38,6 +38,14 @@ choice; changing authentication credentials is not added to scope.
 
 The original discovery record below is retained for history, not as current requirements.
 
+Additional user-confirmed UX refinements (2026-11-06): remove the primary-button
+hover flash throughout the app, including sign-in/sign-up; autocomplete city
+search; advance directly from saving a place to optional photo upload in the same
+dialog; append file selections instead of replacing them; use singular/plural
+upload labels; double postcard size and enlarge postcards on hover. The user
+provided their GeoNames username, now configured only in ignored local runtime
+configuration. A direct live GeoNames query returned cities successfully.
+
 ---
 
 # GlobeAlbum discovery

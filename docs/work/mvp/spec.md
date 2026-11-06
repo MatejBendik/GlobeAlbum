@@ -66,9 +66,22 @@ Photo selection and queue entries show local previews where the browser supports
 the format. Failed rows can be removed and the same file selected again without
 closing the dialog. Revoke local preview URLs when no longer displayed.
 
+User-confirmed refinement (2026-11-06): city search offers an accessible
+autocomplete with arrow-key selection and Enter. Saving a place advances the
+same dialog to optional photo selection for the newly created visit; skipping
+keeps the saved place. Additional file-picker selections append to the pending
+selection, and later upload batches append photos to the visit. Use singular
+or plural upload copy according to the batch size. Shared primary buttons keep
+the same fill on hover, including authentication and settings forms.
+
 ### Globe and galleries
 
 One logical marker per place. Bounded cover postcards plus dots limit visual overlap. Load compact marker DTOs first and gallery metadata on demand. Never preload originals. Retain the complete accessible place list, reduced-motion behavior, keyboard controls and WebGL fallback. Target iOS/Safari 17+ and current Chrome, Edge and Firefox. Test physical devices before claiming mobile validation.
+
+User-requested refinement (2026-11-06): double the original postcard width to
+130 CSS pixels and keep it readable throughout the allowed zoom range. Enlarge
+the postcard on hover or keyboard focus. Collision spacing accounts for the
+larger frame, while other places remain available as dots and in the place list.
 
 ### Globe workspace and navigation refinement
 
