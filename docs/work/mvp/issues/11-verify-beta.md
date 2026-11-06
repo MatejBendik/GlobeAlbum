@@ -21,7 +21,7 @@ Verify and prepare the public beta, as a complete end-to-end user behavior.
 
 ## Validation evidence
 
-Updated 2026-11-06. Production build, Worker checks, 53 Vitest tests and 41 browser
+Updated 2026-11-06. Production build, Worker checks, 53 Vitest tests and 45 browser
 scenarios pass (one intentional mobile-hover skip). Real Neon, Google registration
 and linking, GeoNames, R2 PNG/HEIC and owner JPEG recovery are recorded in
 validation. Physical devices, hosted Linux codec packaging/resource measurements,

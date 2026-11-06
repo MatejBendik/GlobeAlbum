@@ -7,7 +7,7 @@ this checkpoint records execution state for resuming interrupted work.
 
 - Application and Worker TypeScript checks pass; production Next.js build passes.
 - 53 Vitest tests pass against the isolated local PostgreSQL test database.
-- 41 Playwright scenarios pass across desktop and Pixel Chromium emulation;
+- 45 Playwright scenarios pass across desktop and Pixel Chromium emulation;
   the desktop-only pointer-hover case is intentionally skipped on mobile.
 - Owned Google OAuth credentials are configured in Google Cloud and Neon. Real
   explicit linking through Google's ID token, sign-out, protected-route denial,
@@ -17,6 +17,9 @@ this checkpoint records execution state for resuming interrupted work.
   The owner later deleted this account; fresh Google-only registration with a
   new identity now passes after automatic provider cleanup, reaching onboarding
   with no former globe restored.
+- Sign-in/signup backgrounds now paint the persisted theme correctly. The optional
+  date uses a lazy calendar popover with month/year selection, Today, clearing,
+  keyboard/focus support and date-only persistence verified in UTC+14.
 - Shared primary-button hover no longer changes its fill, including login/signup.
 - City autocomplete is keyboard accessible and the user's GeoNames account is
   configured locally. An opt-in browser run verified actual provider search and

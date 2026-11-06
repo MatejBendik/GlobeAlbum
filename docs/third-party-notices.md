@@ -40,3 +40,12 @@ created. Sources checked 2026-11-06:
 https://leafletjs.com/reference.html,
 https://react-leaflet.js.org/docs/start-installation/,
 https://operations.osmfoundation.org/policies/tiles/.
+
+Added 2026-11-06: React DayPicker 9.14.0 and Radix Popover 1.3.1 (MIT) provide
+the optional visit calendar. Its composition follows the shadcn Date Picker
+pattern, adapted to this app's existing Radix components and semantic colors;
+no Base UI or second token system is installed. References checked 2026-11-06:
+https://ui.shadcn.com/docs/components/base/date-picker,
+https://ui.shadcn.com/docs/components/radix/calendar,
+https://daypicker.dev/v9/docs/styling,
+https://daypicker.dev/v9/docs/navigation.

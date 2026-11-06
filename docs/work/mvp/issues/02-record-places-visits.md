@@ -32,3 +32,10 @@ Approved in discovery; implementation explicitly authorized.
 advances the same dialog directly to optional photo upload. Skipping preserves
 the place and no-photo visit. The new-visit upload path is browser tested rather
 than rediscovering a marker after saving.
+
+2026-11-06 calendar refinement: the optional date uses a Radix Popover and React
+DayPicker styled with the app palette. React Hook Form Controller retains Zod
+validation and the existing YYYY-MM-DD contract. Browser verification covers
+month/year choice, keyboard selection, editing, clearing, focus restoration and
+Escape without dismissing the parent form. A UTC+14 case checks the saved date
+independently in PostgreSQL. The calendar code loads only when opened.

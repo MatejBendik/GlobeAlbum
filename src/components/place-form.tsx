@@ -1,7 +1,7 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useEffect, useId, useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowRight, Loader2, MapPin, Search } from "lucide-react";
@@ -9,6 +9,7 @@ import { placeSchema, visitSchema } from "@/lib/validation";
 import { COUNTRIES, countryName } from "@/lib/countries";
 import { addPlaceAction, addVisitAction, editVisitAction } from "@/app/actions";
 import { Button } from "./ui/button";
+import { DatePicker, type DatePickerProps } from "./ui/date-picker";
 import type { VisitDto } from "@/lib/types";
 const LocationPicker = dynamic(() => import("./location-picker"), {
   ssr: false,
@@ -301,12 +302,18 @@ export function PlaceForm({
             form.formState.errors.longitude) && (
             <p className="form-error">Choose the city location on the map.</p>
           )}
-          <DateFields start={form.register("startDate")} />
-          {form.formState.errors.startDate && (
-            <p className="form-error">
-              {form.formState.errors.startDate.message}
-            </p>
-          )}
+          <Controller
+            name="startDate"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <DateFields
+                {...field}
+                value={field.value ?? ""}
+                error={fieldState.error?.message}
+                disabled={pending}
+              />
+            )}
+          />
           {error && (
             <p role="alert" className="form-error">
               {error}
@@ -328,16 +335,28 @@ export function PlaceForm({
     </form>
   );
 }
-function DateFields({ start }: { start: React.ComponentProps<"input"> }) {
+function DateFields({ error, ...props }: DatePickerProps & { error?: string }) {
+  const id = useId();
   return (
     <div className="field">
-      <label htmlFor="visit-start">
+      <label htmlFor={id} id={`${id}-label`}>
         Visit date <span className="optional">optional</span>
       </label>
-      <input id="visit-start" type="date" {...start} />
-      <p className="field-hint">
+      <DatePicker
+        {...props}
+        id={id}
+        aria-labelledby={`${id}-label ${id}-value`}
+        aria-describedby={`${id}-hint${error ? ` ${id}-error` : ""}`}
+        aria-invalid={!!error}
+      />
+      <p className="field-hint" id={`${id}-hint`}>
         Your visit date stays private, even when your globe is published.
       </p>
+      {error && (
+        <p className="form-error" id={`${id}-error`}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -377,10 +396,18 @@ export function VisitForm({
         else onDone();
       })}
     >
-      <DateFields start={form.register("startDate")} />
-      {form.formState.errors.startDate && (
-        <p className="form-error">{form.formState.errors.startDate.message}</p>
-      )}
+      <Controller
+        name="startDate"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <DateFields
+            {...field}
+            value={field.value ?? ""}
+            error={fieldState.error?.message}
+            disabled={pending}
+          />
+        )}
+      />
       {error && (
         <p role="alert" className="form-error">
           {error}

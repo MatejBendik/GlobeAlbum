@@ -5,7 +5,7 @@ Checks below distinguish actual cloud behavior from test fixtures and emulation.
 
 ## Observed evidence
 
-Current local verification on 2026-11-06: 53 Vitest tests and 41 Playwright
+Current local verification on 2026-11-06: 53 Vitest tests and 45 Playwright
 scenarios (desktop/mobile Chromium) passed. One desktop-only pointer-hover
 scenario is intentionally skipped under mobile emulation. This includes read-only generated
 addresses, cold-load readiness, automatic city coordinates, manual map selection,
@@ -42,6 +42,39 @@ Actual maintenance runs processed all 23 durable cleanup jobs after disposable
 users were deleted. The final queue was empty and accounted storage returned to
 zero. Unexpired reservations remained accounted until their capability/lease
 safety windows elapsed; scheduling deletion alone never releases bytes.
+
+## Authentication appearance and visit calendar (2026-11-06)
+
+The theme regression first reproduced a dark root attribute with a white
+hard-coded authentication background. The page now uses the same semantic surface
+and page variables as the rest of the app, including onboarding and unavailable
+profile states that share the auth layout. Browser checks navigate from landing
+to sign-in and sign-up, inspect the painted dark background and inputs, reload,
+and return to light mode. No authentication/provider behavior changed.
+
+The visit control now follows shadcn's Popover/Calendar composition using the
+existing Radix system and React DayPicker 9.14.0. It loads the calendar code on
+open, offers month/year navigation, Today and Clear date, and uses the app's
+light/dark palette. RHF Controller keeps the existing optional Zod date contract.
+Tests verify adding a dated visit, leaving dates blank, editing and clearing,
+arrow-key selection, focus restoration, and Escape closing only the calendar.
+The new edit case runs in UTC+14 and checks the exact persisted date independently
+in PostgreSQL to catch UTC conversion shifts. Screenshots cover both themes and
+viewport widths. Browser services use the existing guarded local contract fakes.
+
+The final complete browser run passed **45 scenarios**, with one intentional
+mobile hover skip (`auth-date-e2e.log`). Visual inspection then caught the mobile
+calendar footer clipped by its scrolling container; the footer now stays outside
+the scrollable day grid. Both auth/calendar cases passed again on desktop/mobile
+(**4 passed**, `auth-date-final-focused.log`), including complete footer-button
+visibility assertions. Production build, application type checking and Prettier also pass. The earlier 53 domain/codec tests were not rerun for this UI-only
+change. No cloud resource, database schema or authentication provider changed.
+
+References checked 2026-11-06:
+https://ui.shadcn.com/docs/components/base/date-picker,
+https://ui.shadcn.com/docs/components/radix/calendar,
+https://daypicker.dev/v9/docs/navigation,
+https://daypicker.dev/v9/docs/styling.
 
 ## R2-only photo upload repair (2026-11-06)
 

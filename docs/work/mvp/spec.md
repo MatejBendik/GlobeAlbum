@@ -87,6 +87,14 @@ selection, and later upload batches append photos to the visit. Use singular
 or plural upload copy according to the batch size. Shared primary buttons keep
 the same fill on hover, including authentication and settings forms.
 
+User-confirmed refinement (2026-11-06): use a theme-aware calendar popover
+instead of the browser-native date popup, following shadcn's Calendar/Popover
+composition and the existing Radix component system. Support month/year selection,
+keyboard navigation, Today and Clear date in place, new-visit and edit-visit forms.
+The value remains an optional private calendar date, with no time or date range.
+Authentication pages must paint the selected theme throughout, including their
+background, and retain it when navigating from the landing page or reloading.
+
 ### Globe and galleries
 
 One logical marker per place. Bounded cover postcards plus dots limit visual overlap. Load compact marker DTOs first and gallery metadata on demand. Never preload originals. Retain the complete accessible place list, reduced-motion behavior, keyboard controls and WebGL fallback. Target iOS/Safari 17+ and current Chrome, Edge and Firefox. Test physical devices before claiming mobile validation.

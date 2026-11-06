@@ -3,6 +3,7 @@ import {
   expect,
   type BrowserContext,
   type Locator,
+  type Page,
 } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -25,6 +26,27 @@ test.beforeEach(async ({ page }) => {
 test.afterAll(async () => {
   await db.$disconnect();
 });
+
+async function selectVisitDate(
+  page: Page,
+  year: string,
+  month: string,
+  day: RegExp,
+) {
+  await page.getByRole("button", { name: /Visit date/ }).click();
+  const calendar = page.getByRole("dialog", {
+    name: "Choose visit date",
+    exact: true,
+  });
+  await calendar
+    .getByRole("combobox", { name: "Choose the Year" })
+    .selectOption(year);
+  await calendar
+    .getByRole("combobox", { name: "Choose the Month" })
+    .selectOption(month);
+  await calendar.getByRole("button", { name: day }).click();
+  await expect(calendar).not.toBeVisible();
+}
 
 async function account(context: BrowserContext, onboarded = false) {
   const id = randomUUID();
@@ -87,7 +109,7 @@ test("creates a private collection, adds a visit, publishes and hides it", async
   await add.getByRole("button", { name: "Choose location on a map" }).click();
   await add.getByLabel("Country or territory").selectOption("FR");
   await expect(add.locator('input[type="number"]')).toHaveCount(0);
-  await expect(add.locator('input[type="date"]')).toHaveCount(1);
+  await expect(add.getByRole("button", { name: /Visit date/ })).toBeVisible();
   await add
     .getByRole("button", { name: "Use map center", exact: true })
     .click();
@@ -107,7 +129,7 @@ test("creates a private collection, adds a visit, publishes and hides it", async
   ).toBeVisible();
   await page.getByRole("button", { name: "Add", exact: true }).click();
   const visit = page.getByRole("dialog").last();
-  await visit.getByLabel(/Visit date/).fill("2024-06-01");
+  await selectVisitDate(page, "2024", "5", /June 1st, 2024/);
   await visit.getByRole("button", { name: "Add visit", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "2024-06-01 0 photos" }),
@@ -604,10 +626,10 @@ test("finds city coordinates automatically and accepts one optional visit date",
     .press("ArrowDown");
   await dialog.getByRole("combobox", { name: "City or town" }).press("Enter");
   await expect(dialog.locator('input[type="number"]')).toHaveCount(0);
-  await expect(dialog.locator('input[type="date"]')).toHaveCount(1);
-  await expect(dialog.getByLabel("Visit date", { exact: false })).toHaveValue(
-    "",
-  );
+  await expect(dialog.locator('input[type="date"]')).toHaveCount(0);
+  await expect(
+    dialog.getByRole("button", { name: /Visit date/ }),
+  ).toContainText("Choose a date");
   await dialog.getByRole("button", { name: "Add place", exact: true }).click();
   await expect(
     dialog.getByRole("heading", { name: "Add photos to Krompachy" }),
@@ -1165,5 +1187,140 @@ test("keeps postcards readable at zoom limits and enlarges them on hover", async
   }
   await page.screenshot({
     path: `.local/verification/postcards-${testInfo.project.name}.png`,
+  });
+});
+
+test("keeps the landing theme on sign-in and sign-up surfaces", async ({
+  page,
+}, testInfo) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
+  await page.getByRole("link", { name: "Make it yours", exact: true }).click();
+  for (const path of ["/sign-in", "/sign-up"]) {
+    if (path === "/sign-up")
+      await page
+        .getByRole("link", { name: "Create an account", exact: true })
+        .click();
+    await expect(page).toHaveURL(TEST_ORIGIN + path);
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    const background = await page
+      .locator(".auth-page")
+      .evaluate((el) => getComputedStyle(el).backgroundImage);
+    // Check the painted background, not just the persisted root theme attribute.
+    const surfaceRGB = await page
+      .locator("input")
+      .first()
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(surfaceRGB).toBe("rgb(27, 32, 35)");
+    expect(background).toContain("rgb(27, 32, 35)");
+    expect(background).not.toContain("rgb(255, 255, 255)");
+    await page.reload();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+    await page.screenshot({
+      path: `.local/verification/auth-${path.slice(1)}-dark-${testInfo.project.name}.png`,
+      fullPage: true,
+    });
+  }
+  await page.getByRole("link", { name: "Back home" }).click();
+  await page.getByRole("button", { name: "Switch to light mode" }).click();
+  await page.goto("/sign-in");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator("input").first()).toHaveCSS(
+    "background-color",
+    "rgb(255, 255, 255)",
+  );
+});
+
+test.describe("visit calendar", () => {
+  test.use({ timezoneId: "Pacific/Kiritimati" });
+  test("edits and clears a date without timezone shifts and keeps the parent dialog open on Escape", async ({
+    page,
+    context,
+  }, testInfo) => {
+    const owner = await account(context, true);
+    const place = await db.place.create({
+      data: {
+        globe: { connect: { userId: owner.id } },
+        name: "Kyoto",
+        sourceCountry: "JP",
+        latitude: 35.01,
+        longitude: 135.76,
+        visits: { create: { startDate: new Date("2024-06-01T00:00:00Z") } },
+      },
+      include: { visits: true },
+    });
+    await page.goto(`/studio?place=${place.id}`);
+    await page.getByRole("button", { name: "2024-06-01 0 photos" }).click();
+    const edit = page.getByRole("dialog", { name: "Edit visit", exact: true });
+    const trigger = edit.getByRole("button", { name: /Visit date/ });
+    await expect(trigger).toContainText("1 June 2024");
+    await trigger.click();
+    const calendar = page.getByRole("dialog", {
+      name: "Choose visit date",
+      exact: true,
+    });
+    await expect(
+      calendar.getByRole("button", { name: /June 1st, 2024/ }),
+    ).toBeFocused();
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("Enter");
+    await expect(trigger).toContainText("2 June 2024");
+    await expect(trigger).toBeFocused();
+    await edit.getByRole("button", { name: "Save visit" }).click();
+    await expect(edit).not.toBeVisible();
+    expect(
+      (
+        await db.visit.findUniqueOrThrow({ where: { id: place.visits[0].id } })
+      ).startDate
+        ?.toISOString()
+        .slice(0, 10),
+    ).toBe("2024-06-02");
+    await page.getByRole("button", { name: "2024-06-02 0 photos" }).click();
+    await trigger.click();
+    await page.keyboard.press("Escape");
+    await expect(calendar).not.toBeVisible();
+    await expect(edit).toBeVisible();
+    await trigger.click();
+    await calendar.getByRole("button", { name: "Today", exact: true }).click();
+    await expect(trigger).not.toContainText("June 2024");
+    await trigger.click();
+    await calendar
+      .getByRole("button", { name: "Clear date", exact: true })
+      .click();
+    await expect(trigger).toContainText("Choose a date");
+    await edit.getByRole("button", { name: "Save visit" }).click();
+    await expect(edit).not.toBeVisible();
+    expect(
+      (await db.visit.findUniqueOrThrow({ where: { id: place.visits[0].id } }))
+        .startDate,
+    ).toBeNull();
+    await page.getByRole("button", { name: "Visit 1 0 photos" }).click();
+    await trigger.click();
+    await expect(calendar.getByRole("grid")).toBeVisible();
+    await expect(
+      calendar.getByRole("button", { name: "Today", exact: true }),
+    ).toBeInViewport({ ratio: 1 });
+    await page.screenshot({
+      path: `.local/verification/date-picker-light-${testInfo.project.name}.png`,
+    });
+    // Theme is the real persisted preference, not a different calendar palette.
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Switch to dark mode" }).click();
+    await page.goto(`/studio?place=${place.id}`);
+    await page.getByRole("button", { name: "Visit 1 0 photos" }).click();
+    await trigger.click();
+    await expect(calendar).toHaveCSS("background-color", "rgb(27, 32, 35)");
+    await expect(calendar.getByRole("grid")).toBeVisible();
+    await expect(
+      calendar.getByRole("button", { name: "Today", exact: true }),
+    ).toBeInViewport({ ratio: 1 });
+    const box = await calendar.boundingBox();
+    expect(box!.x).toBeGreaterThanOrEqual(0);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+    await page.screenshot({
+      path: `.local/verification/date-picker-dark-${testInfo.project.name}.png`,
+    });
   });
 });

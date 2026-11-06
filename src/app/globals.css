@@ -1,4 +1,5 @@
 @import "leaflet/dist/leaflet.css";
+@import "react-day-picker/style.css";
 @import "tailwindcss";
 
 @theme inline {
@@ -1559,7 +1560,7 @@ select:focus-visible {
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(ellipse at 50% 40%, #fff, #fafaf6);
+  background: radial-gradient(ellipse at 50% 40%, var(--surface), var(--page));
 }
 .auth-page > header {
   padding: 26px 4%;
@@ -2423,4 +2424,106 @@ body,
 }
 [data-theme="dark"] .visibility-label.is-published {
   color: #a6d6b7;
+}
+
+/* The visit calendar shares the app palette in both themes. */
+.date-picker-trigger {
+  width: 100%;
+  height: 44px;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 0 13px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 400;
+}
+.date-picker-trigger[data-empty="true"] {
+  color: var(--muted);
+}
+.date-picker-trigger[aria-invalid="true"] {
+  border-color: #ce5f59;
+}
+.date-picker-popover {
+  display: flex;
+  flex-direction: column;
+  z-index: 80;
+  width: min(320px, calc(100vw - 32px));
+  max-height: var(--radix-popover-content-available-height);
+  overflow: hidden;
+  padding: 14px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow:
+    0 12px 40px #0002,
+    inset 0 1px 0 var(--highlight);
+}
+.date-picker-popover .rdp-root {
+  --rdp-accent-color: var(--text);
+  --rdp-accent-background-color: var(--surface-soft);
+  --rdp-day-width: 40px;
+  --rdp-day-height: 40px;
+  --rdp-day_button-width: 36px;
+  --rdp-day_button-height: 36px;
+  --rdp-day_button-border-radius: 9px;
+  --rdp-outside-opacity: 0.4;
+  --rdp-weekday-opacity: 1;
+  min-height: 0;
+  overflow-y: auto;
+  font-size: 12px;
+}
+.date-picker-popover .rdp-months,
+.date-picker-popover .rdp-month {
+  width: 100%;
+}
+.date-picker-popover .rdp-month_grid {
+  width: 100%;
+}
+.date-picker-popover .rdp-weekday {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+.date-picker-popover .rdp-day_button {
+  margin: auto;
+  font-size: 12px;
+}
+.date-picker-popover .rdp-day_button:hover,
+.date-picker-popover .rdp-button_previous:hover,
+.date-picker-popover .rdp-button_next:hover {
+  background: var(--surface-soft);
+}
+.date-picker-popover .rdp-selected .rdp-day_button {
+  background: var(--text);
+  color: var(--surface);
+  border-color: var(--text);
+  font-weight: 500;
+}
+.date-picker-popover .rdp-today:not(.rdp-selected) .rdp-day_button {
+  border-color: var(--line);
+  background: var(--surface-soft);
+}
+.date-picker-popover .rdp-chevron {
+  fill: var(--text-soft);
+}
+.date-picker-popover .rdp-caption_label {
+  font-size: 13px;
+  font-weight: 500;
+  gap: 4px;
+}
+.date-picker-popover .rdp-dropdowns {
+  gap: 10px;
+}
+.date-picker-popover .rdp-dropdown {
+  color: var(--text);
+  background: var(--surface);
+}
+.date-picker-footer {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  margin-top: 8px;
 }
