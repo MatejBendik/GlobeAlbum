@@ -178,6 +178,186 @@ select:focus-visible {
   align-items: center;
   gap: 10px;
 }
+/* Profile settings use the same quiet surfaces as the globe workspace. */
+.settings-page {
+  min-height: 100svh;
+  background: var(--page);
+  color: var(--text);
+}
+.settings-content {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 64px 40px 80px;
+}
+.settings-heading {
+  margin-bottom: 32px;
+}
+.settings-eyebrow {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.settings-heading h1 {
+  font-size: clamp(28px, 4vw, 38px);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1.2;
+  margin-bottom: 12px;
+}
+.settings-heading > p:last-child,
+.settings-section-intro p,
+.settings-signout p,
+.settings-delete p {
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.settings-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0 32px;
+  border-bottom: 1px solid var(--line);
+}
+.settings-avatar {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  font-size: 22px;
+}
+.settings-identity > div:nth-child(2) {
+  min-width: 0;
+}
+.settings-identity-name {
+  font-size: 16px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.settings-identity-address {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.settings-visibility {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--text-soft);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.settings-visibility svg {
+  width: 13px;
+  height: 13px;
+}
+.settings-section {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 48px;
+  padding: 36px 0;
+  border-bottom: 1px solid var(--line);
+}
+.settings-section:last-child {
+  border-bottom: 0;
+}
+.settings-section-intro h2 {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+.settings-form {
+  min-width: 0;
+}
+.settings-form .field-hint {
+  font-size: 11px;
+}
+.settings-form .settings-readonly {
+  color: var(--text-soft);
+  background: var(--surface-soft);
+}
+.settings-save {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+.settings-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-soft);
+}
+.settings-saved svg {
+  width: 15px;
+  height: 15px;
+}
+.settings-signout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 24px;
+}
+.settings-signout h3,
+.settings-delete h3 {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+.settings-delete {
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+  align-items: flex-start;
+}
+.settings-delete .field {
+  width: 100%;
+}
+.settings-delete h3 {
+  color: #d44747;
+}
+@media (max-width: 760px) {
+  .settings-content {
+    padding: 36px 20px 48px;
+  }
+  .settings-back span {
+    display: none;
+  }
+  .settings-back {
+    width: 32px;
+    padding: 0;
+  }
+  .settings-identity {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 0 24px;
+  }
+  .settings-visibility {
+    width: 100%;
+    margin-left: 64px;
+  }
+  .settings-section {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding: 28px 0;
+  }
+  .settings-signout {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
 .visibility-label {
   display: inline-flex;
   align-items: center;

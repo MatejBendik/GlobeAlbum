@@ -5,7 +5,7 @@ Checks below distinguish actual cloud behavior from test fixtures and emulation.
 
 ## Observed evidence
 
-Current local verification on 2026-11-06: 42 Vitest tests and all 26 Playwright
+Current local verification on 2026-11-06: 42 Vitest tests and all 30 Playwright
 scenarios (desktop/mobile Chromium) passed. This includes read-only generated
 addresses, cold-load readiness, automatic city coordinates, manual map selection,
 one optional visit date, local JPEG previews and selecting the same file after
@@ -50,6 +50,22 @@ identical fill/shadow on hover, including its signed-in “Open your globe” la
 Production build passed. Focused browser checks and screenshots covered light
 and dark at desktop/mobile widths, comparing hover styles over 12 frames per
 variant. This CSS-only follow-up did not rerun the domain/full browser suites.
+
+## Standalone profile settings (2026-11-06)
+
+All 30 desktop/mobile Playwright scenarios passed (`30 passed (2.3m)`) after
+replacing the modal with `/settings`. The new journey edits a display name,
+checks the actual PostgreSQL row, reloads it, verifies the unchanged read-only
+profile URL and private email, and navigates back to the globe. It also covers
+the legacy URL redirect, authentication/onboarding guards, and persisted dark
+mode. Existing sign-out and account-deletion journeys pass through the new page.
+Full-page light/dark screenshots were inspected at desktop and Pixel sizes,
+with no horizontal overflow. Auth and storage use the existing guarded local
+contract fakes; this UI change does not claim a new real-provider verification.
+The database schema and provider integration are unchanged; the previously
+recorded 42 Vitest results were not rerun for this page move.
+`npm run build` also passed, including TypeScript and the dynamic `/settings`
+route. Changed files passed the repository's Prettier check.
 
 ## Globe workspace, appearance and navigation (2026-11-06)
 

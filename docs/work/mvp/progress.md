@@ -7,7 +7,10 @@ this checkpoint records execution state for resuming interrupted work.
 
 - Application and Worker TypeScript checks pass; production Next.js build passes.
 - 42 Vitest tests pass against the isolated local PostgreSQL test database.
-- 26 Playwright scenarios pass across desktop and Pixel Chromium emulation.
+- 30 Playwright scenarios pass across desktop and Pixel Chromium emulation.
+- Profile settings are a standalone authenticated `/settings` page, with persisted
+  display-name editing, a fixed globe URL, private email and account controls.
+  The former modal URL redirects; desktop/mobile and light/dark are verified.
 - Full-width centered globe, closable right-hand places list, direct landing-photo
   galleries and signed-in account navigation are implemented and browser verified.
 - Light is the default, including the actual white globe; dark mode persists per

@@ -30,6 +30,12 @@ navigation. This explicitly supersedes the original deferred-theme decision.
 The selected browser preference is local; no new account/database setting or
 service provisioning is required.
 
+On 2026-11-06 the user requested a dedicated profile settings page in the app's
+existing visual style, replacing the modal. The `/settings` route preserves
+display-name editing, the fixed globe address, sign-out and confirmed account
+deletion. Showing the owner's sign-in email read-only is an implementation
+choice; changing authentication credentials is not added to scope.
+
 The original discovery record below is retained for history, not as current requirements.
 
 ---

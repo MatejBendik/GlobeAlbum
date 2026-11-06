@@ -677,10 +677,10 @@ test("shows account navigation when signed in and signs out from the dropdown", 
   await page.getByRole("button", { name: "Account menu" }).click();
   await expect(page.getByRole("menuitem", { name: "My globe" })).toBeVisible();
   await page.getByRole("menuitem", { name: "Profile settings" }).click();
+  await expect(page).toHaveURL(TEST_ORIGIN + "/settings");
   await expect(
-    page.getByRole("dialog", { name: "Profile settings" }),
+    page.getByRole("heading", { name: "Profile settings" }),
   ).toBeVisible();
-  await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("menuitem", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(TEST_ORIGIN + "/");
@@ -688,4 +688,90 @@ test("shows account navigation when signed in and signs out from the dropdown", 
     page.getByRole("button", { name: "Account menu" }),
   ).not.toBeVisible();
   await expect(page.getByRole("link", { name: "Make it yours" })).toBeVisible();
+});
+
+test("edits a profile on its own settings page without changing its address", async ({
+  page,
+  context,
+}, testInfo) => {
+  const owner = await account(context, true);
+  await page.goto("/studio?settings=profile");
+  await expect(page).toHaveURL(TEST_ORIGIN + "/settings");
+  await expect(
+    page.getByRole("heading", { name: "Profile settings" }),
+  ).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByLabel("Your globe address")).toHaveValue(
+    `${TEST_ORIGIN}/u/${owner.username}`,
+  );
+  await expect(page.getByLabel("Your globe address")).toHaveAttribute(
+    "readonly",
+    "",
+  );
+  await expect(page.getByLabel("Sign-in email")).toHaveValue(
+    `${owner.id}@example.test`,
+  );
+  await expect(page.getByLabel("Sign-in email")).toHaveAttribute(
+    "readonly",
+    "",
+  );
+  await expect(page.getByText("Private globe", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Delete account permanently" }),
+  ).toBeDisabled();
+  await page.getByLabel("Display name", { exact: true }).fill("Jamie Travels");
+  await page.getByRole("button", { name: "Save profile" }).click();
+  await expect(page.getByRole("status")).toHaveText("Profile updated.");
+  await expect(page.locator(".settings-identity-name")).toHaveText(
+    "Jamie Travels",
+  );
+  expect(
+    await db.globe.findUnique({ where: { userId: owner.id } }),
+  ).toMatchObject({
+    displayName: "Jamie Travels",
+    username: owner.username,
+    published: false,
+  });
+  await page.reload();
+  await expect(page.getByLabel("Display name", { exact: true })).toHaveValue(
+    "Jamie Travels",
+  );
+  await expect(page.getByLabel("Your globe address")).toHaveValue(
+    `${TEST_ORIGIN}/u/${owner.username}`,
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: `.local/verification/settings-${testInfo.project.name}-light.png`,
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.screenshot({
+    path: `.local/verification/settings-${testInfo.project.name}-dark.png`,
+    fullPage: true,
+  });
+  await page.getByRole("link", { name: "Back to my globe" }).click();
+  await expect(page).toHaveURL(TEST_ORIGIN + "/studio");
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await page.getByRole("menuitem", { name: "Profile settings" }).click();
+  await expect(page.getByLabel("Display name", { exact: true })).toHaveValue(
+    "Jamie Travels",
+  );
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+});
+
+test("requires sign-in and onboarding before opening settings", async ({
+  page,
+  context,
+}) => {
+  await page.goto("/settings");
+  await expect(page).toHaveURL(/sign-in/);
+  await expect(page.getByLabel("Sign-in email")).toHaveCount(0);
+  await account(context);
+  await page.goto("/settings");
+  await expect(page).toHaveURL(TEST_ORIGIN + "/onboarding");
 });

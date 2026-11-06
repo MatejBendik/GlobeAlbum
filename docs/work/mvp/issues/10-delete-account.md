@@ -33,3 +33,8 @@ See [verification and release gates](../../../validation.md). Unchecked criteria
 ## Comments
 
 Approved in discovery; implementation explicitly authorized.
+
+2026-11-06: account deletion moved from the profile modal to the standalone
+settings page, retaining typed-username confirmation. The existing deletion
+journey passes on desktop and mobile, including application-user removal and
+the durable identity fence. Provider-cleanup limitations above are unchanged.

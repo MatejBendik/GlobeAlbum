@@ -39,3 +39,8 @@ Approved in discovery; implementation explicitly authorized.
 address preview, with collision suffixes including retired slugs. The database
 still enforces uniqueness atomically. Cold-load browser coverage ensures typing
 starts only once the preview logic is ready; failed checks can be retried.
+
+2026-11-06 settings refinement: profile editing now lives at `/settings`, linked
+from the account menu. Desktop/mobile browser tests verify saved display names
+against PostgreSQL and after reload, immutable read-only URLs, private email,
+legacy-route redirection, and signed-out/not-onboarded access guards.

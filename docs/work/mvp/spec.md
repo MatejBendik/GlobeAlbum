@@ -82,6 +82,13 @@ an account dropdown with My globe, Profile settings, public profile when publish
 and Sign out. Anonymous navigation retains the example/registration actions.
 Viewer identity is resolved server-side and includes no email or credentials.
 
+User-confirmed refinement (2026-11-06): Profile settings open on the standalone,
+authenticated `/settings` page instead of a workspace dialog. Owners can edit
+their display name, read their immutable globe URL and private sign-in email,
+sign out, or confirm permanent account deletion. The page shares the app's
+light/dark appearance and responsive navigation. The sign-in email is displayed
+only to its owner; it is not included in navigation or public profile projections.
+
 Light is the default for the page, controls, dialogs and actual Three.js globe
 material. Dark mode uses the same semantic palette and navigation. The explicit
 choice persists in this browser across reloads; it does not change publication,

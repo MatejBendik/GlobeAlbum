@@ -34,8 +34,12 @@ rotation/entrance motion; panel and menu transitions stay short.
 
 Server pages resolve minimal navigation-viewer data from the verified managed
 session. The account menu uses Radix keyboard/focus handling and performs sign-out
-through the existing Server Action. Settings use `/studio?settings=profile`;
-resource authorization stays inside the server operations. The public decorative
+through the existing Server Action. Settings use the authenticated `/settings`
+page, which reads only the current owner's profile fields. The former
+`/studio?settings=profile` address redirects there. Profile edits reuse the
+ownership-checked Server Action and refresh the server-rendered identity;
+the immutable globe address and private sign-in email are read-only.
+Resource authorization stays inside the server operations. The public decorative
 land-dot JSON is explicitly public in the SDK middleware allowlist.
 
 Primary references verified 2026-11-06:

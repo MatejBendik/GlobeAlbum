@@ -16,19 +16,13 @@ import {
   ImageIcon,
   List,
   X,
-  LogOut,
 } from "lucide-react";
 import type { NavigationViewer } from "@/lib/navigation-viewer";
 import { AccountMenu } from "./account-menu";
 import { ThemeToggle } from "./theme-provider";
 import type { GlobeDto } from "@/lib/types";
 import { countryName } from "@/lib/countries";
-import {
-  publicationAction,
-  renameAction,
-  deleteAccountAction,
-  signOutAction,
-} from "@/app/actions";
+import { publicationAction } from "@/app/actions";
 import { LIMITS } from "@/lib/limits";
 import { Brand } from "./brand";
 import { Button } from "./ui/button";
@@ -62,7 +56,6 @@ export function Workspace({
     [copied, setCopied] = useState(false),
     [error, setError] = useState(""),
     [pending, setPending] = useState(false);
-  const settings = owner && params.get("settings") === "profile";
   const listButton = useRef<HTMLButtonElement>(null);
   const openPlaces = useCallback(() => setPlacesOpen(true), []);
   function closePlaces() {
@@ -87,7 +80,7 @@ export function Workspace({
     router.replace(`${next.pathname}${next.search}`, { scroll: false });
   }
   useEffect(() => {
-    if (!placesOpen || active || adding || settings || sharing) return;
+    if (!placesOpen || active || adding || sharing) return;
     const keydown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setPlacesOpen(false);
@@ -96,13 +89,7 @@ export function Workspace({
     };
     document.addEventListener("keydown", keydown);
     return () => document.removeEventListener("keydown", keydown);
-  }, [placesOpen, active, adding, settings, sharing]);
-  function closeSettings(open: boolean) {
-    if (open) return;
-    const next = new URL(window.location.href);
-    next.searchParams.delete("settings");
-    router.replace(`${next.pathname}${next.search}`, { scroll: false });
-  }
+  }, [placesOpen, active, adding, sharing]);
   const filtered = globe.places.filter((place) =>
     `${place.name} ${countryName(place.country)}`
       .toLowerCase()
@@ -406,97 +393,6 @@ export function Workspace({
           </Button>
         </DialogContent>
       </Dialog>
-      <Dialog open={settings} onOpenChange={closeSettings}>
-        <DialogContent>
-          <DialogTitle className="dialog-title">Profile settings</DialogTitle>
-          <DialogDescription className="dialog-description">
-            Your display name can change. Your globe address stays yours.
-          </DialogDescription>
-          <SettingsForm globe={globe} onDone={changed} />
-        </DialogContent>
-      </Dialog>
     </main>
-  );
-}
-function SettingsForm({
-  globe,
-  onDone,
-}: {
-  globe: GlobeDto;
-  onDone: () => void;
-}) {
-  const [name, setName] = useState(globe.displayName),
-    [confirmation, setConfirmation] = useState(""),
-    [error, setError] = useState(""),
-    [pending, setPending] = useState(false);
-  return (
-    <div className="form-stack">
-      <form
-        className="form-stack"
-        onSubmit={async (event) => {
-          event.preventDefault();
-          setPending(true);
-          const result = await renameAction(name);
-          setPending(false);
-          if (result.error) setError(result.error);
-          else {
-            setError("");
-            onDone();
-          }
-        }}
-      >
-        <div className="field">
-          <label htmlFor="settings-name">Display name</label>
-          <input
-            id="settings-name"
-            value={name}
-            maxLength={60}
-            required
-            onChange={(event) => setName(event.target.value)}
-          />
-        </div>
-        <p className="field-hint">Your address: /u/{globe.username}</p>
-        <Button disabled={pending}>Save profile</Button>
-      </form>
-      <form action={signOutAction}>
-        <Button variant="secondary" type="submit">
-          <LogOut />
-          Sign out
-        </Button>
-      </form>
-      <div className="danger-zone">
-        <h3>Delete account</h3>
-        <p>
-          This permanently removes your globe, visits and photos. There is no
-          undo.
-        </p>
-        <label htmlFor="delete-confirmation">
-          Type <strong>{globe.username}</strong> to confirm
-        </label>
-        <input
-          id="delete-confirmation"
-          value={confirmation}
-          onChange={(event) => setConfirmation(event.target.value)}
-          autoComplete="off"
-        />
-        <Button
-          variant="destructive"
-          disabled={pending || confirmation !== globe.username}
-          onClick={async () => {
-            setPending(true);
-            const result = await deleteAccountAction(confirmation);
-            setPending(false);
-            if (result.error) setError(result.error);
-          }}
-        >
-          Delete account permanently
-        </Button>
-      </div>
-      {error && (
-        <p role="alert" className="form-error">
-          {error}
-        </p>
-      )}
-    </div>
   );
 }

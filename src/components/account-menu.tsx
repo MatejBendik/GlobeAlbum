@@ -37,7 +37,7 @@ export function AccountMenu({ viewer }: { viewer: NavigationViewer }) {
             </Link>
           </Menu.Item>
           <Menu.Item asChild>
-            <Link href="/studio?settings=profile" scroll={false}>
+            <Link href="/settings">
               <Settings2 /> Profile settings
             </Link>
           </Menu.Item>

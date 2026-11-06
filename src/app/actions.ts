@@ -77,7 +77,9 @@ export async function publicationAction(published: boolean) {
   return execute((id) => domain.setPublication(id, published));
 }
 export async function renameAction(name: string) {
-  return execute((id) => domain.renameGlobe(id, name));
+  const result = await execute((id) => domain.renameGlobe(id, name));
+  if (!result.error) revalidatePath("/settings");
+  return result;
 }
 export async function countryAction(placeId: string, country: string) {
   return execute((id) => domain.correctCountry(id, placeId, country));

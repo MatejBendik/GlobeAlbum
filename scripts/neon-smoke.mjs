@@ -167,6 +167,7 @@ try {
   const savedCookies = await context.cookies();
   await page.getByRole("button", { name: "Account menu" }).click();
   await page.getByRole("menuitem", { name: "Profile settings" }).click();
+  await page.waitForURL(origin + "/settings");
   await page.getByLabel(`Type ${slug} to confirm`).fill(slug);
   await page
     .getByRole("button", { name: "Delete account permanently" })
