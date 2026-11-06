@@ -2,7 +2,7 @@
 
 Type: task
 Status: ready-for-agent
-Execution: email flow verified; real Google OAuth verification outstanding
+Execution: email flow and returning Google sign-in verified; fresh Google registration outstanding
 
 ## What to build
 
@@ -50,5 +50,10 @@ Neon branch; credentials remain ignored locally. Actual Google consent used the
 owned client and returned `account_not_linked` for the existing email identity.
 Explicit linking is now offered in authenticated Profile settings. Automated
 desktop/mobile cases verify callback/error behavior and unauthorized linking
-denial. Real linking/returning Google sign-in remain pending the user's active
-email/password session; the Google acceptance criterion above stays unchecked.
+denial. Subsequent real ID-token linking, sign-out, protected-route denial,
+returning Google sign-in and reload passed in Dia. Read-only SQL confirms the
+same user/globe/slug, 1 place and 3 photos; providers are credential and Google.
+The redirect linking route reproduced the upstream `state_mismatch` defect; the
+app uses the supported ID-token method without disabling safety checks. A new
+Google identity's first registration remains unverified, so the Google acceptance
+criterion above stays unchecked. See [Google setup](../../../google-oauth.md).

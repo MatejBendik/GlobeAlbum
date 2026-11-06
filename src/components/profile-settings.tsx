@@ -9,7 +9,7 @@ import {
   signOutAction,
 } from "@/app/actions";
 import { Button } from "./ui/button";
-import { SignInButton } from "./sign-in-button";
+import { GoogleAccountLink } from "./google-account-link";
 
 export function ProfileSettings({
   displayName,
@@ -18,6 +18,7 @@ export function ProfileSettings({
   published,
   profileUrl,
   googleConnected,
+  googleClientId,
 }: {
   displayName: string;
   username: string;
@@ -25,6 +26,7 @@ export function ProfileSettings({
   published: boolean;
   profileUrl: string;
   googleConnected: boolean | null;
+  googleClientId: string;
 }) {
   const router = useRouter();
   const [name, setName] = useState(displayName);
@@ -168,7 +170,7 @@ export function ProfileSettings({
                 Connected
               </span>
             ) : (
-              <SignInButton mode="link" disabled={pending} />
+              <GoogleAccountLink clientId={googleClientId} disabled={pending} />
             )}
           </div>
           {googleConnected === null && (

@@ -50,7 +50,13 @@ Use pooled database runtime access (`DATABASE_URL`) and a separate direct migrat
 Google OAuth uses the user's owned web client in Google Cloud project
 `globealbum`, configured in the existing Neon branch. Only basic identity scopes
 are requested. Existing email/password accounts connect Google explicitly from
-authenticated Profile settings when the provider rejects implicit linking;
+authenticated Profile settings when the provider rejects implicit linking.
+Use Google's official identity button to obtain an ID token with a fresh nonce,
+then the managed SDK's `linkSocial({ idToken })` method. Neon verifies the token,
+session and matching email; do not bypass OAuth state validation or insert
+provider records directly. The redirect-based linking path has a reproduced
+managed proxy `state_mismatch` defect. Ordinary sign-in retains the managed
+redirect flow. In both cases,
 retain the same user, globe and profile URL. Callback errors use fixed user-facing
 messages. Local Google credential copies remain ignored and server-only.
 

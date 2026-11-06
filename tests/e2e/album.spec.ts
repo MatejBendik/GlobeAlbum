@@ -862,30 +862,77 @@ test("explains an existing-email Google conflict and sends the signup callbacks"
   ).toHaveCount(0);
 });
 
-test("requires a session for Google linking and preserves the globe after provider failure", async ({
+test("requires a session for Google linking and preserves the globe through failure and retry", async ({
   page,
   context,
 }) => {
   const denied = await page.request.post("/api/auth/link-social", {
-    data: { provider: "google", callbackURL: "/settings" },
+    data: {
+      provider: "google",
+      idToken: { token: "invalid", nonce: "invalid" },
+    },
   });
   expect(denied.status()).toBe(401);
   const owner = await account(context, true);
   const before = await db.globe.findUniqueOrThrow({
     where: { userId: owner.id },
   });
+  const linkRequest = page.waitForRequest((request) =>
+    request.url().endsWith("/api/auth/link-social"),
+  );
+  // Exercise the real Neon SDK/proxy contract without contacting Google or
+  // passing a real identity token to the isolated Auth fake.
+  await page.route("https://accounts.google.com/gsi/client", (route) =>
+    route.fulfill({
+      contentType: "application/javascript",
+      body: `let attempts = 0; window.google = { accounts: { id: {
+        initialize(options) { this.options = options; },
+        renderButton(parent) {
+          const button = document.createElement("button");
+          button.textContent = "Continue with Google";
+          button.onclick = () => this.options.callback({
+            credential: ++attempts === 1 ? "invalid-test-token" : "local-contract-google-token"
+          });
+          parent.replaceChildren(button);
+        }
+      } } };`,
+    }),
+  );
   await page.goto("/settings");
   await page
     .getByRole("button", { name: "Connect Google", exact: true })
     .click();
+  await page
+    .getByRole("button", { name: "Continue with Google", exact: true })
+    .click();
+  const payload = (await linkRequest).postDataJSON();
+  expect(payload.provider).toBe("google");
+  expect(payload.idToken.token).toBe("invalid-test-token");
+  expect(payload.idToken.nonce).toMatch(/^[0-9a-f-]{36}$/);
+  expect(payload.callbackURL).toBeUndefined();
   await expect(
-    page.getByText("Google could not be connected. Please try again.", {
-      exact: true,
-    }),
+    page.getByText(
+      "Google could not be connected. Use the same email as your account and try again.",
+      {
+        exact: true,
+      },
+    ),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Connect Google", exact: true }),
+    page.getByRole("button", { name: "Continue with Google", exact: true }),
   ).toBeEnabled();
+  expect(await db.globe.findUnique({ where: { userId: owner.id } })).toEqual(
+    before,
+  );
+  await page
+    .getByRole("button", { name: "Continue with Google", exact: true })
+    .click();
+  await expect(
+    page.getByText("Google is connected to this account.", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Continue with Google", exact: true }),
+  ).toHaveCount(0);
   expect(await db.globe.findUnique({ where: { userId: owner.id } })).toEqual(
     before,
   );

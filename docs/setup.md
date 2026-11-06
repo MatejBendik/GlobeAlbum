@@ -42,9 +42,10 @@ the client. The initial and identity-fence migrations were applied to the empty
 
 The app uses `@neon/auth` for Google and email/password sign-up/sign-in.
 Passwords and sessions are managed by Neon, not by the app's Prisma adapter.
-No direct Google credentials are needed in Next.js environment variables.
-The requested `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` copies are stored in
-ignored `.env.local` for operations. Neon uses the owned Google Cloud client
+`GOOGLE_CLIENT_ID` is public and is passed to the authenticated settings page's
+Google Identity Services button for explicit account linking. The secret is
+never passed to the browser. Its requested `GOOGLE_CLIENT_SECRET` copy is stored
+in ignored `.env.local` for operations only. Neon uses the owned Google Cloud client
 configured in project `globealbum`; see [Google OAuth setup](google-oauth.md).
 Register exact application origins with Neon Auth; the local origin above was
 added using `neon neon-auth domain add http://127.0.0.1:3000`.

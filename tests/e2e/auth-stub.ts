@@ -15,6 +15,7 @@ const db = new PrismaClient({
   adapter: new PrismaPg({ connectionString: url }),
 });
 const sessions = new Map<string, string>();
+const googleLinkedUsers = new Set<string>();
 createServer(async (req, res) => {
   res.setHeader("Content-Type", "application/json");
   if (req.url === "/health") {
@@ -52,10 +53,28 @@ createServer(async (req, res) => {
       res.writeHead(401).end("{}");
       return;
     }
-    res.end(JSON.stringify([{ providerId: "credential" }]));
+    res.end(
+      JSON.stringify([
+        { providerId: "credential" },
+        ...(googleLinkedUsers.has(userId) ? [{ providerId: "google" }] : []),
+      ]),
+    );
     return;
   }
   if (req.url === "/auth/link-social") {
+    let body = "";
+    for await (const part of req) body += part;
+    const payload = JSON.parse(body);
+    if (
+      userId &&
+      payload.provider === "google" &&
+      payload.idToken?.token === "local-contract-google-token" &&
+      /^[0-9a-f-]{36}$/.test(payload.idToken?.nonce ?? "")
+    ) {
+      googleLinkedUsers.add(userId);
+      res.end(JSON.stringify({ status: true, redirect: false, url: "" }));
+      return;
+    }
     res.writeHead(userId ? 503 : 401).end(
       JSON.stringify({
         code: userId ? "PROVIDER_UNAVAILABLE" : "UNAUTHORIZED",

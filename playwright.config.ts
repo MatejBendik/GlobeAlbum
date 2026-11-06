@@ -61,6 +61,7 @@ export default defineConfig({
         IMAGE_WORKER_URL: "http://127.0.0.1:8787",
         IMAGE_WORKER_SECRET: TEST_SESSION_SECRET,
         GEONAMES_USERNAME: process.env.GLOBEALBUM_LIVE_GEONAMES_USERNAME ?? "",
+        GOOGLE_CLIENT_ID: "local-contract-client.apps.googleusercontent.com",
       },
     },
   ],

@@ -9,10 +9,12 @@ this checkpoint records execution state for resuming interrupted work.
 - 42 Vitest tests pass against the isolated local PostgreSQL test database.
 - 39 Playwright scenarios pass across desktop and Pixel Chromium emulation;
   the desktop-only pointer-hover case is intentionally skipped on mobile.
-- Owned Google OAuth credentials are configured in Google Cloud and Neon. The
-  real consent callback hit an existing-email conflict; explicit linking UI and
-  failure handling are implemented/tested. Real linking and returning Google
-  sign-in await an authenticated session in the controlled Dia tab.
+- Owned Google OAuth credentials are configured in Google Cloud and Neon. Real
+  explicit linking through Google's ID token, sign-out, protected-route denial,
+  returning Google sign-in and session restoration passed in Dia. Read-only SQL
+  confirms the same account/globe/slug and retained 1 place and 3 photos. See
+  [Google OAuth](../../google-oauth.md) for the redirect-linking provider defect
+  and the separate fresh-Google-registration release check.
 - Shared primary-button hover no longer changes its fill, including login/signup.
 - City autocomplete is keyboard accessible and the user's GeoNames account is
   configured locally. An opt-in browser run verified actual provider search and
@@ -54,7 +56,8 @@ this checkpoint records execution state for resuming interrupted work.
   Google. See [Neon changes](../../neon-setup.md) and ADR 0005.
 - Managed self-deletion returns 404; a durable identity fence revokes app access
   and operator `auth:cleanup` removes the provider identity. Automation remains gated.
-- Real Google consent, production auth email/recovery and GeoNames remain unverified.
+- First registration with a new Google identity and production auth email/recovery
+  remain unverified. Real GeoNames autocomplete was separately verified; see validation.
 - Browser storage/processing is a local test double; it does not prove image
   conversion, real Google sign-in or physical mobile-device compatibility.
 - No Vercel application deployment or paid upgrade has been performed. Current

@@ -67,6 +67,7 @@ export default async function SettingsPage({
           username={globe.username}
           email={user.email}
           published={globe.published}
+          googleClientId={process.env.GOOGLE_CLIENT_ID ?? ""}
           googleConnected={
             accounts?.data && !accounts.error
               ? accounts.data.some((account) => account.providerId === "google")

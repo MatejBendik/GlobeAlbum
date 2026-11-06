@@ -7,36 +7,24 @@ export function SignInButton({
   enabled = true,
   disabled = false,
   label,
-  mode = "sign-in",
 }: {
   enabled?: boolean;
   disabled?: boolean;
   label?: string;
-  mode?: "sign-in" | "link";
 }) {
   const [pending, setPending] = useState(false),
     [error, setError] = useState("");
-  const failureMessage =
-    mode === "link"
-      ? "Google could not be connected. Please try again."
-      : "Sign-in is unavailable. Please try again.";
+  const failureMessage = "Sign-in is unavailable. Please try again.";
   async function signIn() {
     setPending(true);
     setError("");
     try {
-      const result =
-        mode === "link"
-          ? await authClient.linkSocial({
-              provider: "google",
-              callbackURL: "/settings",
-              errorCallbackURL: "/settings",
-            })
-          : await authClient.signIn.social({
-              provider: "google",
-              callbackURL: "/studio",
-              newUserCallbackURL: "/onboarding",
-              errorCallbackURL: "/sign-in",
-            });
+      const result = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/studio",
+        newUserCallbackURL: "/onboarding",
+        errorCallbackURL: "/sign-in",
+      });
       if (result.error) {
         setError(failureMessage);
         setPending(false);
@@ -63,7 +51,7 @@ export function SignInButton({
             />
           </svg>
         )}
-        {label ?? (mode === "link" ? "Connect Google" : "Continue with Google")}
+        {label ?? "Continue with Google"}
         <ArrowUpRight />
       </Button>
       {!enabled && (

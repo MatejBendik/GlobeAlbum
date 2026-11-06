@@ -58,10 +58,26 @@ reflecting arbitrary provider query values. The full browser suite passed
 targets, link authentication, failure/retry messaging and unchanged globe data.
 All 42 Vitest tests and the production build also passed.
 
-After the usage interruption, neither local origin has an active session in the
-controlled Dia profile. Real linking and subsequent Google sign-in are pending
-the user's email/password sign-in in the prepared tab. Preserve this distinction
-until that real flow succeeds. See [Google OAuth setup](google-oauth.md).
+Real linking and returning sign-in subsequently passed in Dia against the existing
+Neon branch. The redirect-linking flow reproduced `ERR_INVALID_URL`, then the
+known managed proxy `state_mismatch` defect with absolute URLs. Google's official
+identity button and the supported `linkSocial({ idToken })` method succeeded
+without weakening state checks or writing auth records directly. Sign-out denied
+`/studio`; Google sign-in returned to that studio and survived reload. Settings
+showed Connected after the new session. Independent SQL confirmed the same
+application identity, globe, slug, name and publication, with 1 place and 3 photos
+unchanged, and providers `credential` plus `google`.
+
+Focused desktop/mobile regression covers the SDK/proxy ID-token and nonce payload,
+authorization denial, failure/retry and the refreshed Connected state using local
+contract fakes. First signup with an entirely new Google identity, production
+branding/domain setup and Google account deletion remain separate unverified
+release checks. See [Google OAuth setup](google-oauth.md).
+
+Final follow-up commands: `npx playwright test --grep 'profile on its own settings|before opening settings|account navigation|Google'`
+reported `10 passed (29.4s)`; `npm run build` completed compilation, TypeScript
+and route generation successfully; `npm run format:check` passed. The earlier
+42 Vitest tests were not rerun for this client-only linking change.
 
 ## Landing appearance follow-up (2026-11-06)
 
@@ -193,7 +209,7 @@ Managed `/delete-user` returns an empty 404. App access/data revocation is
 immediate; `DeletedIdentity.authDeletedAt` remains null until operator CLI
 cleanup succeeds. The operator command was verified against disposable managed
 identities. Automated provider cleanup is an outstanding beta gate, alongside
-Google consent and production email verification/recovery/SMTP.
+first-time Google registration and production email verification/recovery/SMTP.
 
 ## HEIC failure record
 
@@ -236,7 +252,8 @@ Sources verified 2026-11-05:
 ## Before beta
 
 - [ ] Resolve the HEIC provider failure; rerun full cloud smoke successfully.
-- [ ] Verify real Google registration, returning session, sign-out and account deletion.
+- [x] Verify real Google linking, returning session, reload and sign-out.
+- [ ] Verify first registration with a new Google identity and Google account deletion.
 - [x] Verify real Neon pooled runtime reads/writes and direct migrations.
 - [ ] Measure Neon connection/concurrency behavior under representative hosted load.
 - [ ] Resolve/accept the managed identity cleanup operating requirement and verify production SMTP, email verification and password recovery.
