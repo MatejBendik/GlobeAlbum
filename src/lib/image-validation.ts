@@ -103,7 +103,7 @@ export function inspectPhoto(
     if (!primary || primary.end - primary.start < 6)
       throw new Error("HEIC must contain a primary still image.");
     // Compatible sequence brands can occur in still collections. Timed tracks
-    // are rejected structurally above; the image service must also decode it.
+    // are rejected structurally above; the server processor must also decode it.
     if (
       brands.some((brand) => ["heic", "heix", "heim", "heis"].includes(brand))
     )

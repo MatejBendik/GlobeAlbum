@@ -10,6 +10,7 @@ import {
 } from "vitest";
 import { config } from "dotenv";
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { getDb } from "../src/lib/db";
 import * as domain from "../src/lib/domain";
 import { LIMITS, utcMonth } from "../src/lib/limits";
@@ -215,10 +216,11 @@ describe("owned travel collections", () => {
 
 describe("atomic upload reservations", () => {
   it("does not resurrect a photo deleted during processing", async () => {
+    const image = readFileSync("tests/fixtures/tiny.png");
     const place = await domain.addPlace("alice", paris);
     const upload = await domain.reserveUpload("alice", {
       visitId: place.visitId,
-      size: 100,
+      size: image.length,
     });
     let signalStarted!: () => void;
     let release!: () => void;
@@ -231,11 +233,13 @@ describe("atomic upload reservations", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: URL) => {
-        if (url.pathname === "/process") {
+        if (url.pathname === "/source") {
           signalStarted();
           await response;
-          return Response.json({ processed: true });
+          return new Response(image);
         }
+        if (url.pathname === "/variant")
+          return Response.json({ stored: true }, { status: 201 });
         return Response.json({ size: 100 });
       }),
     );

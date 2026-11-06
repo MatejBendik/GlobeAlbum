@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const config: NextConfig = {
   poweredByHeader: false,
-  serverExternalPackages: ["pg"],
+  serverExternalPackages: ["pg", "heic-decode", "libheif-js"],
   async headers() {
     return [
       {

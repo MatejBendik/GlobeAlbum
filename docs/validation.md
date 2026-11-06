@@ -5,7 +5,7 @@ Checks below distinguish actual cloud behavior from test fixtures and emulation.
 
 ## Observed evidence
 
-Current local verification on 2026-11-06: 47 Vitest tests and 41 Playwright
+Current local verification on 2026-11-06: 53 Vitest tests and 41 Playwright
 scenarios (desktop/mobile Chromium) passed. One desktop-only pointer-hover
 scenario is intentionally skipped under mobile emulation. This includes read-only generated
 addresses, cold-load readiness, automatic city coordinates, manual map selection,
@@ -13,12 +13,12 @@ one optional visit date, local JPEG previews and selecting the same file after
 removing a failed upload. Application and Worker type checks passed.
 
 The additional desktop/mobile batch-upload scenarios exercise real application
-handlers and PostgreSQL against a local storage/processing test double. A batch
+handlers and PostgreSQL against a local R2 transport double and the real Node.js processor. A batch
 with one network failure, one cancellation and one successful transfer finishes
 with exactly two ready photos after retry. These tests exposed and now prevent
 duplicate cancellation cleanup and its incorrect unfinished-upload warning.
 The test double binds only to localhost, requires explicit test mode, and does
-not decode images or replace the separate real Cloudflare verification.
+not replace the separate real R2 verification; Sharp and HEIC decoding run in the application.
 
 | Boundary                  | Evidence                                                                                                                   | Limit                                                                                       |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
@@ -28,10 +28,10 @@ not decode images or replace the separate real Cloudflare verification.
 | Browser journey           | Desktop and Pixel Chromium emulation: onboarding, private globe, manual place, repeat visit, publish, anonymous view, hide | Uses managed SDK with guarded local Auth contract fake; real Google itself is not exercised |
 | Form size validation      | Selecting a 20,000,001-byte file shows the Zod/RHF error without `/api/uploads` requests                                   | Browser checks supplement server enforcement                                                |
 | WebGL fallback            | Disabled WebGL retains search, list and place gallery                                                                      | Physical GPU/browser testing outstanding                                                    |
-| R2/Images PNG             | Actual private upload, replay rejection, decode/re-encode, idempotent finish and signed display read                       | Small synthetic fixture, not a large mobile photograph                                      |
+| R2 PNG/HEIC               | Actual private upload, replay rejection, decode/re-encode, idempotent finish and signed display read                       | Small synthetic cloud fixtures; owner JPEG recovery separately verified                     |
 | Byte constraints          | Actual wrong-size and short streamed requests rejected with no stored source                                               | Cloudflare edge may reject before the Worker's FixedLengthStream                            |
-| Privacy                   | Processed WebP has no EXIF/XMP chunks; no-store headers; expired links denied; hide prevents new grants                    | Explicit orientation/GPS fixtures still required                                            |
-| HEIC                      | Two real files tested against `/info` and `/transform`; both return internal error `9516`                                  | **Release blocker**; support/cause unresolved                                               |
+| Privacy                   | Processed WebP has no EXIF/XMP chunks; no-store headers; expired links denied; hide prevents new grants                    | Orientation/EXIF regression passes; physical iPhone GPS fixtures remain                     |
+| HEIC                      | Actual R2 upload and local HEIC decode/re-encode pass; old Images errors superseded                                        | Physical mobile and hosted Linux runtime checks remain                                      |
 
 Local reports/screenshots live in ignored `.local/verification/`. Browser traces
 can contain session cookies and remain ignored under `test-results/`.
@@ -42,6 +42,57 @@ Actual maintenance runs processed all 23 durable cleanup jobs after disposable
 users were deleted. The final queue was empty and accounted storage returned to
 zero. Unexpired reservations remained accounted until their capability/lease
 safety windows elapsed; scheduling deletion alone never releases bytes.
+
+## R2-only photo upload repair (2026-11-06)
+
+The owner's two JPEG uploads reached R2 with their expected byte counts but
+failed during the Images binding transformation. Direct probes without Neon
+reproduced provider error `9523` for those sources, a 13.9 MB synthetic JPEG and
+tiny JPEG/PNG inputs. Changing the stream, resize options or output format did
+not resolve it. The provider's internal cause is unknown; no Neon credential
+change or database bypass was needed.
+
+The user explicitly requested R2 storage without an Images plan. Next.js Node.js
+now decodes with Sharp plus HEIC/libheif WASM, applies orientation, creates bounded
+WebP variants and strips metadata. The existing Worker only gates private R2
+upload, server source reads, variant writes and short-lived image reads. Its
+Images binding and temporary diagnostic routes are removed. Deployed version:
+`0c44f4ab-de97-4efb-86bb-e5dfe12b1caa`. No paid plan was activated.
+
+Actual evidence after the change:
+
+- Both existing owner uploads completed through the normal authorized domain
+  operation and are `READY` in Neon. Both were then opened in the authenticated
+  production-build gallery; the second display image decoded at 2560×1920.
+  Screenshot: `.local/verification/r2-owner-gallery-ready.png`. No forced status
+  update or original-file serving was used.
+- Anonymous `/source` and `/variant` requests return 401; removed `/process`
+  and `/diagnose` endpoints return 404 against the deployed Worker.
+- Full cloud smoke passed PNG and HEIC uploads against actual R2, immutable
+  replay rejection, idempotent completion, private WebP reads, EXIF/XMP absence,
+  incorrect-size rejection, publication/hiding and expired grants. After the
+  capability/lease window elapsed, normal maintenance drained the isolated test
+  cleanup queue to zero; R2 HEAD checks confirmed all queued keys absent.
+- Native codec probes passed an official 1280×854 HEIC sample and a 13,895,200-byte
+  4032×3024 JPEG. Automated orientation/metadata, pixel-limit and corrupt-input
+  regressions pass; smaller images are not enlarged.
+- `npm run test`: **53 passed**. `npm run test:e2e`: **41 passed, 1 skipped**
+  (mobile pointer-hover). Browser tests use a guarded R2 transport fake, real local
+  PostgreSQL and the actual Node.js codec; managed Auth remains a contract fake.
+- Production `npm run build` and Worker TypeScript checks pass. Actual Vercel/Linux
+  packaging, resource usage and representative physical iPhone files remain release
+  checks; this is not a production deployment or a completed beta certification.
+
+Ignored reports: `r2-local-processing-tests.log`, `r2-processing-e2e.log`,
+`r2-processing-build.log`, `r2-native-cloud-smoke.log`, and `r2-owner-retry.log`
+under `.local/verification/`.
+
+Primary processing references checked 2026-11-06:
+https://sharp.pixelplumbing.com/install/,
+https://sharp.pixelplumbing.com/api-operation/,
+https://sharp.pixelplumbing.com/api-output/,
+https://github.com/catdad-experiments/heic-decode,
+https://github.com/catdad-experiments/libheif-js.
 
 ## Google OAuth configuration and account linking (2026-11-06)
 
@@ -261,7 +312,7 @@ API: actual automatic removal, stale-cookie denial and same-email registration
 now pass. Production email verification/recovery/SMTP and hosted maintenance
 scheduling remain outstanding.
 
-## HEIC failure record
+## Historical Images HEIC failure record
 
 Cloudflare documents HEIC input support, and identifies `9516` as an internal
 error, distinct from unsupported-format `9520`. On 2026-11-05:
@@ -280,7 +331,7 @@ brand. A failing regression test established that separate local defect; it is
 fixed by scanning BMFF boxes and rejecting timed tracks structurally. That fix
 does **not** resolve the provider failure.
 
-**User-confirmed decision:** retain Cloudflare; working HEIC remains mandatory
+**Historical decision, superseded by ADR 0007 above:** retain Cloudflare; working HEIC remains mandatory
 before beta. No alternative processor, paid plan, client conversion, or original
 fallback has been introduced. Reproduce with the full cloud-smoke command before
 declaring this resolved. Do not silently skip dimension checks to bypass it.
@@ -301,7 +352,8 @@ Sources verified 2026-11-05:
 
 ## Before beta
 
-- [ ] Resolve the HEIC provider failure; rerun full cloud smoke successfully.
+- [x] Replace the failing Images dependency with the user-approved R2-only flow; full PNG/HEIC cloud smoke passes.
+- [ ] Verify native/WASM packaging and bounded CPU/memory in the actual hosted Linux runtime.
 - [x] Verify real Google linking, returning session, reload and sign-out.
 - [x] Verify fresh Google registration after confirmed deletion and removal of the old Google-linked identity.
 - [x] Verify real Neon pooled runtime reads/writes and direct migrations.

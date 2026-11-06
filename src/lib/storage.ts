@@ -2,6 +2,55 @@ import "server-only";
 import { z } from "zod";
 import { AppError } from "./errors";
 import { signMediaGrant } from "./upload-grant";
+import { readBounded } from "./image-validation";
+import { LIMITS } from "./limits";
+
+export async function readPhotoSource(key: string, expectedBytes: number) {
+  const response = await fetch(new URL("/source", workerUrl()), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.IMAGE_WORKER_SECRET!}`,
+    },
+    body: JSON.stringify({ key, expectedBytes }),
+    signal: AbortSignal.timeout(30_000),
+    cache: "no-store",
+  });
+  if (!response.ok || !response.body)
+    throw new AppError(
+      "Photo storage is temporarily unavailable. Retry this upload.",
+      503,
+      "PROCESSING",
+    );
+  const bytes = await readBounded(response.body, LIMITS.fileBytes);
+  if (bytes.length !== expectedBytes)
+    throw new AppError(
+      "The upload is incomplete. Please choose the photo again.",
+      422,
+      "PROCESSING",
+    );
+  return bytes;
+}
+
+export async function writePhotoVariant(key: string, bytes: Buffer) {
+  const response = await fetch(new URL("/variant", workerUrl()), {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${process.env.IMAGE_WORKER_SECRET!}`,
+      "Content-Type": "image/webp",
+      "X-Object-Key": key,
+    },
+    body: new Uint8Array(bytes),
+    signal: AbortSignal.timeout(30_000),
+    cache: "no-store",
+  });
+  if (!response.ok)
+    throw new AppError(
+      "Photo storage is temporarily unavailable. Retry this upload.",
+      503,
+      "PROCESSING",
+    );
+}
 
 export function storageConfigured() {
   return (

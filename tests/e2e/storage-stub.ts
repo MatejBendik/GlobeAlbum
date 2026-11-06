@@ -1,7 +1,6 @@
-// Local test double for storage/processing transport. Real Cloudflare decoding
-// and byte enforcement are exercised separately by scripts/cloud-smoke.ts.
+// Local R2 transport double. The app performs actual Sharp/HEIC decoding.
+// Real R2 storage and byte enforcement are verified separately.
 import { createServer, type IncomingMessage } from "node:http";
-import { readFileSync } from "node:fs";
 import {
   verifyUploadGrant,
   verifyMediaGrant,
@@ -12,7 +11,6 @@ if (process.env.GLOBEALBUM_STORAGE_TEST_STUB !== "1")
   throw new Error("This server is only for the isolated local browser tests.");
 
 const objects = new Map<string, Buffer>();
-const image = readFileSync(new URL("../fixtures/tiny.png", import.meta.url));
 async function body(request: IncomingMessage, limit: number) {
   const chunks: Buffer[] = [];
   let length = 0;
@@ -70,7 +68,7 @@ createServer(async (request, response) => {
       const bytes = grant && objects.get(grant.key);
       if (!bytes) return reply({ error: "Missing test image." }, 404);
       response.writeHead(200, {
-        "Content-Type": "image/png",
+        "Content-Type": "image/webp",
         "Cache-Control": "no-store",
       });
       response.end(bytes);
@@ -78,13 +76,23 @@ createServer(async (request, response) => {
     }
     if (request.headers.authorization !== `Bearer ${TEST_SESSION_SECRET}`)
       return reply({ error: "Unauthorized." }, 401);
+    if (url.pathname === "/variant" && request.method === "PUT") {
+      const key = request.headers["x-object-key"];
+      if (typeof key !== "string") return reply({ error: "Invalid key" }, 400);
+      objects.set(key, await body(request, 4_000_000));
+      return reply({ stored: true }, 201);
+    }
     const input = JSON.parse((await body(request, 4096)).toString());
-    if (url.pathname === "/process") {
-      if (!objects.has(input.sourceKey))
+    if (url.pathname === "/source") {
+      const source = objects.get(input.key);
+      if (!source || source.length !== input.expectedBytes)
         return reply({ error: "Missing source." }, 422);
-      objects.set(input.thumbnailKey, image);
-      objects.set(input.displayKey, image);
-      return reply({ processed: true });
+      response.writeHead(200, {
+        "Content-Type": "application/octet-stream",
+        "Cache-Control": "private, no-store",
+      });
+      response.end(source);
+      return;
     }
     if (url.pathname === "/objects") {
       if (input.operation === "delete") {

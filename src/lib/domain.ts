@@ -15,6 +15,7 @@ import {
 } from "./validation";
 import { photoUrl, storageConfigured, workerUrl, objectSize } from "./storage";
 import { signUploadGrant } from "./upload-grant";
+import { processStoredPhoto } from "./photo-processing";
 import type { GlobeDto, GalleryDto } from "./types";
 
 export type Transaction = Prisma.TransactionClient;
@@ -552,29 +553,12 @@ export async function finishUpload(userId: string, id: string) {
   if (claim.ready) return { photoId: claim.upload.photoId };
   const { upload, leaseToken } = claim;
   try {
-    const response = await fetch(new URL("/process", workerUrl()), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.IMAGE_WORKER_SECRET!}`,
-      },
-      body: JSON.stringify({
-        sourceKey: upload.sourceKey,
-        expectedBytes: upload.expectedBytes,
-        thumbnailKey: upload.photo.thumbnailKey,
-        displayKey: upload.photo.displayKey,
-      }),
-      signal: AbortSignal.timeout(90_000),
-      cache: "no-store",
+    await processStoredPhoto({
+      sourceKey: upload.sourceKey,
+      expectedBytes: upload.expectedBytes,
+      thumbnailKey: upload.photo.thumbnailKey,
+      displayKey: upload.photo.displayKey,
     });
-    if (!response.ok)
-      throw new AppError(
-        response.status === 422
-          ? "This photo could not be decoded, is animated or exceeds image limits."
-          : "Processing is temporarily unavailable. Retry this upload.",
-        response.status === 422 ? 422 : 503,
-        "PROCESSING",
-      );
     const [thumbnailBytes, displayBytes] = await Promise.all([
       objectSize(upload.photo.thumbnailKey),
       objectSize(upload.photo.displayKey),

@@ -121,17 +121,23 @@ CORS responses echo only an approved request origin and vary by Origin.
 3. Return a signed five-minute Worker upload capability for a unique quarantine key.
 4. The Worker checks origin/signature/expiry and streams exactly the reserved
    length through `FixedLengthStream`; conditional R2 writes reject reuse.
-5. Completion claims a five-minute processing lease. The Worker reads at most
-   20 MB, inspects the actual container, rejects animation/timed tracks, checks
-   decoded dimensions (50 megapixels), and re-encodes two static WebP variants.
+5. Completion claims a five-minute processing lease. The Node.js server reads at
+   most 20 MB through the authenticated R2 gateway, inspects the actual container,
+   rejects animation/timed tracks and checks decoded dimensions (50 megapixels).
+   Sharp produces oriented, metadata-free WebP variants; HEIC uses a local
+   libheif WASM decoder before Sharp. Authenticated variant PUTs persist the
+   outputs in R2. The Worker performs storage and access checks only.
 6. Persist actual variant sizes and mark ready only while the lease still owns
    an existing Photo. Repeat completion returns the existing result.
 7. Transfer source deletion to a durable job. Source bytes remain accounted
    until physical removal; failed uploads retain their reservation until cleanup.
 
 Variants are at most 320/2,560 px, without upscaling, with a 4 MB combined cap.
-Processing failures expose no original. HEIC currently fails in the real
-Cloudflare backend and remains a release blocker; see [validation](validation.md).
+Processing failures expose no original. The Worker no longer binds Cloudflare
+Images; its old `/process` and temporary diagnostic routes are removed. Source
+bytes are only available through a server-authenticated endpoint, never a public
+read capability. See [validation](validation.md) and ADR 0007 for real JPEG/HEIC
+results and the remaining physical-device/hosting checks.
 See [ADR 0004](adr/0004-bound-worker-capabilities.md) for the bounded upload gateway.
 
 ## Privacy and authorization
@@ -163,7 +169,8 @@ Old IDs remain permanently fenced; a later same-email registration receives a
 new identity with no old globe. See ADR 0006 and setup for the credential scope.
 
 Invocation logging and trace sampling are disabled for capability URLs.
-Structured processing errors record phase/code only, not user files or secrets.
+Do not log source bytes, signed grant URLs, authentication headers or credentials.
+Temporary provider diagnostic routes/logs have been removed.
 Rate limits and quotas are application controls, not a provider spending guarantee.
 
 ## Service limits

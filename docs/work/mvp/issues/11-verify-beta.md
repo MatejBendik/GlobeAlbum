@@ -21,7 +21,13 @@ Verify and prepare the public beta, as a complete end-to-end user behavior.
 
 ## Validation evidence
 
-Updated 2026-11-06. The production build, type checks, 42 Vitest tests and all 26 browser scenarios pass. Browser verification covers desktop and mobile emulation; see docs/validation.md for current command evidence and remaining gates. Real Neon email/session and persisted-globe checks now pass. HEIC, real Google, GeoNames, physical devices, production auth email/recovery, automated identity cleanup, deployment cron and Vercel eligibility remain open. Cloudflare resources are authorized and deployed; Vercel application deployment and paid upgrades are not performed.
+Updated 2026-11-06. Production build, Worker checks, 53 Vitest tests and 41 browser
+scenarios pass (one intentional mobile-hover skip). Real Neon, Google registration
+and linking, GeoNames, R2 PNG/HEIC and owner JPEG recovery are recorded in
+validation. Physical devices, hosted Linux codec packaging/resource measurements,
+production auth email/recovery, deployment cron and Vercel eligibility remain
+open. Automated managed identity cleanup is verified. Cloudflare uses R2 only;
+no Images plan, paid upgrade or Vercel deployment was performed.
 
 See [verification and release gates](../../../validation.md). Unchecked criteria remain pending, even when their code exists.
 

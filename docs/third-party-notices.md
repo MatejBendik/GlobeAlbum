@@ -22,6 +22,14 @@ Recorded 2026-11-05.
 The visual design and UI source are original to this project. Clerk and AlignUI
 were aesthetic references, not bundled products or claimed affiliations.
 
+Added 2026-11-06: Sharp 0.35.5 (Apache-2.0), `heic-decode` 2.1.0 (ISC), and
+its libheif-js WASM dependency (LGPL-3.0) run on the Node.js server for photo
+processing. Preserve their packaged license notices and upstream source links;
+the decoder is not shipped to browser clients. Sources:
+https://sharp.pixelplumbing.com/,
+https://github.com/catdad-experiments/heic-decode,
+https://github.com/catdad-experiments/libheif-js.
+
 Added 2026-11-06: Leaflet 1.9.4 (BSD-2-Clause) and React Leaflet 5.0.0 (MIT)
 power the manual location picker. Standard OpenStreetMap tiles retain visible
 © OpenStreetMap contributors attribution. Browsers fetch only the visible map,

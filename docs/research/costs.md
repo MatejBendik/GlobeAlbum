@@ -4,7 +4,7 @@ Prices checked: 2026-11-05. USD before tax, exchange rates, retries, domains and
 unrelated account usage. Examples are not purchases or approved upgrades.
 
 Required services: Vercel Next.js/functions/cron, Neon PostgreSQL, R2 Standard,
-Images-enabled Worker, managed Neon Auth, Google OAuth configuration and GeoNames search account.
+storage-only Worker, local Sharp/HEIC processing, managed Neon Auth, Google OAuth configuration and GeoNames search account.
 Auth scope changed on 2026-11-06: shared SMTP is a development facility;
 production custom SMTP is required. Its cost and managed Auth growth allowances
 are not included in the original estimates and must be checked before release. Domain ~$12/year is
@@ -15,15 +15,17 @@ the user's estimate, not a verified renewal quote.
 | Vercel      | Hobby $0 for eligible use                                                              | Non-commercial personal use; Pro starts at $20/month with usage rules              |
 | Neon Free   | 100 CU-hours/month/project, 1 GB PostgreSQL, 5 GB public transfer/month/project        | Compute can suspend at allowance; Launch lists $0.106/CU-hour and $0.35/GB-month   |
 | R2 Standard | 10 GB-month, 1M Class A and 10M Class B operations/month, no R2 internet egress charge | $0.015/GB-month, $4.50/M Class A, $0.36/M Class B; billing categories round upward |
-| Images Free | 5,000 unique transformations/month; `.info()` free                                     | New transforms fail at limit; paid scenario $0.50/1,000 above included 5,000       |
 | Worker      | Free runtime selected                                                                  | Requests/CPU are separate; measure and confirm runtime limits                      |
 
 Workers Free currently permits 100,000 requests/day and 10 ms CPU per invocation.
-The large-image path must be measured against that CPU allowance before release.
+The Worker now handles storage/access only. Measure its request/validation CPU
+and the separate Next.js decoding CPU/memory before release.
 
 The user manually activated R2's subscription. It can bill excess usage. The
-app's 8 GB/4,000 transformation limits provide headroom, not a provider-wide
-spending guarantee. No Images/Workers paid upgrade has been enabled.
+app's 8 GB storage and 4,000 local-variant-operation limits provide headroom,
+not a provider-wide spending guarantee. The latter is an application compute
+budget, not a Cloudflare Images counter. The user removed the Images dependency
+on 2026-11-06; no Images/Workers paid upgrade was enabled.
 
 Assume full 50-photo accounts, 0.5 MB combined retained variants/photo, 5 MB
 average source retained for at most one day, and two initial transforms/photo.
@@ -41,14 +43,17 @@ five 400 KB display images. These are estimates, not measured behavior.
 
 Growth exceeds the app's free-beta processing cap. If approved later, 25 GB
 retained storage implies roughly $0.23/month beyond the R2 allowance; 100,000
-initial transforms imply $47.50 Images. Temporary objects, writes, heads,
-cleanup, Worker requests, database and hosting are additional dimensions.
+initial transforms now consume Next.js compute rather than an Images fee.
+The old $47.50 Images estimate is superseded by the R2-only decision. Measure
+native/WASM processing time and memory before estimating growth compute costs.
+Temporary objects, writes, heads, cleanup, Worker requests, database and hosting
+remain additional dimensions.
 Simultaneously reserving every beta source also exceeds 8 GB:
 1,500 × (5 MB source + 4 MB variant reserve) = 13.5 GB.
 
 Estimate Neon from measured CU-hours/metadata transfer, not photo count. Images
-travel through Worker/R2 rather than Vercel's image optimizer; Vercel still serves
-HTML/JS/APIs and incurs compute/waiting usage. A free allowance does not guarantee
+travel through Worker/R2 rather than Vercel's image optimizer; Vercel serves
+HTML/JS/APIs and performs photo decoding/resizing, incurring compute/waiting usage. A free allowance does not guarantee
 long-term free production operation.
 
 Primary sources:

@@ -39,7 +39,7 @@ One personal globe per account, private until explicitly published. Open Google 
 
 ### Stack and boundaries
 
-Next.js App Router and TypeScript on Vercel Node runtime; Tailwind CSS and selected shadcn-compatible primitives; Zod; React Hook Form for editor forms; Neon PostgreSQL and Prisma 7; managed Neon Better Auth via `@neon/auth` (Google plus email/password); private R2; Cloudflare Images through a small Worker; react-globe.gl; GeoNames search. No Zustand or TanStack Query initially. Keep one design-token system; AlignUI is visual inspiration, not a second component system.
+Next.js App Router and TypeScript on Vercel Node runtime; Tailwind CSS and selected shadcn-compatible primitives; Zod; React Hook Form for editor forms; Neon PostgreSQL and Prisma 7; managed Neon Better Auth via `@neon/auth` (Google plus email/password); private R2 through a storage-only Worker; local Node.js processing with Sharp and a HEIC WASM decoder; react-globe.gl; GeoNames search. No Zustand or TanStack Query initially. Keep one design-token system; AlignUI is visual inspiration, not a second component system.
 
 Server Components perform initial reads through server-only access functions. Client Components own interaction, gestures and upload progress. Server Actions handle metadata mutations; Route Handlers handle auth, upload control and lazy galleries. Every operation independently checks identity, ownership or publication. Publication-sensitive reads have no persistent cache. Saved changes appear on the next request; no live synchronization.
 
@@ -123,6 +123,13 @@ original deferred status. Photographs retain their original colors.
 
 ### Photos
 
+User-confirmed refinement (2026-11-06): use Cloudflare only for R2 storage;
+no Cloudflare Images plan or transformation dependency. Next.js Node.js creates
+the variants using Sharp; HEIC is decoded locally through libheif WASM. The Worker
+has only the private R2 binding. Server-authenticated source reads and variant
+writes are unavailable to anonymous visitors. Storage remains private and no
+original is served as an error fallback. See ADR 0007.
+
 Maximum input: 20,000,000 bytes. Accept static JPEG, PNG, WebP, HEIC; reject SVG, RAW, videos and animation. Authenticate -> verify Visit ownership -> atomically reserve account/shared capacity -> signed upload to private quarantine -> verify actual bytes/type/decoding -> create oriented metadata-free WebP thumbnail (up to 320px) and display variant (up to 2560px), without upscaling -> persist actual sizes and mark ready -> remove source. Original retention and EXIF location extraction are out of scope.
 
 Originals and outputs remain private. Issue image GET links for at most 60 seconds only after access checks. Use no-store responses and object headers to avoid extending the agreed access window through browser/CDN freshness. Processing failures never serve the source. Use idempotency and processing leases. Late completions cannot revive deleted content. Cleanup must retry abandoned uploads and failed object deletion. Verify signed upload byte constraints against the actual provider before beta.
@@ -133,7 +140,7 @@ Per account: 1 globe, 100 places, 300 visits, 50 photos. Count pending reservati
 
 ### Assumptions and cost gates
 
-At 30 fully used accounts: 1,500 photos, 0.75 GB retained at assumed 0.5 MB combined variants/photo, 3,000 initial transformations. At 1,000 accounts: 50,000 photos, 25 GB, 100,000 initial transformations; this exceeds the free beta. Current R2/Images rates suggest approximately $0.23/month storage and $47.50 initial processing for that growth scenario, excluding other services/taxes/retries. These are calculations, not measurements or guaranteed bills.
+At 30 fully used accounts: 1,500 photos, 0.75 GB retained at assumed 0.5 MB combined variants/photo, 3,000 initial transformations. At 1,000 accounts: 50,000 photos, 25 GB, 100,000 initial transformations; this exceeds the free beta. The historical Images estimate ($47.50 initial processing) no longer applies after the R2-only amendment. Retained R2 storage remains approximately $0.23/month above its allowance; processing now consumes Next.js hosting compute and must be measured. Other services, taxes and retries are excluded. These are calculations, not measurements or guaranteed bills.
 
 R2's included usage is not a hard spending stop. Monitor requests, temporary storage, transformations and Neon compute. Domain ~$12/year is the user's unverified estimate. Vercel Hobby is restricted to non-commercial personal use; resolve eligibility before deployment. If ineligible, hold deployment for a separate decision.
 
@@ -141,7 +148,7 @@ R2's included usage is not a hard spending stop. Monitor requests, temporary sto
 
 The primary seam is the complete user journey: sign-in -> onboarding -> private globe -> places/visits -> upload -> gallery -> publish -> anonymous view -> hide -> deletion. Add focused integration tests for authorization, database concurrency, quotas, byte validation, processing and cleanup failures. Tests assert observable behavior rather than internal call structure. There is no pre-existing test suite.
 
-Cover optional dates, repeat visits, no-photo places, effective country counts, manual entry, malformed/oversized/animated images, real HEIC, EXIF removal, cross-owner IDs, stale public links, cancelled/retried uploads and late callbacks. Verify keyboard, touch, reduced motion, dense markers and no-WebGL fallback. Early real-cloud HEIC processing is a release gate, not something mocked tests can establish.
+Cover optional dates, repeat visits, no-photo places, effective country counts, manual entry, malformed/oversized/animated images, real HEIC, EXIF removal, cross-owner IDs, stale public links, cancelled/retried uploads and late callbacks. Verify keyboard, touch, reduced motion, dense markers and no-WebGL fallback. Verify real HEIC decoding and its complete R2 upload/delivery flow; physical-device and hosted-runtime evidence remain separate release checks.
 
 Beta success: at least 5 of the first 10 testers independently add 3 places and 5 photos and share with another person. Collect direct feedback; no analytics service.
 
@@ -151,7 +158,7 @@ Payments, paid plans, multiple globes, trips as entities, embedding, original ba
 
 ## Further Notes
 
-Approved tickets are individual Markdown files in the sibling issues directory. Status means implementation readiness, not verified cloud readiness. Cloudflare provisioning was subsequently authorized and the user activated R2 personally. Deployment to Vercel remains separate. The user confirmed retaining Cloudflare after real HEIC tests returned internal error 9516; working HEIC remains a mandatory beta gate. See [validation](../../validation.md) and [the bounded Worker capability refinement](../../adr/0004-bound-worker-capabilities.md).
+Approved tickets are individual Markdown files in the sibling issues directory. Status means implementation readiness, not verified cloud readiness. Cloudflare provisioning was subsequently authorized and the user activated R2 personally. Deployment to Vercel remains separate. After repeated Images failures (HEIC 9516, then JPEG/PNG 9523), the user explicitly chose R2 storage without an Images plan. Local processing supersedes the former Images dependency; physical mobile-device and hosted-runtime verification remain mandatory before beta. See [validation](../../validation.md) and [the bounded Worker capability refinement](../../adr/0004-bound-worker-capabilities.md).
 
 Primary sources verified 2026-11-05:
 

@@ -12,6 +12,5 @@
     "traces": { "enabled": true, "head_sampling_rate": 0 },
   },
   "vars": { "APP_ORIGIN": "http://127.0.0.1:3000" },
-  "images": { "binding": "IMAGES" },
   "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "globealbum-photos" }],
 }

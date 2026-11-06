@@ -2,22 +2,9 @@ import { isAllowedAppOrigin } from "../src/lib/origins";
 import { z } from "zod";
 import { verifyUploadGrant, verifyMediaGrant } from "../src/lib/upload-grant";
 import { LIMITS } from "../src/lib/limits";
-import {
-  readBounded,
-  inspectPhoto,
-  byteStream,
-} from "../src/lib/image-validation";
+import { readBounded, inspectPhoto } from "../src/lib/image-validation";
 
-// Binding types are generated from wrangler.jsonc into worker-configuration.d.ts.
-const processSchema = z
-  .object({
-    sourceKey: z.string().regex(/^quarantine\/[a-zA-Z0-9-]+$/),
-    expectedBytes: z.number().int().positive().max(LIMITS.fileBytes),
-    thumbnailKey: z.string().regex(/^photos\/[a-zA-Z0-9-]+\/thumbnail\.webp$/),
-    displayKey: z.string().regex(/^photos\/[a-zA-Z0-9-]+\/display\.webp$/),
-  })
-  .refine((v) => v.thumbnailKey.split("/")[1] === v.displayKey.split("/")[1]);
-let processing = false;
+// Binding types are generated from wrangler.jsonc. This Worker only stores files.
 function reply(
   body: object,
   status = 200,
@@ -160,93 +147,64 @@ export default {
         );
       return reply({ uploaded: true }, 201, cors);
     }
-    if (url.pathname !== "/process" || request.method !== "POST")
-      return reply({ error: "Not found." }, 404);
-    if (!(await hasControlAccess(request, env.IMAGE_WORKER_SECRET)))
-      return reply({ error: "Unauthorized" }, 401);
-    if (processing)
-      return reply({ error: "Processor is busy. Retry shortly." }, 503);
-    processing = true;
-    const processingDeadline = Date.now() + 90_000;
-    let phase = "request";
-    try {
-      if (Number(request.headers.get("content-length") ?? 0) > 4096)
-        return reply({ error: "Request too large." }, 413);
-      const raw = await readBounded(request.body!, 4096);
-      const input = processSchema.parse(
-        JSON.parse(new TextDecoder().decode(raw)),
-      );
-      phase = "source";
-      const source = await env.PHOTOS.get(input.sourceKey);
-      if (!source || source.size !== input.expectedBytes)
-        return reply(
-          { error: "Upload is missing or has the wrong size." },
-          422,
-        );
-      const bytes = await readBounded(source.body, LIMITS.fileBytes);
-      phase = "validation";
-      inspectPhoto(bytes);
-      phase = "image-info";
-      const info = await env.IMAGES.info(byteStream(bytes));
-      if (
-        !("width" in info) ||
-        info.width * info.height > LIMITS.maxPixels ||
-        !info.width ||
-        !info.height
-      )
-        return reply({ error: "Image dimensions are not supported." }, 422);
-      let total = 0;
-      phase = "transformation";
-      for (const [width, key, quality] of [
-        [320, input.thumbnailKey, 76],
-        [2560, input.displayKey, 84],
-      ] as const) {
-        const output = await env.IMAGES.input(byteStream(bytes))
-          .transform({ width, height: width, fit: "scale-down" })
-          .output({ format: "image/webp", quality, anim: false });
-        const image = await readBounded(
-          output.image(),
-          LIMITS.variantBytes - total,
-        );
-        total += image.length;
-        if (Date.now() > processingDeadline)
-          return reply({ error: "Processing timed out. Retry shortly." }, 503);
-        await env.PHOTOS.put(key, image, {
+    if (url.pathname === "/source" && request.method === "POST") {
+      if (!(await hasControlAccess(request, env.IMAGE_WORKER_SECRET)))
+        return reply({ error: "Unauthorized" }, 401);
+      try {
+        const input = z
+          .object({
+            key: z.string().regex(/^quarantine\/[a-zA-Z0-9-]+$/),
+            expectedBytes: z.number().int().positive().max(LIMITS.fileBytes),
+          })
+          .parse(
+            JSON.parse(
+              new TextDecoder().decode(await readBounded(request.body!, 1024)),
+            ),
+          );
+        const source = await env.PHOTOS.get(input.key);
+        if (!source || source.size !== input.expectedBytes)
+          return reply(
+            { error: "Upload is missing or has the wrong size." },
+            422,
+          );
+        return new Response(source.body, {
+          headers: {
+            "Content-Type": "application/octet-stream",
+            "Content-Length": String(source.size),
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+          },
+        });
+      } catch {
+        return reply({ error: "Invalid source request." }, 400);
+      }
+    }
+    if (url.pathname === "/variant" && request.method === "PUT") {
+      if (!(await hasControlAccess(request, env.IMAGE_WORKER_SECRET)))
+        return reply({ error: "Unauthorized" }, 401);
+      try {
+        const key = z
+          .string()
+          .regex(/^photos\/[a-zA-Z0-9-]+\/(thumbnail|display)\.webp$/)
+          .parse(request.headers.get("X-Object-Key"));
+        const expected = Number(request.headers.get("content-length"));
+        if (!expected || expected > LIMITS.variantBytes)
+          return reply({ error: "Invalid variant size." }, 413);
+        const bytes = await readBounded(request.body!, LIMITS.variantBytes);
+        if (bytes.length !== expected || inspectPhoto(bytes) !== "webp")
+          return reply({ error: "Invalid variant." }, 422);
+        await env.PHOTOS.put(key, bytes, {
           httpMetadata: {
             contentType: "image/webp",
             cacheControl: "private, no-store, max-age=0",
           },
         });
+        return reply({ stored: true }, 201);
+      } catch {
+        return reply({ error: "Invalid variant." }, 422);
       }
-      return reply({ processed: true });
-    } catch (error) {
-      const providerCode =
-        typeof error === "object" && error !== null && "code" in error
-          ? error.code
-          : null;
-      console.error(
-        JSON.stringify({
-          event: "photo_processing_failed",
-          phase,
-          providerCode,
-          name: error instanceof Error ? error.name : "UnknownError",
-        }),
-      );
-      const invalid =
-        phase === "validation" ||
-        [9402, 9412, 9413, 9520].includes(Number(providerCode));
-      return reply(
-        {
-          error: invalid
-            ? "The photograph is unsupported, corrupt, animated or too large."
-            : "Image processing is temporarily unavailable.",
-          phase,
-          providerCode,
-        },
-        invalid ? 422 : 503,
-      );
-    } finally {
-      processing = false;
     }
+    return reply({ error: "Not found." }, 404);
   },
 } satisfies ExportedHandler<Env>;

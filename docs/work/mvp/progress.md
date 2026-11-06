@@ -6,7 +6,7 @@ this checkpoint records execution state for resuming interrupted work.
 ## Verified locally
 
 - Application and Worker TypeScript checks pass; production Next.js build passes.
-- 47 Vitest tests pass against the isolated local PostgreSQL test database.
+- 53 Vitest tests pass against the isolated local PostgreSQL test database.
 - 41 Playwright scenarios pass across desktop and Pixel Chromium emulation;
   the desktop-only pointer-hover case is intentionally skipped on mobile.
 - Owned Google OAuth credentials are configured in Google Cloud and Neon. Real
@@ -47,12 +47,14 @@ this checkpoint records execution state for resuming interrupted work.
 
 - Private R2 bucket and `globealbum-images` Worker exist in the user's Cloudflare
   account. Required secret is configured locally and in the Worker, never in Git.
-- Actual PNG processing, immutable upload, bounded image links and physical
-  cleanup passed on 2026-11-05. A 2026-11-06 repeat again completed PNG but failed
-  at HEIC with application status 503. Earlier provider diagnostics recorded 9516.
-- Real JPEG upload from localhost, conversion and private WebP reads passed after
-  deploying Worker `0615b2bb-df2b-4bbe-b988-ea785c5f9780`; test objects removed.
-- **Confirmed:** keep Cloudflare; functioning HEIC remains mandatory before beta.
+- User confirmed R2-only storage without an Images plan. Sharp/HEIC WASM now
+  processes photos in Next.js Node.js; the storage-only Worker has no Images
+  binding. See ADR 0007 and validation for the historical 9516/9523 failures.
+- Full actual-R2 PNG/HEIC smoke passes, including byte enforcement, private WebP
+  reads and idempotency. Both owner JPEG uploads recovered to READY through the
+  normal domain operation. Large JPEG and official HEIC native-codec probes pass.
+- Physical iPhone and actual hosted Linux packaging/resource verification remain
+  beta gates; no paid plan or Vercel deployment was performed.
 - Neon production is linked and migrated; real managed email signup/session and
   persisted globe/place flows pass. User explicitly added email/password alongside
   Google. See [Neon changes](../../neon-setup.md) and ADR 0005.
@@ -64,8 +66,8 @@ this checkpoint records execution state for resuming interrupted work.
   Neon disposable test, with provider absence and unchanged stale-session denial.
 - Production auth email/recovery remains unverified. Real GeoNames autocomplete
   was separately verified; see validation.
-- Browser storage/processing is a local test double; it does not prove image
-  conversion, real Google sign-in or physical mobile-device compatibility.
+- Browser tests use a local R2 transport double and the real Node.js photo
+  processor. They do not prove real Google sign-in or physical-device compatibility.
 - No Vercel application deployment or paid upgrade has been performed. Current
   authorization covers implementation, Cloudflare resources and the existing Neon project.
 

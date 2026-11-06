@@ -88,7 +88,7 @@ GLOBEALBUM_LIVE_GEONAMES_USERNAME=your_username npm run test:e2e -- --project=de
 
 This routes the browser's search through the application to the actual GeoNames
 service and persists the selected city in local `*_test` PostgreSQL. Auth and
-photo processing remain localhost test doubles. Normal browser runs leave this
+R2 transport remain localhost test doubles; photo processing uses the real Node.js codec. Normal browser runs leave this
 variable unset and use deterministic search fixtures. The provided account was
 verified successfully on 2026-11-06; no paid GeoNames plan was activated.
 
@@ -151,10 +151,20 @@ Created with the user's authorization after they manually activated R2:
 - Private Standard R2 bucket: `globealbum-photos`, WEUR location hint.
 - Worker: `globealbum-images`.
 - URL: `https://globealbum-images.matejbendik-mb.workers.dev`.
-- Bindings: `PHOTOS` (R2), `IMAGES` (Images), `APP_ORIGIN` (allowed browser origin).
+- Bindings: `PHOTOS` (R2), `APP_ORIGIN` (allowed browser origin). No Images binding.
 - Secret: `IMAGE_WORKER_SECRET`, shared with the Next.js server.
 - Bucket lifecycle: delete `quarantine/` objects and abort multipart uploads after one day.
 - No public bucket domain, no Images Paid or Workers Paid upgrade.
+
+The historical `globealbum-images` Worker name and `IMAGE_WORKER_*` variables
+are retained to preserve the existing URL and credentials. This Worker now only
+stores and serves R2 objects; it does not use Cloudflare Images or an Images plan.
+
+Next.js uses Sharp 0.35.5 directly and `heic-decode`/libheif WASM for HEIC.
+The portable Sharp binary does not include HEVC decoding by itself. Keep the
+server packages external/traced in the Next build, and verify the actual Linux
+hosting runtime before deployment. No decoder is sent to the browser. Native
+processing consumes hosting CPU/memory; it is not promised to be free at scale.
 
 The Next.js application does not need S3 access keys. It grants short-lived
 upload/read capabilities and uses the protected Worker control interface.
