@@ -19,6 +19,14 @@ if (
 const linked = JSON.parse(readFileSync(".neon", "utf8"));
 if (!linked.projectId || !linked.branch)
   throw Error("Link the existing Neon project first.");
+if (
+  !process.env.NEON_AUTH_ADMIN_API_KEY ||
+  !process.env.NEON_AUTH_PROJECT_ID ||
+  !process.env.NEON_AUTH_BRANCH_ID
+)
+  throw Error(
+    "Configure the project-scoped identity cleanup key before the full Neon smoke test.",
+  );
 mkdirSync(".local/neon-setup", { recursive: true, mode: 0o700 });
 const i = {
   email: `globealbum-${randomUUID()}@example.com`,
@@ -176,13 +184,18 @@ try {
   await page.waitForURL(origin + "/");
   const gone = await db.query('SELECT 1 FROM "User" WHERE id=$1', [i.id]);
   const fence = await db.query(
-    'SELECT 1 FROM "DeletedIdentity" WHERE "userId"=$1',
+    'SELECT "authDeletedAt" FROM "DeletedIdentity" WHERE "userId"=$1',
     [i.id],
   );
-  if (gone.rowCount || fence.rowCount !== 1)
+  if (gone.rowCount || fence.rowCount !== 1 || !fence.rows[0].authDeletedAt)
     throw Error("Deletion fence missing");
+  if (
+    (await db.query('SELECT 1 FROM neon_auth."user" WHERE id=$1', [i.id]))
+      .rowCount
+  )
+    throw Error("Managed identity deletion did not complete");
   console.log(
-    "PASS account deletion removes application data and queues provider cleanup",
+    "PASS confirmed account deletion removes the real managed identity automatically",
   );
   const stale = await browser.newContext();
   await stale.addCookies(
@@ -205,6 +218,27 @@ try {
   await stale.close();
   console.log(
     "PASS stale managed cookies cannot recreate a deleted application account",
+  );
+  await page.goto(`${origin}/sign-up`);
+  await page.getByLabel("Name", { exact: true }).fill(i.name);
+  await page.getByLabel("Email", { exact: true }).fill(i.email);
+  await page.getByLabel("Password", { exact: true }).fill(i.password);
+  await page
+    .getByRole("button", { name: "Create account", exact: true })
+    .click();
+  await page.waitForURL("**/onboarding");
+  const fresh = await page.evaluate(async () =>
+    (await fetch("/api/auth/get-session")).json(),
+  );
+  if (!fresh?.user || fresh.user.id === i.id || fresh.user.email !== i.email)
+    throw Error("Re-registration did not create a new identity");
+  if (
+    (await db.query('SELECT 1 FROM "Globe" WHERE "userId"=$1', [fresh.user.id]))
+      .rowCount
+  )
+    throw Error("Re-registration restored old globe data");
+  console.log(
+    "PASS same-email re-registration creates a new identity and starts onboarding without restoring content",
   );
 } catch (error) {
   console.error(

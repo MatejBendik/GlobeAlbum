@@ -173,7 +173,7 @@ model RetiredUsername {
 }
 
 // Prevent stale managed sessions from recreating deleted application accounts.
-// A null authDeletedAt is durable operator work for Neon identity removal.
+// A null authDeletedAt is durable retry work for Neon identity removal.
 model DeletedIdentity {
   userId        String   @id
   createdAt     DateTime @default(now())

@@ -3,10 +3,12 @@ import { randomUUID } from "node:crypto";
 import { getDb } from "./db";
 import { deletePhoto, locked } from "./domain";
 import { removeObject, storageConfigured } from "./storage";
+import { retryIdentityDeletions } from "./identity-cleanup";
 
 export async function runMaintenance() {
+  const identities = await retryIdentityDeletions();
   if (!storageConfigured())
-    return { expired: 0, cleaned: 0, storageConfigured: false };
+    return { expired: 0, cleaned: 0, storageConfigured: false, identities };
   const expired = await getDb().uploadIntent.findMany({
     where: {
       expiresAt: { lt: new Date() },
@@ -86,5 +88,10 @@ export async function runMaintenance() {
   await getDb().requestWindow.deleteMany({
     where: { expiresAt: { lt: new Date() } },
   });
-  return { expired: expired.length, cleaned, storageConfigured: true };
+  return {
+    expired: expired.length,
+    cleaned,
+    storageConfigured: true,
+    identities,
+  };
 }

@@ -94,24 +94,55 @@ verified successfully on 2026-11-06; no paid GeoNames plan was activated.
 
 ## Managed identity deletion
 
-Application deletion immediately hides/removes ownership data and leaves a
-`DeletedIdentity` row. This fence is checked when synchronizing every authenticated
-identity, including stale cookies. Its `authDeletedAt = NULL` records pending
-provider deletion. The current managed `/delete-user` endpoint returns 404.
-The app attempts deletion, signs out, and retains work on provider failure.
+Application deletion immediately removes ownership data and leaves a
+`DeletedIdentity` row. This fence blocks old identities, including stale cached
+cookies. `authDeletedAt = NULL` records pending provider deletion. The managed
+`/delete-user` endpoint returns 404, so the app signs out after logical deletion,
+then uses Neon's supported branch management API. Failures remain durable retry
+work; the fence permanently rejects the old ID.
 
-Until a supported automated path is wired, an authenticated operator reviews
-pending rows and runs:
+Server-only configuration:
+
+- `NEON_AUTH_ADMIN_API_KEY`: a project-scoped Neon Editor key, never a personal
+  or organization-wide key. The live key is named GlobeAlbum identity cleanup.
+- `NEON_AUTH_PROJECT_ID` and `NEON_AUTH_BRANCH_ID`: the linked project and exact
+  immutable branch IDs. Before deletion, the API's branch auth URL must match
+  `NEON_AUTH_BASE_URL`.
+- `CRON_SECRET`: authenticates `/api/maintenance`. Maintenance retries up to three
+  identities per invocation, including when photo storage is unavailable.
+
+The key can manage project resources beyond user deletion; Neon does not offer a
+narrower key type here. Keep it server-only, ignored and owner-readable. It was
+created locally for the existing project on 2026-11-06; no credential was sent to
+Vercel. Configure the corresponding secrets deliberately before deployment.
+Never copy the CLI's personal login into application code.
+
+Only a deletion fence with no active application User permits removal. Verify
+provider absence through read-only `neon_auth` access before marking completion;
+never delete provider records with SQL. Retain the fence and retired profile URL.
+Registering again with the same email creates a new identity and starts onboarding.
+
+A stale deleted session receives an explanation on sign-in. Continue with Google
+first calls the same-origin `/api/account/restart`, which can only finish deletion
+for that signed session's own fenced ID. Pending cleanup stops with readable
+retry feedback instead of silently cycling to login.
+
+The operator fallback remains available after reviewing pending rows:
 
 ```sh
 npm run auth:cleanup -- --confirm
 ```
 
-This script checks CLI branch/database alignment, removes only identities from
-pending deletion rows through Neon CLI, verifies absence in `neon_auth`, and marks
-completion. It keeps the opaque fence and retired usernames. No Neon control-plane
-API key is stored in the application or Vercel. This operator requirement must be
-resolved/accepted before beta; daily R2 maintenance does not drain this queue.
+It checks CLI/database alignment, deletes only pending identities using Neon CLI,
+verifies absence and retains fences. Production maintenance scheduling remains a
+deployment check; this undeployed app has no scheduled cron.
+
+Sources checked 2026-11-06:
+
+- https://neon.com/docs/auth/guides/manage-auth-api
+- https://neon.com/docs/manage/api-keys
+- Installed Neon CLI OpenAPI description for
+  `DELETE /projects/{project_id}/branches/{branch_id}/auth/users/{auth_user_id}`.
 
 ## Existing Cloudflare resources
 

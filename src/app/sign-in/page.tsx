@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, Globe2 } from "lucide-react";
-import { authConfigured, currentUser } from "@/lib/auth";
+import { authConfigured, currentIdentity } from "@/lib/auth";
 import { Brand } from "@/components/brand";
 import { SignInButton } from "@/components/sign-in-button";
 import { EmailAuthForm } from "@/components/email-auth-form";
@@ -12,7 +12,8 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<{ error?: string | string[] }>;
 }) {
-  if (await currentUser()) redirect("/studio");
+  const { user, deleted } = await currentIdentity();
+  if (user) redirect("/studio");
   const { error } = await searchParams;
   return (
     <main className="auth-page">
@@ -37,8 +38,11 @@ export default async function SignInPage({
           <br />
           Your memories start private.
         </p>
-        <OAuthNotice error={error} />
-        <SignInButton enabled={authConfigured()} />
+        <OAuthNotice error={deleted ? "account_deleted" : error} />
+        <SignInButton
+          enabled={authConfigured()}
+          restartDeletedAccount={deleted}
+        />
         <span className="muted text-xs">or use your email</span>
         <EmailAuthForm mode="sign-in" enabled={authConfigured()} />
         <p className="text-sm">

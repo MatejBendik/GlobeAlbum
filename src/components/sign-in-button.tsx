@@ -7,10 +7,12 @@ export function SignInButton({
   enabled = true,
   disabled = false,
   label,
+  restartDeletedAccount = false,
 }: {
   enabled?: boolean;
   disabled?: boolean;
   label?: string;
+  restartDeletedAccount?: boolean;
 }) {
   const [pending, setPending] = useState(false),
     [error, setError] = useState("");
@@ -19,6 +21,18 @@ export function SignInButton({
     setPending(true);
     setError("");
     try {
+      if (restartDeletedAccount) {
+        const response = await fetch("/api/account/restart", {
+          method: "POST",
+        });
+        if (!response.ok) {
+          setError(
+            "Your previous account is still being removed. Please try again shortly.",
+          );
+          setPending(false);
+          return;
+        }
+      }
       const result = await authClient.signIn.social({
         provider: "google",
         callbackURL: "/studio",

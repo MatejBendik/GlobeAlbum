@@ -154,6 +154,14 @@ account. In-flight work cannot mark a deleted Photo ready. Cleanup is delayed
 past outstanding processing/upload leases to avoid resurrected storage objects.
 Retired usernames are not reassigned during beta.
 
+Managed identity removal is a separate, retriable operation through Neon's branch
+management API. A project-scoped server credential is guarded by the expected
+Auth URL and a committed deletion fence; only read-only queries inspect
+`neon_auth`. Completion requires verified identity absence. Account deletion,
+bounded maintenance and authenticated same-origin restart can drain that work.
+Old IDs remain permanently fenced; a later same-email registration receives a
+new identity with no old globe. See ADR 0006 and setup for the credential scope.
+
 Invocation logging and trace sampling are disabled for capability URLs.
 Structured processing errors record phase/code only, not user files or secrets.
 Rate limits and quotas are application controls, not a provider spending guarantee.

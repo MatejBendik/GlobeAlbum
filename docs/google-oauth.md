@@ -96,13 +96,28 @@ deployment, a domain purchase and paid upgrades remain separate instructions.
 - The follow-up browser regression covers ID-token/nonce submission through the
   SDK/proxy, unauthenticated denial, failure/retry and a refreshed Connected state
   using isolated contract fakes. These tests do not replace the real result above.
-  The final focused auth/settings run passed 10 desktop/mobile cases; the final
-  production build and repository-wide Prettier check passed. The earlier full
+  At the linking checkpoint, the focused auth/settings run passed 10 desktop/mobile cases; the final
+  production build and repository-wide Prettier check passed at that checkpoint. The earlier full
   39-case browser suite and 42 Vitest results are recorded separately above.
-- A brand-new Google identity's first registration/onboarding was not exercised;
-  the available Google identity already owned this globe. Keep that release
-  check separate from verified linking and returning sign-in. No owner content
-  was deleted to fabricate a fresh-registration test.
+- Later, the owner deleted that account and reproduced a silent return to login.
+  Application data was gone, but the old managed identity remained and was
+  correctly rejected by its permanent deletion fence. Automatic management-API
+  cleanup now removes the old identity without clearing that fence.
+- Real Google-only re-registration then passed: a new managed ID was created
+  with only the Google provider, onboarding opened and survived reload, and no
+  globe existed for that new ID. The original user/identity remained deleted.
+  The owner was left on onboarding to choose their own display name.
+
+## Account chooser behavior
+
+Google can reuse its signed-in account and an existing grant without displaying
+another consent/account-choice page. A read-only diagnostic of the current
+managed sign-in initialization showed that `additionalParams.prompt` is not
+forwarded to Google's authorization URL, so the app does not retain an ineffective
+"force chooser" option or rewrite Neon's OAuth flow. The missing chooser did not
+cause this bug: deletion left a provider identity that the app correctly blocked.
+No Google Console change is required to register after the identity is removed.
+See [automatic deletion setup](setup.md#managed-identity-deletion) and ADR 0006.
 
 ## Primary references
 
@@ -115,4 +130,6 @@ Verified 2026-11-06:
 - https://developers.google.com/identity/gsi/web/reference/js-reference
 - https://developers.google.com/identity/gsi/web/guides/display-button
 - https://github.com/neondatabase/neon-js/issues/181
+- https://developers.google.com/identity/openid-connect/openid-connect
+- https://neon.com/docs/auth/guides/manage-auth-api
 - Installed `@neon/auth` 0.8.2 SDK and Next.js 16.4.5 local documentation.

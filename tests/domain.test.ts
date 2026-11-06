@@ -14,6 +14,7 @@ import { getDb } from "../src/lib/db";
 import * as domain from "../src/lib/domain";
 import { LIMITS, utcMonth } from "../src/lib/limits";
 import { runMaintenance } from "../src/lib/maintenance";
+import { completeIdentityDeletion } from "../src/lib/identity-cleanup";
 
 config({ path: ".local/database.env", quiet: true });
 const url = process.env.TEST_DATABASE_URL;
@@ -28,20 +29,31 @@ if (
 }
 process.env.DATABASE_URL = url;
 process.env.DIRECT_URL = url;
+// Never inherit live control-plane credentials into local integration tests.
+process.env.NEON_AUTH_ADMIN_API_KEY = "";
 // Only reservation/signature behavior is exercised; no requests leave the test process.
 process.env.IMAGE_WORKER_URL = "http://127.0.0.1:8787";
 process.env.IMAGE_WORKER_SECRET = "test-secret-at-least-32-characters-long";
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
 
-beforeAll(() => {
+beforeAll(async () => {
   execFileSync(
     process.execPath,
     ["node_modules/prisma/build/index.js", "migrate", "deploy"],
     { env: process.env, stdio: "pipe" },
   );
+  // A minimal managed-identity contract fixture, only in the guarded local DB.
+  // Application migrations never create or modify Neon's actual auth schema.
+  await getDb().$executeRaw`CREATE SCHEMA IF NOT EXISTS neon_auth`;
+  await getDb()
+    .$executeRaw`CREATE TABLE IF NOT EXISTS neon_auth."user" (id text PRIMARY KEY)`;
 });
 
 beforeEach(async () => {
+  await getDb().$executeRaw`TRUNCATE TABLE neon_auth."user"`;
   await getDb()
     .$executeRaw`TRUNCATE TABLE "User", "CleanupJob", "RetiredUsername", "DeletedIdentity", "Usage", "MonthlyUsage", "RequestWindow" CASCADE`;
   for (const id of ["alice", "bob"]) {
@@ -354,5 +366,135 @@ describe("atomic upload reservations", () => {
         where: { username: "alice-travels" },
       }),
     ).not.toBeNull();
+  });
+});
+
+describe("managed identity deletion", () => {
+  function configureCleanup() {
+    vi.stubEnv("NEON_AUTH_ADMIN_API_KEY", "test-project-scoped-key");
+    vi.stubEnv("NEON_AUTH_PROJECT_ID", "test-project");
+    vi.stubEnv("NEON_AUTH_BRANCH_ID", "test-branch");
+    vi.stubEnv(
+      "NEON_AUTH_BASE_URL",
+      "https://test.neonauth.example/neondb/auth",
+    );
+  }
+  const details = () =>
+    Response.json({ base_url: "https://test.neonauth.example/neondb/auth" });
+
+  it("never deletes an active account or an identity without a deletion fence", async () => {
+    configureCleanup();
+    const request = vi.fn();
+    vi.stubGlobal("fetch", request);
+    expect(await completeIdentityDeletion("alice")).toBe(false);
+    await getDb().deletedIdentity.create({ data: { userId: "alice" } });
+    expect(await completeIdentityDeletion("alice")).toBe(false);
+    expect(request).not.toHaveBeenCalled();
+    expect(
+      await getDb().user.findUnique({ where: { id: "alice" } }),
+    ).not.toBeNull();
+  });
+
+  it("retries failed provider deletion and allows a new identity without restoring the old globe", async () => {
+    configureCleanup();
+    await domain.deleteAccount("alice");
+    await getDb()
+      .$executeRaw`INSERT INTO neon_auth."user" (id) VALUES ('alice')`;
+    const request = vi
+      .fn()
+      .mockResolvedValueOnce(details())
+      .mockResolvedValueOnce(new Response(null, { status: 503 }));
+    vi.stubGlobal("fetch", request);
+    expect(await completeIdentityDeletion("alice")).toBe(false);
+    expect(
+      await getDb().deletedIdentity.findUnique({ where: { userId: "alice" } }),
+    ).toMatchObject({ authDeletedAt: null });
+    request
+      .mockResolvedValueOnce(details())
+      .mockImplementationOnce(async (url, options) => {
+        expect(url).toBe(
+          "https://console.neon.tech/api/v2/projects/test-project/branches/test-branch/auth/users/alice",
+        );
+        expect(options.method).toBe("DELETE");
+        await getDb()
+          .$executeRaw`DELETE FROM neon_auth."user" WHERE id = 'alice'`;
+        return new Response(null, { status: 204 });
+      });
+    expect(await completeIdentityDeletion("alice")).toBe(true);
+    expect(
+      (
+        await getDb().deletedIdentity.findUniqueOrThrow({
+          where: { userId: "alice" },
+        })
+      ).authDeletedAt,
+    ).toBeInstanceOf(Date);
+    expect(
+      await domain.syncIdentity({
+        id: "alice",
+        name: "Alice",
+        email: "alice@example.test",
+        emailVerified: true,
+      }),
+    ).toBeNull();
+    expect(
+      await domain.syncIdentity({
+        id: "new-google-alice",
+        name: "Alice",
+        email: "alice@example.test",
+        emailVerified: true,
+      }),
+    ).toMatchObject({ id: "new-google-alice" });
+    await domain.createGlobe("new-google-alice", {
+      username: "alice-new-globe",
+      displayName: "Alice",
+    });
+    const fresh = await domain.readGlobe({ userId: "new-google-alice" });
+    expect(fresh?.places).toHaveLength(0);
+    expect(fresh?.published).toBe(false);
+  });
+
+  it("rejects a mismatched branch before issuing any destructive request", async () => {
+    configureCleanup();
+    await domain.deleteAccount("alice");
+    await getDb()
+      .$executeRaw`INSERT INTO neon_auth."user" (id) VALUES ('alice')`;
+    const request = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json({ base_url: "https://other-branch.example/auth" }),
+      );
+    vi.stubGlobal("fetch", request);
+    expect(await completeIdentityDeletion("alice")).toBe(false);
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(
+      await getDb().deletedIdentity.findUnique({ where: { userId: "alice" } }),
+    ).toMatchObject({ authDeletedAt: null });
+  });
+
+  it("finishes an interrupted cleanup idempotently after the provider identity is gone", async () => {
+    configureCleanup();
+    await domain.deleteAccount("alice");
+    const request = vi.fn();
+    vi.stubGlobal("fetch", request);
+    expect(await completeIdentityDeletion("alice")).toBe(true);
+    expect(await completeIdentityDeletion("alice")).toBe(true);
+    expect(request).not.toHaveBeenCalled();
+    expect(
+      await domain.syncIdentity({
+        id: "alice",
+        name: "Alice",
+        email: "alice@example.test",
+        emailVerified: true,
+      }),
+    ).toBeNull();
+  });
+
+  it("retries identity work even when photo storage is not configured", async () => {
+    configureCleanup();
+    vi.stubEnv("IMAGE_WORKER_URL", "");
+    await domain.deleteAccount("alice");
+    const result = await runMaintenance();
+    expect(result.storageConfigured).toBe(false);
+    expect(result.identities).toEqual({ attempted: 1, completed: 1 });
   });
 });

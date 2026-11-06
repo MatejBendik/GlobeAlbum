@@ -2,7 +2,7 @@
 
 Type: task
 Status: ready-for-agent
-Execution: email flow and returning Google sign-in verified; fresh Google registration outstanding
+Execution: email flow, Google linking, returning sign-in and fresh Google registration verified
 
 ## What to build
 
@@ -14,7 +14,7 @@ None
 
 ## Acceptance criteria
 
-- [ ] Open Google registration persists a session; unauthorized users cannot read the editor.
+- [x] Open Google registration persists a session; unauthorized users cannot read the editor.
 - [x] Email/password signup, current-user read, sign-out and returning sign-in work through actual managed Neon Auth.
 - [x] Onboarding creates exactly one private globe with a unique immutable slug and editable display name.
 - [x] Missing credentials produce actionable setup guidance, never a fake authenticated identity.
@@ -25,7 +25,7 @@ Updated 2026-11-06. User explicitly added email/password and selected managed
 Neon Auth. A real disposable identity registered through the browser form;
 `/api/auth/get-session` returned that user, reload restored the session,
 wrong credentials showed an appropriate error and returning sign-in restored
-the private globe persisted in Neon. Google consent/callback remains unverified.
+the private globe persisted in Neon. Google-specific results were added in the later comments below.
 Local browser tests use an isolated Auth contract fake, separately from this
 real-service smoke. See `npm run verify:neon -- --confirm` (requires running app).
 
@@ -54,6 +54,13 @@ denial. Subsequent real ID-token linking, sign-out, protected-route denial,
 returning Google sign-in and reload passed in Dia. Read-only SQL confirms the
 same user/globe/slug, 1 place and 3 photos; providers are credential and Google.
 The redirect linking route reproduced the upstream `state_mismatch` defect; the
-app uses the supported ID-token method without disabling safety checks. A new
-Google identity's first registration remains unverified, so the Google acceptance
-criterion above stays unchecked. See [Google setup](../../../google-oauth.md).
+app uses the supported ID-token method without disabling safety checks. At that
+checkpoint a new Google identity's first registration was still unverified; the
+subsequent result below completes that check. See [Google setup](../../../google-oauth.md).
+
+2026-11-06 deletion/re-registration fix: after the owner deleted their previous
+account, the old managed identity remained fenced and caused a silent login loop.
+Automatic cleanup removed that confirmed-deleted identity through the supported
+branch API. A real Google-only registration created a different identity, reached
+onboarding and survived reload; SQL confirmed zero globes for the new ID. No old
+content was restored. This supersedes the earlier fresh-registration caveat.

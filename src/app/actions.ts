@@ -6,6 +6,7 @@ import { requireUser, getAuth } from "@/lib/auth";
 import * as domain from "@/lib/domain";
 import { errorMessage } from "@/lib/errors";
 import { getDb } from "@/lib/db";
+import { completeIdentityDeletion } from "@/lib/identity-cleanup";
 import {
   profileAddressBase,
   availableProfileAddress,
@@ -115,20 +116,14 @@ export async function deleteAccountAction(
     if (!globe || confirmation !== globe.username)
       throw new Error("Confirmation does not match.");
     await domain.deleteAccount(userId);
-    // Logical deletion and the identity fence commit before contacting Neon.
-    // The managed service currently does not expose self-deletion on this branch;
-    // DeletedIdentity retains durable operator work if it rejects this request.
+    // Revoke the current session while the provider identity still exists.
+    // The database fence already denies all application access if sign-out fails.
     try {
-      const { error } = await getAuth().deleteUser({});
-      if (!error)
-        await getDb().deletedIdentity.update({
-          where: { userId },
-          data: { authDeletedAt: new Date() },
-        });
+      await getAuth().signOut();
     } catch {
-      // Access stays revoked; provider cleanup is retried by the operator.
+      // Provider cleanup still proceeds; stale sessions cannot restore content.
     }
-    await getAuth().signOut();
+    await completeIdentityDeletion(userId);
   });
   if (result.error) return result;
   redirect("/");

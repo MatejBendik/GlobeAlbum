@@ -15,6 +15,10 @@ const db = new PrismaClient({
   adapter: new PrismaPg({ connectionString: url }),
 });
 const sessions = new Map<string, string>();
+const identities = new Map<
+  string,
+  { id: string; name: string; email: string; emailVerified: boolean }
+>();
 const googleLinkedUsers = new Set<string>();
 createServer(async (req, res) => {
   res.setHeader("Content-Type", "application/json");
@@ -35,11 +39,13 @@ createServer(async (req, res) => {
     let body = "";
     for await (const part of req) body += part;
     const { userId } = JSON.parse(body);
-    if (!(await db.user.findUnique({ where: { id: userId } }))) {
+    const user = await db.user.findUnique({ where: { id: userId } });
+    if (!user) {
       res.writeHead(404).end("{}");
       return;
     }
     const token = randomUUID();
+    identities.set(userId, user);
     sessions.set(token, userId);
     res.end(JSON.stringify({ token }));
     return;
@@ -87,7 +93,8 @@ createServer(async (req, res) => {
   }
   if (req.url?.startsWith("/auth/get-session")) {
     const user = userId
-      ? await db.user.findUnique({ where: { id: userId } })
+      ? ((await db.user.findUnique({ where: { id: userId } })) ??
+        identities.get(userId))
       : null;
     res.end(
       JSON.stringify(

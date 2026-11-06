@@ -408,6 +408,38 @@ test("browses repeated-visit photos, edits a caption and deletes the account", a
   expect(browserErrors).toEqual([]);
 });
 
+test("explains a deleted identity and stops registration while provider cleanup is pending", async ({
+  page,
+  context,
+}) => {
+  const owner = await account(context, true);
+  await page.goto("/studio");
+  await db.deletedIdentity.create({ data: { userId: owner.id } });
+  await db.user.delete({ where: { id: owner.id } });
+  await page.goto("/sign-up");
+  await expect(
+    page.getByRole("alert", { name: "Google authorization notice" }),
+  ).toContainText("Your previous account was deleted.");
+  const forbidden = await page.request.post("/api/account/restart", {
+    headers: { Origin: "https://untrusted.example" },
+  });
+  expect(forbidden.status()).toBe(403);
+  await page.getByRole("button", { name: "Continue with Google" }).click();
+  await expect(
+    page.getByText(
+      "Your previous account is still being removed. Please try again shortly.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Continue with Google" }),
+  ).toBeEnabled();
+  expect(await db.user.findUnique({ where: { id: owner.id } })).toBeNull();
+  expect(
+    await db.deletedIdentity.findUnique({ where: { userId: owner.id } }),
+  ).toMatchObject({ authDeletedAt: null });
+});
+
 test("validates email signup and reports the managed invalid-password response", async ({
   page,
 }) => {

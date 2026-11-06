@@ -14,8 +14,8 @@ export function getAuth() {
   return auth;
 }
 
-export async function currentUser() {
-  if (!authConfigured()) return null;
+export async function currentIdentity() {
+  if (!authConfigured()) return { user: null, deleted: false };
   const { data: session, error } = await getAuth().getSession();
   if (error)
     throw new AppError(
@@ -23,8 +23,12 @@ export async function currentUser() {
       503,
       "AUTH_UNAVAILABLE",
     );
-  if (!session?.user) return null;
-  return syncIdentity(session.user);
+  if (!session?.user) return { user: null, deleted: false };
+  const user = await syncIdentity(session.user);
+  return { user, deleted: user === null };
+}
+export async function currentUser() {
+  return (await currentIdentity()).user;
 }
 export async function requireUser() {
   const user = await currentUser();

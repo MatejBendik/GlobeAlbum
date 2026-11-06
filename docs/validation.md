@@ -5,7 +5,7 @@ Checks below distinguish actual cloud behavior from test fixtures and emulation.
 
 ## Observed evidence
 
-Current local verification on 2026-11-06: 42 Vitest tests and 39 Playwright
+Current local verification on 2026-11-06: 47 Vitest tests and 41 Playwright
 scenarios (desktop/mobile Chromium) passed. One desktop-only pointer-hover
 scenario is intentionally skipped under mobile emulation. This includes read-only generated
 addresses, cold-load readiness, automatic city coordinates, manual map selection,
@@ -70,14 +70,63 @@ unchanged, and providers `credential` plus `google`.
 
 Focused desktop/mobile regression covers the SDK/proxy ID-token and nonce payload,
 authorization denial, failure/retry and the refreshed Connected state using local
-contract fakes. First signup with an entirely new Google identity, production
-branding/domain setup and Google account deletion remain separate unverified
-release checks. See [Google OAuth setup](google-oauth.md).
+contract fakes. Fresh Google registration and old provider removal were verified
+in the subsequent deletion fix below; public branding/domain setup remains a
+release check. See [Google OAuth setup](google-oauth.md).
 
 Final follow-up commands: `npx playwright test --grep 'profile on its own settings|before opening settings|account navigation|Google'`
 reported `10 passed (29.4s)`; `npm run build` completed compilation, TypeScript
 and route generation successfully; `npm run format:check` passed. The earlier
 42 Vitest tests were not rerun for this client-only linking change.
+
+## Deleted-account Google registration fix (2026-11-06)
+
+The owner deleted their account, then Google repeatedly returned to sign-in.
+Read-only SQL showed no application User, an unfinished deletion fence, and the
+old Neon identity with credential/Google methods still present. The live Google
+attempt reproduced that silent return. Local regression first failed because
+sign-in showed no explanation of the deleted identity.
+
+The supported branch management API now finishes confirmed deletions using a
+server-only project-scoped key. Verify the branch's Auth URL before destructive
+requests, and verify identity absence before setting `authDeletedAt`. Keep old
+IDs fenced forever. Maintenance retries bounded work independently of photo
+storage; an authenticated same-origin restart operation can finish only the
+current session's already-confirmed deletion. It cannot select arbitrary IDs
+or delete active accounts. Failure produces an explicit retry message.
+
+Real Google-only registration passed after this cleanup: the old managed identity
+is absent, its fence is marked complete, the new ID differs, its only method is
+Google, and it has zero globes. Onboarding opened and survived reload. The owner
+was left there to choose a display name; no old globe was restored. Screenshot:
+ignored `.local/verification/google-fresh-signup-onboarding.png`.
+
+Google may reuse an existing account/grant without another chooser. A diagnostic
+of the managed init response confirmed that `additionalParams.prompt` is not
+forwarded to Google; no ineffective force-chooser code remains. This required no
+Google Console reconfiguration. See [Google setup](google-oauth.md).
+
+The 47 Vitest tests passed, including failure/retry, wrong-branch refusal,
+idempotent completion, new same-email identity creation, old-ID denial and
+maintenance without photo storage. Browser cases separately cover pending-cleanup
+feedback and cross-origin refusal. The complete browser suite passed 41 scenarios with one intentional mobile
+hover skip. The production build and repository-wide Prettier check passed.
+
+The production-build `npm run verify:neon -- --confirm` also passed against actual
+Neon using its own disposable email identity. Relevant output:
+
+```text
+PASS confirmed account deletion removes the real managed identity automatically
+PASS stale managed cookies cannot recreate a deleted application account
+PASS same-email re-registration creates a new identity and starts onboarding without restoring content
+PASS disposable identity physically removed through Neon CLI
+```
+
+The owner's separate real Google registration used the controlled Dia browser,
+not this disposable email test. A real authenticated maintenance invocation also returned HTTP 200 and removed
+eight queued object-cleanup jobs. No production migration, Vercel deployment or
+paid upgrade was required. Hosted maintenance scheduling still needs verification
+when deployment is authorized.
 
 ## Landing appearance follow-up (2026-11-06)
 
@@ -205,11 +254,12 @@ These use actual managed Auth and pooled Neon Postgres, not the local doubles.
 The direct Prisma migrations also succeeded. Test identities are physically
 removed through Neon CLI; retained opaque fences prevent stale-session reuse.
 
-Managed `/delete-user` returns an empty 404. App access/data revocation is
-immediate; `DeletedIdentity.authDeletedAt` remains null until operator CLI
-cleanup succeeds. The operator command was verified against disposable managed
-identities. Automated provider cleanup is an outstanding beta gate, alongside
-first-time Google registration and production email verification/recovery/SMTP.
+Managed `/delete-user` returns an empty 404. This initially required operator CLI
+cleanup and left `DeletedIdentity.authDeletedAt` null until that manual step.
+The deletion fix above supersedes that limitation with the supported management
+API: actual automatic removal, stale-cookie denial and same-email registration
+now pass. Production email verification/recovery/SMTP and hosted maintenance
+scheduling remain outstanding.
 
 ## HEIC failure record
 
@@ -253,10 +303,11 @@ Sources verified 2026-11-05:
 
 - [ ] Resolve the HEIC provider failure; rerun full cloud smoke successfully.
 - [x] Verify real Google linking, returning session, reload and sign-out.
-- [ ] Verify first registration with a new Google identity and Google account deletion.
+- [x] Verify fresh Google registration after confirmed deletion and removal of the old Google-linked identity.
 - [x] Verify real Neon pooled runtime reads/writes and direct migrations.
 - [ ] Measure Neon connection/concurrency behavior under representative hosted load.
-- [ ] Resolve/accept the managed identity cleanup operating requirement and verify production SMTP, email verification and password recovery.
+- [x] Automate managed identity cleanup through a supported API; retain durable retries and stale-session fences.
+- [ ] Verify production SMTP, email verification and password recovery.
 - [x] Enable/test the user's GeoNames account and attribution with live search.
 - [ ] Exercise iPhone HEIC/JPEG, orientation, GPS/EXIF removal, a near-20 MB file,
       invalid/corrupt files, WebP/APNG animation rejection, interrupted transfers,

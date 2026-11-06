@@ -13,3 +13,7 @@ accounts. The observed managed self-deletion endpoint returns 404; durable
 operator cleanup through Neon CLI is implemented, while automated provider
 cleanup remains a beta gate. Production SMTP, recovery and real Google consent
 still require verification. See [setup evidence](../neon-setup.md).
+
+The manual-only identity cleanup was superseded on 2026-11-06 by
+[ADR 0006](0006-automate-managed-identity-cleanup.md) after the deletion and Google
+re-registration bug was reproduced. Managed Auth and the identity fence remain.

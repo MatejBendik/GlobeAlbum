@@ -7,7 +7,10 @@ export function OAuthNotice({
 }) {
   if (typeof error !== "string" || !error) return null;
   let message: string;
-  if (error === "account_not_linked")
+  if (error === "account_deleted")
+    message =
+      "Your previous account was deleted. Continue with Google to create a new account. Your old globe will not be restored.";
+  else if (error === "account_not_linked")
     message =
       "An account with this email already exists. Sign in with email, then connect Google in Profile settings.";
   else if (error === "access_denied")

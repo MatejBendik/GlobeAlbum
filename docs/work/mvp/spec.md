@@ -43,7 +43,7 @@ Next.js App Router and TypeScript on Vercel Node runtime; Tailwind CSS and selec
 
 Server Components perform initial reads through server-only access functions. Client Components own interaction, gestures and upload progress. Server Actions handle metadata mutations; Route Handlers handle auth, upload control and lazy galleries. Every operation independently checks identity, ownership or publication. Publication-sensitive reads have no persistent cache. Saved changes appear on the next request; no live synchronization.
 
-Use pooled database runtime access (`DATABASE_URL`) and a separate direct migration connection (`DATABASE_URL_UNPOOLED`; `DIRECT_URL` is an explicit local/CI override). Neon owns `neon_auth`; application ownership records remain in `public`. Managed session cookies cache for up to 60 seconds; a database identity-deletion fence denies deleted accounts immediately. Provider identity cleanup remains durable operator work until an automated supported removal path is available. Generation/build does not apply production migrations.
+Use pooled database runtime access (`DATABASE_URL`) and a separate direct migration connection (`DATABASE_URL_UNPOOLED`; `DIRECT_URL` is an explicit local/CI override). Neon owns `neon_auth`; application ownership records remain in `public`. Managed session cookies cache for up to 60 seconds; a database identity-deletion fence denies deleted accounts immediately. Provider identity cleanup uses the supported Neon branch management API with a server-only project-scoped key. A deletion fence permits immediate cleanup, bounded maintenance retries and authenticated recovery before re-registration; retain the fence permanently and never restore old content. Validate the managed branch URL before destructive requests and independently verify identity absence. Generation/build does not apply production migrations.
 
 ### Domain and privacy
 
@@ -58,7 +58,7 @@ provider records directly. The redirect-based linking path has a reproduced
 managed proxy `state_mismatch` defect. Ordinary sign-in retains the managed
 redirect flow. In both cases,
 retain the same user, globe and profile URL. Callback errors use fixed user-facing
-messages. Local Google credential copies remain ignored and server-only.
+messages. Local Google secrets remain ignored and server-only; the public client ID is passed to the authenticated identity button.
 
 User -> Globe -> Place -> Visit -> Photo. One globe per user. Place is an owned city/town with coordinates, optional provider ID, source country and separate correction. Each visit has one optional date-only value. New date ranges are not accepted; legacy database columns remain preserved. Photo belongs to a visit and has an optional caption. Upload intents reserve capacity and track quarantine, processing, expiry and completion. Durable cleanup survives account deletion.
 
