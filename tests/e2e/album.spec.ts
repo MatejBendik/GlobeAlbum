@@ -818,6 +818,85 @@ test("requires sign-in and onboarding before opening settings", async ({
   await expect(page).toHaveURL(TEST_ORIGIN + "/onboarding");
 });
 
+test("explains an existing-email Google conflict and sends the signup callbacks", async ({
+  page,
+}) => {
+  await page.goto("/sign-up?error=account_not_linked");
+  await expect(
+    page.getByRole("alert", { name: "Google authorization notice" }),
+  ).toContainText(
+    "Sign in with email, then connect Google in Profile settings.",
+  );
+  let payload: Record<string, string> | undefined;
+  await page.route("**/api/auth/sign-in/social", (route) => {
+    payload = route.request().postDataJSON();
+    return route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({
+        code: "PROVIDER_UNAVAILABLE",
+        message: "Unavailable",
+      }),
+    });
+  });
+  await page.getByRole("button", { name: "Continue with Google" }).click();
+  await expect(
+    page.getByText("Sign-in is unavailable. Please try again.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(payload?.provider).toBe("google");
+  expect(new URL(payload!.callbackURL, TEST_ORIGIN).pathname).toBe("/studio");
+  expect(new URL(payload!.newUserCallbackURL, TEST_ORIGIN).pathname).toBe(
+    "/onboarding",
+  );
+  expect(new URL(payload!.errorCallbackURL, TEST_ORIGIN).pathname).toBe(
+    "/sign-in",
+  );
+  await page.goto("/sign-in?error=private-unexpected-provider-message");
+  await expect(
+    page.getByRole("alert", { name: "Google authorization notice" }),
+  ).toHaveText("Google sign-in could not be completed. Please try again.");
+  await expect(
+    page.getByText("private-unexpected-provider-message", { exact: true }),
+  ).toHaveCount(0);
+});
+
+test("requires a session for Google linking and preserves the globe after provider failure", async ({
+  page,
+  context,
+}) => {
+  const denied = await page.request.post("/api/auth/link-social", {
+    data: { provider: "google", callbackURL: "/settings" },
+  });
+  expect(denied.status()).toBe(401);
+  const owner = await account(context, true);
+  const before = await db.globe.findUniqueOrThrow({
+    where: { userId: owner.id },
+  });
+  await page.goto("/settings");
+  await page
+    .getByRole("button", { name: "Connect Google", exact: true })
+    .click();
+  await expect(
+    page.getByText("Google could not be connected. Please try again.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Connect Google", exact: true }),
+  ).toBeEnabled();
+  expect(await db.globe.findUnique({ where: { userId: owner.id } })).toEqual(
+    before,
+  );
+  await page.goto("/settings?error=unable_to_link_account");
+  await expect(
+    page.getByRole("alert", { name: "Google authorization notice" }),
+  ).toHaveText(
+    "Google could not be connected. Use the same email as your account and try again.",
+  );
+});
+
 test("adds separate photo selections together instead of replacing the first", async ({
   page,
   context,

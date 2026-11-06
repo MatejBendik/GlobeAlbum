@@ -47,6 +47,13 @@ Use pooled database runtime access (`DATABASE_URL`) and a separate direct migrat
 
 ### Domain and privacy
 
+Google OAuth uses the user's owned web client in Google Cloud project
+`globealbum`, configured in the existing Neon branch. Only basic identity scopes
+are requested. Existing email/password accounts connect Google explicitly from
+authenticated Profile settings when the provider rejects implicit linking;
+retain the same user, globe and profile URL. Callback errors use fixed user-facing
+messages. Local Google credential copies remain ignored and server-only.
+
 User -> Globe -> Place -> Visit -> Photo. One globe per user. Place is an owned city/town with coordinates, optional provider ID, source country and separate correction. Each visit has one optional date-only value. New date ranges are not accepted; legacy database columns remain preserved. Photo belongs to a visit and has an optional caption. Upload intents reserve capacity and track quarantine, processing, expiry and completion. Durable cleanup survives account deletion.
 
 Counts use unique places with visits and distinct effective country codes, including separately listed territories. Display a compact line such as "50 places in 23 countries" with an explanation of territories. Public DTOs contain no email, visit dates, credentials or original metadata.

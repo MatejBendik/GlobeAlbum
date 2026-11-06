@@ -9,6 +9,7 @@ import {
   signOutAction,
 } from "@/app/actions";
 import { Button } from "./ui/button";
+import { SignInButton } from "./sign-in-button";
 
 export function ProfileSettings({
   displayName,
@@ -16,12 +17,14 @@ export function ProfileSettings({
   email,
   published,
   profileUrl,
+  googleConnected,
 }: {
   displayName: string;
   username: string;
   email: string;
   published: boolean;
   profileUrl: string;
+  googleConnected: boolean | null;
 }) {
   const router = useRouter();
   const [name, setName] = useState(displayName);
@@ -146,6 +149,33 @@ export function ProfileSettings({
           <p>Manage access to your account.</p>
         </div>
         <div className="settings-form form-stack">
+          <div className="settings-signout settings-google">
+            <div>
+              <h3>Google sign-in</h3>
+              <p>
+                {googleConnected
+                  ? "Google is connected to this account."
+                  : "Connect Google to sign in to this same globe."}
+              </p>
+            </div>
+            {googleConnected === null ? (
+              <Button variant="secondary" onClick={() => router.refresh()}>
+                Reload sign-in methods
+              </Button>
+            ) : googleConnected ? (
+              <span className="settings-saved">
+                <Check />
+                Connected
+              </span>
+            ) : (
+              <SignInButton mode="link" disabled={pending} />
+            )}
+          </div>
+          {googleConnected === null && (
+            <p role="alert" className="form-error">
+              Could not check connected sign-in methods. Reload to try again.
+            </p>
+          )}
           <div className="settings-signout">
             <div>
               <h3>Sign out</h3>

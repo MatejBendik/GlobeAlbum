@@ -296,6 +296,23 @@ select:focus-visible {
   gap: 20px;
   padding-bottom: 24px;
 }
+.settings-google {
+  border-bottom: 1px solid var(--line);
+}
+.oauth-notice {
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--text-soft);
+  font-size: 12px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+  max-width: 560px;
+}
+.auth-content .oauth-notice {
+  margin-bottom: 0;
+}
 .settings-signout h3,
 .settings-delete h3 {
   font-size: 13px;

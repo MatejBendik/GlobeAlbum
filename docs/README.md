@@ -8,6 +8,8 @@ Resume interrupted work from the [implementation checkpoint](work/mvp/progress.m
 - [Architecture](architecture.md): boundaries, data model, photo flow and privacy.
 - [Setup and operations](setup.md): credentials, local PostgreSQL, Cloudflare and release steps.
 - [Neon setup changes](neon-setup.md): project link, skills/MCP installation, auth amendment and real-service evidence.
+- [Google OAuth setup](google-oauth.md): owned Google client, private credentials,
+  managed callback, explicit linking and real-service verification limits.
 - [Verification](validation.md): observed results, HEIC blocker and outstanding release gates.
 - [Stack rationale](research/stack.md), [globe/geography](research/globe-and-geography.md), [cost model](research/costs.md).
 - [Delivery tickets](work/mvp/issues/): acceptance evidence, separate from triage readiness.

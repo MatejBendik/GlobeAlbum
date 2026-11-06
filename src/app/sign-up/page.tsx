@@ -5,9 +5,15 @@ import { Brand } from "@/components/brand";
 import { EmailAuthForm } from "@/components/email-auth-form";
 import { SignInButton } from "@/components/sign-in-button";
 import { authConfigured, currentUser } from "@/lib/auth";
+import { OAuthNotice } from "@/components/oauth-notice";
 
-export default async function SignUpPage() {
+export default async function SignUpPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string | string[] }>;
+}) {
   if (await currentUser()) redirect("/studio");
+  const { error } = await searchParams;
   return (
     <main className="auth-page">
       <header>
@@ -22,6 +28,7 @@ export default async function SignUpPage() {
         <p>
           Your globe starts private. Choose its public name after signing up.
         </p>
+        <OAuthNotice error={error} />
         <SignInButton enabled={authConfigured()} />
         <span className="muted text-xs">or use your email</span>
         <EmailAuthForm mode="sign-up" enabled={authConfigured()} />

@@ -7,8 +7,12 @@ this checkpoint records execution state for resuming interrupted work.
 
 - Application and Worker TypeScript checks pass; production Next.js build passes.
 - 42 Vitest tests pass against the isolated local PostgreSQL test database.
-- 35 Playwright scenarios pass across desktop and Pixel Chromium emulation;
+- 39 Playwright scenarios pass across desktop and Pixel Chromium emulation;
   the desktop-only pointer-hover case is intentionally skipped on mobile.
+- Owned Google OAuth credentials are configured in Google Cloud and Neon. The
+  real consent callback hit an existing-email conflict; explicit linking UI and
+  failure handling are implemented/tested. Real linking and returning Google
+  sign-in await an authenticated session in the controlled Dia tab.
 - Shared primary-button hover no longer changes its fill, including login/signup.
 - City autocomplete is keyboard accessible and the user's GeoNames account is
   configured locally. An opt-in browser run verified actual provider search and

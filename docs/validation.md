@@ -5,7 +5,7 @@ Checks below distinguish actual cloud behavior from test fixtures and emulation.
 
 ## Observed evidence
 
-Current local verification on 2026-11-06: 42 Vitest tests and 35 Playwright
+Current local verification on 2026-11-06: 42 Vitest tests and 39 Playwright
 scenarios (desktop/mobile Chromium) passed. One desktop-only pointer-hover
 scenario is intentionally skipped under mobile emulation. This includes read-only generated
 addresses, cold-load readiness, automatic city coordinates, manual map selection,
@@ -42,6 +42,26 @@ Actual maintenance runs processed all 23 durable cleanup jobs after disposable
 users were deleted. The final queue was empty and accounted storage returned to
 zero. Unexpired reservations remained accounted until their capability/lease
 safety windows elapsed; scheduling deletion alone never releases bytes.
+
+## Google OAuth configuration and account linking (2026-11-06)
+
+The owned Google web client is registered and the existing Neon Google provider
+reports `standard`, replacing shared development credentials. The real browser
+request used that client ID, reached Google consent for basic identity data,
+and returned `account_not_linked` because the email already has an email/password
+identity. This is an observed managed identity conflict, not a completed login.
+
+Profile settings now expose explicit authenticated Google linking using the
+installed Neon SDK. Error routes explain existing-account conflicts without
+reflecting arbitrary provider query values. The full browser suite passed
+39 scenarios, with the intentional mobile hover skip; new cases cover callback
+targets, link authentication, failure/retry messaging and unchanged globe data.
+All 42 Vitest tests and the production build also passed.
+
+After the usage interruption, neither local origin has an active session in the
+controlled Dia profile. Real linking and subsequent Google sign-in are pending
+the user's email/password sign-in in the prepared tab. Preserve this distinction
+until that real flow succeeds. See [Google OAuth setup](google-oauth.md).
 
 ## Landing appearance follow-up (2026-11-06)
 

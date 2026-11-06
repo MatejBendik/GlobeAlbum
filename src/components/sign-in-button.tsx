@@ -5,33 +5,54 @@ import { authClient } from "@/lib/auth-client";
 import { Button } from "./ui/button";
 export function SignInButton({
   enabled = true,
-  label = "Continue with Google",
+  disabled = false,
+  label,
+  mode = "sign-in",
 }: {
   enabled?: boolean;
+  disabled?: boolean;
   label?: string;
+  mode?: "sign-in" | "link";
 }) {
   const [pending, setPending] = useState(false),
     [error, setError] = useState("");
+  const failureMessage =
+    mode === "link"
+      ? "Google could not be connected. Please try again."
+      : "Sign-in is unavailable. Please try again.";
   async function signIn() {
     setPending(true);
     setError("");
     try {
-      const result = await authClient.signIn.social({
-        provider: "google",
-        callbackURL: "/studio",
-      });
+      const result =
+        mode === "link"
+          ? await authClient.linkSocial({
+              provider: "google",
+              callbackURL: "/settings",
+              errorCallbackURL: "/settings",
+            })
+          : await authClient.signIn.social({
+              provider: "google",
+              callbackURL: "/studio",
+              newUserCallbackURL: "/onboarding",
+              errorCallbackURL: "/sign-in",
+            });
       if (result.error) {
-        setError("Sign-in is unavailable. Please try again.");
+        setError(failureMessage);
         setPending(false);
       }
     } catch {
-      setError("Could not connect. Please try again.");
+      setError(failureMessage);
       setPending(false);
     }
   }
   return (
     <div>
-      <Button size="lg" onClick={signIn} disabled={!enabled || pending}>
+      <Button
+        size="lg"
+        onClick={signIn}
+        disabled={!enabled || disabled || pending}
+      >
         {pending ? (
           <Loader2 className="animate-spin" />
         ) : (
@@ -42,7 +63,7 @@ export function SignInButton({
             />
           </svg>
         )}
-        {label}
+        {label ?? (mode === "link" ? "Connect Google" : "Continue with Google")}
         <ArrowUpRight />
       </Button>
       {!enabled && (

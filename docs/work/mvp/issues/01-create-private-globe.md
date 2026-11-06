@@ -44,3 +44,11 @@ starts only once the preview logic is ready; failed checks can be retried.
 from the account menu. Desktop/mobile browser tests verify saved display names
 against PostgreSQL and after reload, immutable read-only URLs, private email,
 legacy-route redirection, and signed-out/not-onboarded access guards.
+
+2026-11-06 owned Google OAuth: the user's web client is configured in the existing
+Neon branch; credentials remain ignored locally. Actual Google consent used the
+owned client and returned `account_not_linked` for the existing email identity.
+Explicit linking is now offered in authenticated Profile settings. Automated
+desktop/mobile cases verify callback/error behavior and unauthorized linking
+denial. Real linking/returning Google sign-in remain pending the user's active
+email/password session; the Google acceptance criterion above stays unchecked.

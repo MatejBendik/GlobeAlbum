@@ -47,6 +47,25 @@ createServer(async (req, res) => {
     req.headers.cookie || "",
   )?.[1];
   const userId = token ? sessions.get(token) : undefined;
+  if (req.url?.startsWith("/auth/list-accounts")) {
+    if (!userId) {
+      res.writeHead(401).end("{}");
+      return;
+    }
+    res.end(JSON.stringify([{ providerId: "credential" }]));
+    return;
+  }
+  if (req.url === "/auth/link-social") {
+    res.writeHead(userId ? 503 : 401).end(
+      JSON.stringify({
+        code: userId ? "PROVIDER_UNAVAILABLE" : "UNAUTHORIZED",
+        message: userId
+          ? "Provider unavailable in local contract fake."
+          : "Sign in first.",
+      }),
+    );
+    return;
+  }
   if (req.url?.startsWith("/auth/get-session")) {
     const user = userId
       ? await db.user.findUnique({ where: { id: userId } })

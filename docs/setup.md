@@ -43,6 +43,9 @@ the client. The initial and identity-fence migrations were applied to the empty
 The app uses `@neon/auth` for Google and email/password sign-up/sign-in.
 Passwords and sessions are managed by Neon, not by the app's Prisma adapter.
 No direct Google credentials are needed in Next.js environment variables.
+The requested `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` copies are stored in
+ignored `.env.local` for operations. Neon uses the owned Google Cloud client
+configured in project `globealbum`; see [Google OAuth setup](google-oauth.md).
 Register exact application origins with Neon Auth; the local origin above was
 added using `neon neon-auth domain add http://127.0.0.1:3000`.
 Keep the Worker's `APP_ORIGIN` aligned. With an HTTP loopback origin, both
@@ -51,12 +54,13 @@ hosted origins remain exact. Changing to a production origin still requires
 updating both configurations.
 
 Current branch configuration: email/password enabled, registration open, email
-verification not required, no signup email. Shared SMTP and Google credentials
-are development facilities. Before production configure own Google OAuth app,
-custom SMTP, a deliberate verification/recovery flow and the actual deployment
-origin. Configure providers in Neon; use the callback URL supplied by Neon,
-not the old application-hosted Better Auth callback. Real Google consent was
-not exercised during this setup. Do not enable verification without adding and
+verification not required, no signup email. Shared SMTP remains a development
+facility; Google uses the owned OAuth client. Before production complete OAuth
+branding/audience review, custom SMTP, a deliberate verification/recovery flow
+and the actual deployment origin. Configure providers in Neon; use the callback
+URL supplied by Neon, not the old application-hosted Better Auth callback.
+Existing email accounts connect Google explicitly from Profile settings after
+signing in with their existing method. Do not enable verification without adding and
 testing the corresponding UI. Password reset is a remaining release task.
 
 ## Real-service verification
