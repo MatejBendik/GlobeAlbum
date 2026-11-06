@@ -4,9 +4,14 @@
   "main": "index.ts",
   "compatibility_date": "2026-11-05",
   "workers_dev": true,
-  "vars": { "APP_ORIGIN": "http://localhost:3000" },
+  "account_id": "48363e7ac8ecf05f17707d376f15ecf5",
+  "secrets": { "required": ["IMAGE_WORKER_SECRET"] },
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "invocation_logs": false },
+    "traces": { "enabled": true, "head_sampling_rate": 0 },
+  },
+  "vars": { "APP_ORIGIN": "http://127.0.0.1:3000" },
   "images": { "binding": "IMAGES" },
-  "r2_buckets": [
-    { "binding": "PHOTOS", "bucket_name": "REPLACE_WITH_PRIVATE_BUCKET" },
-  ],
+  "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "globealbum-photos" }],
 }

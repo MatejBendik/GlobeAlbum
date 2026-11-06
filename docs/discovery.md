@@ -2,7 +2,11 @@
 
 Phase: implementation authorized. All product decisions and the 11-ticket breakdown were confirmed in chat. The authoritative specification is [the MVP specification](work/mvp/spec.md).
 
-Final changes superseding initial assumptions: open Google registration (no invitations), 50 photos/account, 100 places, 300 visits, immutable username URLs, Vercel hosting, manual missing-place entry, no original retention, HEIC support and no live visitor updates. Default triage labels are confirmed. Cloud provisioning, deployment and purchases remain outside current authorization.
+Final changes superseding initial assumptions: open Google registration (no invitations), 50 photos/account, 100 places, 300 visits, immutable username URLs, Vercel hosting, manual missing-place entry, no original retention, HEIC support and no live visitor updates. Default triage labels are confirmed.
+
+Subsequent user instructions authorize implementation, dependencies, regular commits/pushes and the required Cloudflare resources. The user manually activated R2 billing. Vercel deployment and paid upgrades remain separate decisions. The user requested frontend file-size validation through React Hook Form and Zod, now implemented.
+
+On 2026-11-05 real Cloudflare HEIC operations failed with internal error 9516 while PNG succeeded. The user explicitly confirmed retaining Cloudflare and keeping working HEIC as a beta release gate. See [verification evidence](validation.md). No processor replacement is approved.
 
 The original discovery record below is retained for history, not as current requirements.
 

@@ -3,6 +3,35 @@ import { LIMITS } from "./limits";
 function text(bytes: Uint8Array, offset: number, length: number) {
   return String.fromCharCode(...bytes.subarray(offset, offset + length));
 }
+
+function boxes(bytes: Uint8Array, start = 0, end = bytes.length) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const result: { type: string; start: number; end: number }[] = [];
+  for (let offset = start; offset < end;) {
+    if (result.length >= 10_000)
+      throw new Error("HEIC container is too complex.");
+    if (offset + 8 > end) throw new Error("Invalid HEIC container.");
+    let size = view.getUint32(offset);
+    let header = 8;
+    if (size === 1) {
+      if (offset + 16 > end) throw new Error("Invalid HEIC container.");
+      const large = view.getBigUint64(offset + 8);
+      if (large > BigInt(end - offset))
+        throw new Error("Invalid HEIC container.");
+      size = Number(large);
+      header = 16;
+    } else if (size === 0) size = end - offset;
+    if (size < header || size > end - offset)
+      throw new Error("Invalid HEIC container.");
+    result.push({
+      type: text(bytes, offset + 4, 4),
+      start: offset + header,
+      end: offset + size,
+    });
+    offset += size;
+  }
+  return result;
+}
 export function inspectPhoto(
   bytes: Uint8Array,
 ): "jpeg" | "png" | "webp" | "heic" {
@@ -51,14 +80,33 @@ export function inspectPhoto(
     return "webp";
   }
   if (text(bytes, 4, 4) === "ftyp") {
-    const size = view.getUint32(0);
-    if (size < 16 || size > bytes.length || size > 4096)
-      throw new Error("Invalid HEIC container.");
-    const brands = [text(bytes, 8, 4)];
-    for (let i = 16; i + 4 <= size; i += 4) brands.push(text(bytes, i, 4));
-    if (brands.some((b) => ["hevc", "hevx", "msf1", "avis"].includes(b)))
+    const container = boxes(bytes);
+    if (container.some((box) => box.type === "moov" || box.type === "moof"))
       throw new Error("Image sequences are not supported.");
-    if (brands.some((b) => ["heic", "heix", "heim", "heis"].includes(b)))
+    const ftyp = container[0];
+    if (
+      ftyp.end - ftyp.start < 8 ||
+      ftyp.end > 4096 ||
+      (ftyp.end - ftyp.start) % 4
+    )
+      throw new Error("Invalid HEIC container.");
+    const brands = [text(bytes, ftyp.start, 4)];
+    for (let i = ftyp.start + 8; i < ftyp.end; i += 4)
+      brands.push(text(bytes, i, 4));
+    const meta = container.find((box) => box.type === "meta");
+    const primary =
+      meta && meta.end - meta.start >= 4
+        ? boxes(bytes, meta.start + 4, meta.end).find(
+            (box) => box.type === "pitm",
+          )
+        : undefined;
+    if (!primary || primary.end - primary.start < 6)
+      throw new Error("HEIC must contain a primary still image.");
+    // Compatible sequence brands can occur in still collections. Timed tracks
+    // are rejected structurally above; the image service must also decode it.
+    if (
+      brands.some((brand) => ["heic", "heix", "heim", "heis"].includes(brand))
+    )
       return "heic";
   }
   throw new Error("Choose a static JPEG, PNG, WebP or HEIC photograph.");

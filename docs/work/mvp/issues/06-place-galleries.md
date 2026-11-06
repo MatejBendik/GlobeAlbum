@@ -2,6 +2,7 @@
 
 Type: task
 Status: ready-for-agent
+Execution: implemented; some recovery/device checks outstanding
 
 ## What to build
 
@@ -13,13 +14,15 @@ Browse photo postcards and place galleries, as a complete end-to-end user behavi
 
 ## Acceptance criteria
 
-- [ ] Place covers appear as bounded postcards while remaining places use dots.
-- [ ] One lazy-loaded place gallery combines visits with captions and arrows/keyboard/swipes.
+- [x] Place covers appear as bounded postcards while remaining places use dots.
+- [x] One lazy-loaded place gallery combines visits with captions and arrows/keyboard/swipes.
 - [ ] Expired media links refresh through authorization without loading originals.
 
 ## Validation evidence
 
-Pending implementation and verification. External credentials and service checks must be reported separately.
+Updated 2026-11-05. Projected postcard collision logic has focused tests. Browser tests combine two visits in one gallery and exercise arrows, keyboard and dispatched swipe events, plus caption editing. Lazy image-link renewal is implemented but expiry-recovery UX still needs an explicit browser check. No originals are rendered.
+
+See [verification and release gates](../../../validation.md). Unchecked criteria remain pending, even when their code exists.
 
 ## Comments
 

@@ -123,11 +123,15 @@ export function Workspace({
               >
                 <Settings2 />
               </Button>
-              <Button variant="secondary" onClick={() => setSharing(true)}>
+              <Button
+                aria-label="Share globe"
+                variant="secondary"
+                onClick={() => setSharing(true)}
+              >
                 <Share2 />
                 <span>Share globe</span>
               </Button>
-              <Button onClick={() => setAdding(true)}>
+              <Button aria-label="Add place" onClick={() => setAdding(true)}>
                 <Plus />
                 <span>Add place</span>
               </Button>
@@ -166,8 +170,10 @@ export function Workspace({
               <h1>{globe.displayName}</h1>
             </div>
             <p className="collection-stats">
-              <strong>{globe.places.length}</strong> places in{" "}
-              <strong>{globe.countryCount}</strong> countries
+              <strong>{globe.places.length}</strong>{" "}
+              {globe.places.length === 1 ? "place" : "places"} in{" "}
+              <strong>{globe.countryCount}</strong>{" "}
+              {globe.countryCount === 1 ? "country" : "countries"}
             </p>
             <p className="stats-explanation">
               Including separately listed territories.

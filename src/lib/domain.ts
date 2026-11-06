@@ -262,9 +262,11 @@ export async function readGlobe(
         orderBy: [{ createdAt: "asc" }, { id: "asc" }],
         include: {
           visits: {
+            orderBy: [{ createdAt: "asc" }, { id: "asc" }],
             select: {
               id: true,
               photos: {
+                orderBy: [{ createdAt: "asc" }, { id: "asc" }],
                 select: { id: true, status: true, thumbnailKey: true },
               },
             },
@@ -329,10 +331,9 @@ export async function readGallery(
     include: {
       globe: { select: { userId: true } },
       visits: {
-        orderBy: { createdAt: "asc" },
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
         include: {
           photos: {
-            where: { status: "READY" },
             orderBy: [{ createdAt: "asc" }, { id: "asc" }],
           },
         },
@@ -344,6 +345,7 @@ export async function readGallery(
   const photos = await Promise.all(
     place.visits
       .flatMap((visit) => visit.photos)
+      .filter((photo) => photo.status === "READY")
       .map(async (photo) => ({
         id: photo.id,
         caption: photo.caption,
@@ -356,11 +358,16 @@ export async function readGallery(
     photos,
     ...(owner
       ? {
+          pendingPhotos: place.visits
+            .flatMap((visit) => visit.photos)
+            .filter((photo) => photo.status !== "READY")
+            .map((photo) => ({ id: photo.id, status: photo.status })),
           visits: place.visits.map((visit) => ({
             id: visit.id,
             startDate: visit.startDate?.toISOString().slice(0, 10) ?? "",
             endDate: visit.endDate?.toISOString().slice(0, 10) ?? "",
-            photoCount: visit.photos.length,
+            photoCount: visit.photos.filter((photo) => photo.status === "READY")
+              .length,
           })),
         }
       : {}),

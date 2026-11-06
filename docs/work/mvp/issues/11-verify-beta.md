@@ -2,6 +2,7 @@
 
 Type: task
 Status: ready-for-agent
+Execution: release gated
 
 ## What to build
 
@@ -13,14 +14,16 @@ Verify and prepare the public beta, as a complete end-to-end user behavior.
 
 ## Acceptance criteria
 
-- [ ] Build/type checks and meaningful domain/integration/browser tests pass.
+- [x] Build/type checks and meaningful domain/integration/browser tests pass.
 - [ ] Real Google, Neon, R2 and HEIC checks and physical-device evidence are recorded before release.
 - [ ] Vercel plan eligibility, storage lifecycle/CORS, cron, secrets and usage monitoring are checked before deployment.
 - [ ] No deployment or paid upgrade occurs without a separate instruction.
 
 ## Validation evidence
 
-Pending implementation and verification. External credentials and service checks must be reported separately.
+Updated 2026-11-06. The production build, type checks, 28 Vitest tests and all 10 browser scenarios pass. Browser verification covers desktop and mobile emulation; see docs/validation.md for current command evidence and remaining gates. Real HEIC, Google, Neon, GeoNames, physical devices, deployment cron and Vercel eligibility remain open. Cloudflare resources are authorized and deployed; Vercel application deployment and paid upgrades are not performed.
+
+See [verification and release gates](../../../validation.md). Unchecked criteria remain pending, even when their code exists.
 
 ## Comments
 

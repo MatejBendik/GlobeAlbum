@@ -1,30 +1,15 @@
 # GlobeAlbum documentation
 
-Status: discovery and design. No application implementation is authorized.
+Phase: implementation, authorized after approval of the MVP and 11 tickets.
+Beta remains gated by the checks in [validation](validation.md).
 
-## Current documents
+- [Product specification](work/mvp/spec.md): audience, value, scenarios and exact scope.
+- [Architecture](architecture.md): boundaries, data model, photo flow and privacy.
+- [Setup and operations](setup.md): credentials, local PostgreSQL, Cloudflare and release steps.
+- [Verification](validation.md): observed results, HEIC blocker and outstanding release gates.
+- [Stack rationale](research/stack.md), [globe/geography](research/globe-and-geography.md), [cost model](research/costs.md).
+- [Delivery tickets](work/mvp/issues/): acceptance evidence, separate from triage readiness.
+- [Glossary](../GLOSSARY.md), [decisions](adr/), [discovery history](discovery.md) and [third-party notices](third-party-notices.md).
 
-- [Discovery](discovery.md): confirmed constraints, working product idea, design questions, and interview rounds.
-- [Research plan](research/README.md): required technical investigations and evidence rules.
-- [Issue tracker](agents/issue-tracker.md): local specification and ticket conventions.
-- [Domain documentation](agents/domain.md): glossary and decision record conventions.
-- [Triage labels](agents/triage-labels.md): proposed status vocabulary awaiting confirmation.
-
-## Planned documents
-
-Create these when there is substantive content; an entry here does not mean a decision has been made.
-
-| Location                          | Purpose                                                                                         |
-| --------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `../GLOSSARY.md`                  | Agreed domain vocabulary, without implementation details                                        |
-| `adr/NNNN-<decision>.md`          | Significant decisions with context and alternatives                                             |
-| `product.md`                      | Target user, problem, value, MVP boundaries, deferred features, user scenarios                  |
-| `architecture.md`                 | Recommended stack, component boundaries, data model, photo lifecycle, privacy and authorization |
-| `validation.md`                   | Acceptance criteria, proportionate validation plan, unresolved risks                            |
-| `research/stack.md`               | Technology comparison with current official sources                                             |
-| `research/globe-and-geography.md` | Globe libraries, place search, country data, licensing and limits                               |
-| `research/costs.md`               | Hosting choices, service inventory, beta and growth cost assumptions                            |
-| `work/mvp/spec.md`                | Final specification produced through `to-spec` after user confirmation                          |
-| `work/mvp/issues/NN-<slug>.md`    | Individual implementation tickets produced through `to-tickets`                                 |
-
-Discovery notes are provisional. Final specification and implementation tickets have separate user gates; see `AGENTS.md`.
+Agent conventions: [local tracker](agents/issue-tracker.md), [domain documentation](agents/domain.md),
+[triage vocabulary](agents/triage-labels.md), [evidence rules](research/README.md).

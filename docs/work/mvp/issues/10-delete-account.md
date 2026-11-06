@@ -2,6 +2,7 @@
 
 Type: task
 Status: ready-for-agent
+Execution: implemented; browser/domain verification complete
 
 ## What to build
 
@@ -13,13 +14,15 @@ Delete an account and revoke its content, as a complete end-to-end user behavior
 
 ## Acceptance criteria
 
-- [ ] Confirmed account deletion removes sessions and blocks owned/public data immediately.
-- [ ] Durable object cleanup survives deletion of the user and repeated execution.
-- [ ] Late upload completion cannot revive an account or photo.
+- [x] Confirmed account deletion removes sessions and blocks owned/public data immediately.
+- [x] Durable object cleanup survives deletion of the user and repeated execution.
+- [x] Late upload completion cannot revive an account or photo.
 
 ## Validation evidence
 
-Pending implementation and verification. External credentials and service checks must be reported separately.
+Updated 2026-11-05. Desktop/mobile browser tests delete an account, remove its sessions and deny later studio access. PostgreSQL tests retain independent cleanup jobs and reject late completion after deletion; an in-flight completion/deletion race is also covered. Actual Cloudflare cleanup batches succeeded after disposable users were removed.
+
+See [verification and release gates](../../../validation.md). Unchecked criteria remain pending, even when their code exists.
 
 ## Comments
 

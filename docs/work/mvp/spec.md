@@ -1,6 +1,6 @@
 # GlobeAlbum MVP specification
 
-Status: approved; implementation authorized by the user. Cloud provisioning, purchases and deployment are not authorized.
+Status: approved; implementation authorized by the user. Subsequent instructions authorize the required Cloudflare resources. Purchases, paid upgrades and Vercel deployment remain separate.
 Approved and researched: 2026-11-05.
 
 ## Problem Statement
@@ -87,7 +87,7 @@ Payments, paid plans, multiple globes, trips as entities, embedding, original ba
 
 ## Further Notes
 
-Approved tickets are individual Markdown files in the sibling issues directory. Status means implementation readiness, not verified cloud readiness. Local dependencies and implementation are now authorized; cloud provisioning and deployment remain separate.
+Approved tickets are individual Markdown files in the sibling issues directory. Status means implementation readiness, not verified cloud readiness. Cloudflare provisioning was subsequently authorized and the user activated R2 personally. Deployment to Vercel remains separate. The user confirmed retaining Cloudflare after real HEIC tests returned internal error 9516; working HEIC remains a mandatory beta gate. See [validation](../../validation.md) and [the bounded Worker capability refinement](../../adr/0004-bound-worker-capabilities.md).
 
 Primary sources verified 2026-11-05:
 

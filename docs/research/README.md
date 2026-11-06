@@ -1,6 +1,8 @@
 # Technical research plan
 
-Status: planned; no provider or stack decision has been accepted.
+Status: the MVP stack is approved and implemented. The checklist below is retained
+for research history. Current findings: [stack](stack.md), [globe/geography](globe-and-geography.md)
+and [costs](costs.md). Unresolved checks live in [validation](../validation.md).
 
 ## Evidence rules
 
@@ -11,7 +13,7 @@ Status: planned; no provider or stack decision has been accepted.
 - Read the installed `research` skill when starting an investigation. Use the relevant specialist skills when their scope applies.
 - No dependency installation, service provisioning, implementation, or purchases during research.
 
-## Candidate stack — all provisional
+## Original candidate stack
 
 Next.js App Router, TypeScript, Tailwind CSS, shadcn/ui with a compatible registry, React Hook Form, Zod, Zustand, TanStack Query, Neon PostgreSQL, Prisma or Drizzle, Better Auth, and Cloudflare R2.
 

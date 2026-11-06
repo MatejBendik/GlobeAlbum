@@ -1,71 +1,23 @@
 import "server-only";
-import {
-  S3Client,
-  GetObjectCommand,
-  HeadObjectCommand,
-  DeleteObjectCommand,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { z } from "zod";
 import { AppError } from "./errors";
-import { LIMITS } from "./limits";
+import { signMediaGrant } from "./upload-grant";
 
-let client: S3Client | undefined;
 export function storageConfigured() {
-  return [
-    "R2_ACCOUNT_ID",
-    "R2_ACCESS_KEY_ID",
-    "R2_SECRET_ACCESS_KEY",
-    "R2_BUCKET",
-    "IMAGE_WORKER_URL",
-    "IMAGE_WORKER_SECRET",
-  ].every((key) => !!process.env[key]);
-}
-function s3() {
-  if (!storageConfigured())
-    throw new AppError(
-      "Photo storage is not configured yet.",
-      503,
-      "NOT_CONFIGURED",
-    );
-  return (client ??= new S3Client({
-    region: "auto",
-    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-    credentials: {
-      accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-    },
-  }));
-}
-export async function photoUrl(key: string) {
-  return getSignedUrl(
-    s3(),
-    new GetObjectCommand({
-      Bucket: process.env.R2_BUCKET!,
-      Key: key,
-      ResponseCacheControl: "private, no-store, max-age=0",
-      ResponseContentType: "image/webp",
-    }),
-    { expiresIn: LIMITS.imageUrlSeconds },
+  return (
+    !!process.env.IMAGE_WORKER_URL &&
+    (process.env.IMAGE_WORKER_SECRET?.length ?? 0) >= 32
   );
 }
-export async function objectSize(key: string) {
-  const object = await s3().send(
-    new HeadObjectCommand({ Bucket: process.env.R2_BUCKET!, Key: key }),
-  );
-  return object.ContentLength ?? 0;
-}
-export async function removeObject(key: string) {
-  await s3().send(
-    new DeleteObjectCommand({ Bucket: process.env.R2_BUCKET!, Key: key }),
-  );
-}
+
 export function workerUrl() {
-  if (!storageConfigured())
+  if (!storageConfigured()) {
     throw new AppError(
       "Photo storage is not configured yet.",
       503,
       "NOT_CONFIGURED",
     );
+  }
   const url = new URL(process.env.IMAGE_WORKER_URL!);
   if (
     url.protocol !== "https:" &&
@@ -73,7 +25,45 @@ export function workerUrl() {
       process.env.NODE_ENV !== "production" &&
       ["127.0.0.1", "localhost"].includes(url.hostname)
     )
-  )
+  ) {
     throw new AppError("Image worker requires HTTPS.", 503, "NOT_CONFIGURED");
+  }
   return url;
+}
+
+export async function photoUrl(key: string) {
+  const url = new URL("/image", workerUrl());
+  url.searchParams.set(
+    "grant",
+    await signMediaGrant(key, process.env.IMAGE_WORKER_SECRET!),
+  );
+  return url.toString();
+}
+
+async function objectRequest(operation: "head" | "delete", key: string) {
+  const response = await fetch(new URL("/objects", workerUrl()), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.IMAGE_WORKER_SECRET!}`,
+    },
+    body: JSON.stringify({ operation, key }),
+    signal: AbortSignal.timeout(15_000),
+    cache: "no-store",
+  });
+  if (!response.ok)
+    throw new AppError("Photo storage is temporarily unavailable.", 503);
+  return response;
+}
+
+export async function objectSize(key: string) {
+  const response = await objectRequest("head", key);
+  const value = z
+    .object({ size: z.number().int().nonnegative() })
+    .parse(await response.json());
+  return value.size;
+}
+
+export async function removeObject(key: string) {
+  await objectRequest("delete", key);
 }

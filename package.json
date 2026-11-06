@@ -7,6 +7,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "next dev --hostname 127.0.0.1",
     "build": "prisma generate && next build",
     "start": "next start --hostname 127.0.0.1",
@@ -17,13 +18,13 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "worker:check": "tsc -p worker/tsconfig.json --noEmit",
+    "db:local": "node scripts/local-db.mjs start",
+    "worker:types": "wrangler types worker/worker-configuration.d.ts --config worker/wrangler.jsonc --env-interface Env",
+    "worker:check": "npm run worker:types && tsc -p worker/tsconfig.json --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "3.1162.0",
-    "@aws-sdk/s3-request-presigner": "3.1162.0",
     "@better-auth/prisma-adapter": "1.7.18",
     "@hookform/resolvers": "7.0.3",
     "@prisma/adapter-pg": "7.10.1",
@@ -35,7 +36,6 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "dotenv": "18.0.9",
-    "file-type": "22.3.0",
     "lucide-react": "1.69.0",
     "next": "16.4.5",
     "pg": "8.23.1",
@@ -49,7 +49,6 @@
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20261104.1",
     "@playwright/test": "1.56.1",
     "@tailwindcss/postcss": "4.3.4",
     "@types/node": "24.19.2",

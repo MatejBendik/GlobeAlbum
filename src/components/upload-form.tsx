@@ -75,7 +75,8 @@ export function UploadForm({
   async function removeRemote(id: string) {
     const remote = remotes.current.get(id);
     if (remote) {
-      await deletePhotoAction(remote.photoId);
+      const result = await deletePhotoAction(remote.photoId);
+      if (result.error) throw new Error(result.error);
       remotes.current.delete(id);
     }
   }
@@ -137,7 +138,14 @@ export function UploadForm({
     } catch (error) {
       if (cancelled.current.has(item.id)) {
         update(item.id, { status: "cancelled" });
-        await removeRemote(item.id);
+        try {
+          await removeRemote(item.id);
+        } catch {
+          update(item.id, {
+            error:
+              "Cancelled. Remove the unfinished upload from this place if it is still listed.",
+          });
+        }
       } else
         update(item.id, {
           status: "error",
@@ -174,7 +182,14 @@ export function UploadForm({
     requests.current.get(item.id)?.abort();
     controllers.current.get(item.id)?.abort();
     update(item.id, { status: "cancelled" });
-    await removeRemote(item.id);
+    try {
+      await removeRemote(item.id);
+    } catch {
+      update(item.id, {
+        error:
+          "Cancelled. Remove the unfinished upload from this place if it is still listed.",
+      });
+    }
     onUploaded();
   }
   const fileError =
@@ -196,10 +211,13 @@ export function UploadForm({
                 type="file"
                 accept={PHOTO_ACCEPT}
                 multiple
+                ref={field.ref}
+                onBlur={field.onBlur}
                 disabled={busy || remaining <= 0}
-                onChange={(event) =>
-                  field.onChange(Array.from(event.target.files ?? []))
-                }
+                onChange={(event) => {
+                  field.onChange(Array.from(event.target.files ?? []));
+                  event.currentTarget.value = "";
+                }}
               />
             </label>
           )}
@@ -266,6 +284,17 @@ export function UploadForm({
                       <X />
                     </Button>
                   )
+                )}
+                {item.status === "error" && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Remove ${item.file.name}`}
+                    onClick={() => cancel(item)}
+                  >
+                    <X />
+                  </Button>
                 )}
               </div>
               <div className="upload-progress">

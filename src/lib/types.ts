@@ -32,5 +32,9 @@ export type VisitDto = {
   endDate: string;
   photoCount: number;
 };
-export type GalleryDto = { photos: PhotoDto[]; visits?: VisitDto[] };
+export type GalleryDto = {
+  photos: PhotoDto[];
+  visits?: VisitDto[];
+  pendingPhotos?: { id: string; status: string }[];
+};
 export type ActionResult = { error?: string; success?: boolean };

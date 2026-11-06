@@ -138,14 +138,18 @@ export function PlaceGallery({
           <div
             className="gallery-image"
             onTouchStart={(event) => {
-              touch.current = event.touches[0].clientX;
+              touch.current = event.touches[0]?.clientX ?? null;
             }}
             onTouchEnd={(event) => {
-              if (touch.current !== null) {
-                const delta = event.changedTouches[0].clientX - touch.current;
+              const end = event.changedTouches[0];
+              if (touch.current !== null && end) {
+                const delta = end.clientX - touch.current;
                 if (Math.abs(delta) > 50) next(delta < 0 ? 1 : -1);
-                touch.current = null;
               }
+              touch.current = null;
+            }}
+            onTouchCancel={() => {
+              touch.current = null;
             }}
           >
             {photo && !imageError ? (
@@ -300,6 +304,39 @@ export function PlaceGallery({
             )}
             {owner && gallery?.visits && (
               <div className="visit-manager">
+                {!!gallery.pendingPhotos?.length && (
+                  <div className="pending-uploads">
+                    <h3>Unfinished uploads</h3>
+                    <p className="field-hint">
+                      Remove interrupted uploads to free their photo slots.
+                    </p>
+                    {gallery.pendingPhotos.map((pending, i) => (
+                      <div className="visit-row" key={pending.id}>
+                        <span className="field-hint">
+                          Photograph {i + 1} ·{" "}
+                          {pending.status === "PROCESSING"
+                            ? "processing"
+                            : "waiting"}
+                        </span>
+                        <ConfirmDialog
+                          title="Remove this upload?"
+                          description="This cancels the unfinished photograph. Choose the file again if you want to upload it later."
+                          trigger={
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Remove unfinished upload ${i + 1}`}
+                            >
+                              <Trash2 />
+                            </Button>
+                          }
+                          onConfirm={() => deletePhotoAction(pending.id)}
+                          onDone={changed}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="section-heading">
                   <h3>Visits</h3>
                   <Button

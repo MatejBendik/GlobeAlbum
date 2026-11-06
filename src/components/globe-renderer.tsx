@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Globe, { type GlobeMethods } from "react-globe.gl";
 import { MeshPhongMaterial } from "three";
 import type { PlaceDto } from "@/lib/types";
+import { choosePostcards } from "@/lib/marker-layout";
 
 export default function GlobeRenderer({
   places,
@@ -38,6 +39,17 @@ export default function GlobeRenderer({
   }, []);
   useEffect(() => () => material.dispose(), [material]);
   useEffect(() => {
+    const current = globe.current;
+    if (!current) return;
+    current.pointOfView({ lat: 30, lng: 16, altitude: 2.15 }, 0);
+    const renderer = current.renderer();
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.domElement.addEventListener("webglcontextlost", onFailure);
+    setReady(true);
+    return () =>
+      renderer.domElement.removeEventListener("webglcontextlost", onFailure);
+  }, [onFailure]);
+  useEffect(() => {
     if (!ready || !globe.current) return;
     const controls = globe.current.controls();
     controls.autoRotate = rotating;
@@ -52,33 +64,57 @@ export default function GlobeRenderer({
     if (place)
       globe.current?.pointOfView(
         { lat: place.latitude, lng: place.longitude, altitude: 1.7 },
-        650,
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 650,
       );
   }, [ready, selectedId, places]);
-  const element = useMemo(() => {
-    const shown = new Set(
-      places
-        .filter((p) => p.coverUrl)
-        .slice(0, width < 600 ? 5 : 9)
-        .map((p) => p.id),
-    );
-    return (object: object) => {
+  const markers = useMemo(() => {
+    const elements = new Map<string, HTMLButtonElement>();
+    let frame = 0;
+    function layout() {
+      if (!globe.current) return;
+      const visible = places.filter(
+        (place) =>
+          place.coverUrl && elements.get(place.id)?.dataset.facing === "true",
+      );
+      const candidates = visible.map((place) => ({
+        id: place.id,
+        selected: place.id === selectedId,
+        ...globe.current!.getScreenCoords(
+          place.latitude,
+          place.longitude,
+          0.045,
+        ),
+      }));
+      const shown = choosePostcards(candidates, width < 600 ? 5 : 9);
+      for (const place of places) {
+        const button = elements.get(place.id);
+        if (!button) continue;
+        const postcard = shown.has(place.id);
+        button.classList.toggle("photo-marker", postcard);
+        button.classList.toggle("dot-marker", !postcard);
+        const image = button.querySelector("img");
+        if (postcard && image && !image.getAttribute("src") && place.coverUrl)
+          image.src = place.coverUrl;
+      }
+    }
+    function element(object: object) {
       const place = object as PlaceDto;
       const button = document.createElement("button");
       button.type = "button";
-      button.className = `globe-marker ${shown.has(place.id) ? "photo-marker" : "dot-marker"} ${selectedId === place.id ? "marker-selected" : ""}`;
+      button.className = `globe-marker dot-marker ${selectedId === place.id ? "marker-selected" : ""}`;
       button.setAttribute("aria-label", `Open ${place.name} gallery`);
-      if (shown.has(place.id) && place.coverUrl) {
+      if (place.coverUrl) {
         const img = document.createElement("img");
-        img.src = place.coverUrl;
         img.alt = "";
         img.loading = "lazy";
         img.draggable = false;
         button.append(img);
         const label = document.createElement("span");
+        label.className = "marker-label";
         label.textContent = place.name;
         button.append(label);
-      } else {
+      }
+      {
         const dot = document.createElement("span");
         dot.className = "marker-core";
         button.append(dot);
@@ -87,9 +123,29 @@ export default function GlobeRenderer({
         event.stopPropagation();
         onSelect(place.id);
       };
+      elements.set(place.id, button);
       return button;
+    }
+    return {
+      element,
+      layout,
+      visibility(el: HTMLElement, visible: boolean) {
+        el.dataset.facing = String(visible);
+        el.style.opacity = visible ? "1" : "0";
+        el.style.pointerEvents = visible ? "auto" : "none";
+        el.tabIndex = visible ? 0 : -1;
+        if (!frame)
+          frame = requestAnimationFrame(() => {
+            frame = 0;
+            layout();
+          });
+      },
+      dispose() {
+        if (frame) cancelAnimationFrame(frame);
+      },
     };
   }, [places, width, selectedId, onSelect]);
+  useEffect(() => () => markers.dispose(), [markers]);
   return (
     <div onContextMenu={(event) => event.preventDefault()}>
       <Globe
@@ -114,21 +170,9 @@ export default function GlobeRenderer({
         htmlLat="latitude"
         htmlLng="longitude"
         htmlAltitude={0.045}
-        htmlElement={element}
-        htmlElementVisibilityModifier={(el, visible) => {
-          el.style.opacity = visible ? "1" : "0";
-          el.style.pointerEvents = visible ? "auto" : "none";
-          el.tabIndex = visible ? 0 : -1;
-        }}
-        onGlobeReady={() => {
-          setReady(true);
-          globe.current?.pointOfView({ lat: 30, lng: 16, altitude: 2.15 }, 0);
-          const renderer = globe.current?.renderer();
-          renderer?.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-          renderer?.domElement.addEventListener("webglcontextlost", onFailure, {
-            once: true,
-          });
-        }}
+        htmlElement={markers.element}
+        htmlElementVisibilityModifier={markers.visibility}
+        onZoom={markers.layout}
       />
     </div>
   );

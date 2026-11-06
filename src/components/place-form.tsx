@@ -66,14 +66,7 @@ export function PlaceForm({ onDone }: { onDone: () => void }) {
     else onDone();
   }
   function choose(place: SearchPlace) {
-    for (const field of [
-      "name",
-      "country",
-      "latitude",
-      "longitude",
-      "providerId",
-    ] as const)
-      form.setValue(field, place[field] as never, { shouldValidate: true });
+    form.reset({ ...form.getValues(), ...place });
     setQuery("");
     setResults([]);
     setManual(true);

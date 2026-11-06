@@ -521,6 +521,11 @@ select:focus-visible {
     0 0 0 3px #ddd6c417,
     0 0 12px #ddd6c450;
 }
+.dot-marker img,
+.dot-marker .marker-label,
+.photo-marker .marker-core {
+  display: none;
+}
 .dot-marker:hover .marker-core {
   box-shadow: 0 0 0 6px #ddd6c425;
 }

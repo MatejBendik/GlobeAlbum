@@ -30,7 +30,8 @@ export async function runMaintenance() {
     }
   }
   let cleaned = 0;
-  for (let i = 0; i < 20; i++) {
+  const deadline = Date.now() + 75_000;
+  for (let i = 0; i < 200 && Date.now() < deadline; i++) {
     const token = randomUUID();
     const job = await locked(async (tx) => {
       const found = await tx.cleanupJob.findFirst({
@@ -48,7 +49,7 @@ export async function runMaintenance() {
     });
     if (!job) break;
     try {
-      for (const key of job.keys) await removeObject(key);
+      await Promise.all(job.keys.map(removeObject));
       await locked(async (tx) => {
         if (
           !(await tx.cleanupJob.findFirst({

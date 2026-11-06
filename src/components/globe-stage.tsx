@@ -1,6 +1,6 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Globe2, LocateFixed, Pause, Play, List } from "lucide-react";
 import type { PlaceDto } from "@/lib/types";
 import { Button } from "./ui/button";
@@ -29,6 +29,7 @@ export function GlobeStage({
   const [supported, setSupported] = useState<boolean | null>(null);
   const [rotating, setRotating] = useState(false);
   const [reset, setReset] = useState(0);
+  const handleFailure = useCallback(() => setSupported(false), []);
   useEffect(() => {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("webgl2");
@@ -66,7 +67,7 @@ export function GlobeStage({
           selectedId={selectedId}
           onSelect={onSelect}
           rotating={rotating}
-          onFailure={() => setSupported(false)}
+          onFailure={handleFailure}
         />
       ) : supported === false ? (
         <div className="globe-unavailable">
