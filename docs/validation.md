@@ -16,8 +16,10 @@ Checks below distinguish actual cloud behavior from test fixtures and emulation.
   rejection, sign-in, session restoration, a private globe, live GeoNames
   selection, publication, hiding, account deletion and re-registration.
   Neon confirmed managed identity removal and denial of the old session.
-  Google Identity Services returned 403 for **Connect Google** because the
-  Vercel origin had yet to be added to the OAuth client at test time.
+  The first **Connect Google** check returned 403. After the user added the
+  Vercel origin to the Google OAuth client, the button rendered and Google's
+  button request returned 200. A real matching-account link was verified in
+  the earlier local browser run.
 - Actual browser uploads sent PNG, JPEG, WebP and two HEIC samples to private
   R2. Vercel/Linux processed all five in roughly ten seconds for the batch,
   including network transfers and a 701 KiB HEIC sample. All ten resulting WebP
@@ -32,9 +34,10 @@ Checks below distinguish actual cloud behavior from test fixtures and emulation.
 - The hosted demo rendered its globe and postcards in Pixel Chromium
   emulation without horizontal overflow. With WebGL disabled, the place list
   and Kyoto gallery still worked. Physical devices remain a separate gate.
-- Local Vitest passed 54 tests. The hosted run used actual providers and
-  disposable accounts. Earlier local browser runs used the service doubles
-  described below.
+- Local Vitest passed 54 tests. Playwright passed 51 local cases with one
+  intentional mobile hover skip. The focused auth route and settings cases
+  passed on both projects after the HEAD probe fix. The hosted runs used
+  actual providers and disposable accounts.
 
 ## Observed evidence
 
@@ -487,6 +490,7 @@ Sources verified 2026-11-05:
 - [ ] Run cleanup against real stored objects, confirm accounting reconciliation
       and monitor oldest pending jobs; verify cron in the deployed environment.
 - [x] Deploy the personal non-commercial MVP on Hobby under the user's 2026-11-07 instruction.
-- [ ] Confirm the hosted Google Identity Services origin for account linking and review usage monitoring.
+- [x] Confirm the hosted Google Identity Services origin for account linking.
+- [ ] Review usage monitoring before inviting public beta testers.
 - [ ] Record the agreed usability outcome: 5 of 10 testers independently add
       three places and five photos, then share with another person.

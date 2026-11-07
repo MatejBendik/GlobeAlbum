@@ -75,7 +75,12 @@ the session on reload.
 In [Google Auth Platform → Clients](https://console.cloud.google.com/auth/clients?project=globealbum),
 open **GlobeAlbum Web (Neon Auth)** and add `https://globealbum.vercel.app`
 under **Authorized JavaScript origins** for **Connect Google** in Profile
-settings. Keep the existing Neon callback in **Authorized redirect URIs**:
+settings. The user saved the hosted origin on 2026-11-07. The production button
+then rendered and Google's button request returned 200. The end-to-end link
+of a matching email account was verified locally with the real provider, as
+recorded below.
+
+Keep the existing Neon callback in **Authorized redirect URIs**.
 
 ```text
 https://ep-lucky-frog-b9lv2ak8.neonauth.c-7.eu-central-1.aws.neon.tech/neondb/auth/callback/google
