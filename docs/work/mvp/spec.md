@@ -104,6 +104,12 @@ User-requested refinement (2026-11-06): double the original postcard width to
 the postcard on hover or keyboard focus. Collision spacing accounts for the
 larger frame, while other places remain available as dots and in the place list.
 
+Following the user request on 2026-11-07, a place with multiple ready photos
+shows layered paper behind its cover postcard. The marker opens its complete
+place gallery. The starting and reset views center the selected place, the first
+place with a cover, or the first saved place, in that order. A single-place globe
+starts still. Reset pauses automatic rotation and respects reduced motion.
+
 ### Globe workspace and navigation refinement
 
 User-confirmed on 2026-11-06: the globe occupies the full workspace instead of

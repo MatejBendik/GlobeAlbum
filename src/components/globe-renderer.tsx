@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import Globe, { type GlobeMethods } from "react-globe.gl";
 import { useTheme } from "next-themes";
 import { MeshPhongMaterial } from "three";
@@ -11,6 +11,7 @@ export default function GlobeRenderer({
   selectedId,
   onSelect,
   rotating,
+  reset,
   width,
   height,
   onFailure,
@@ -19,6 +20,7 @@ export default function GlobeRenderer({
   selectedId?: string;
   onSelect: (id: string) => void;
   rotating: boolean;
+  reset: number;
   width: number;
   height: number;
   onFailure: () => void;
@@ -27,6 +29,29 @@ export default function GlobeRenderer({
   const dark = resolvedTheme === "dark";
   // Perspective projection fits height; compensate for narrow portrait viewports.
   const cameraScale = Math.max(1, height / width);
+  const featured = places.find((place) => place.coverUrl) ?? places[0];
+  const selected = places.find((place) => place.id === selectedId);
+  const focusPlace = useEffectEvent((animate: boolean) => {
+    const current = globe.current;
+    if (!current) return;
+    const place = selected ?? featured;
+    const controls = current.controls();
+    // Flush momentum from the previous drag before changing the view.
+    const damping = controls.enableDamping;
+    controls.enableDamping = false;
+    controls.update();
+    controls.enableDamping = damping;
+    current.pointOfView(
+      {
+        lat: place?.latitude ?? 30,
+        lng: place?.longitude ?? 16,
+        altitude: (selected ? 2.7 : 3.15) * cameraScale - 1,
+      },
+      animate && !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? 650
+        : 0,
+    );
+  });
   const globe = useRef<GlobeMethods | undefined>(undefined),
     [dots, setDots] = useState<{ lat: number; lng: number }[]>([]),
     [ready, setReady] = useState(false);
@@ -50,17 +75,13 @@ export default function GlobeRenderer({
   useEffect(() => {
     const current = globe.current;
     if (!current) return;
-    current.pointOfView(
-      { lat: 30, lng: 16, altitude: 3.15 * cameraScale - 1 },
-      0,
-    );
     const renderer = current.renderer();
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.domElement.addEventListener("webglcontextlost", onFailure);
     setReady(true);
     return () =>
       renderer.domElement.removeEventListener("webglcontextlost", onFailure);
-  }, [onFailure, cameraScale]);
+  }, [onFailure]);
   useEffect(() => {
     if (!ready || !globe.current) return;
     const controls = globe.current.controls();
@@ -71,18 +92,11 @@ export default function GlobeRenderer({
     controls.maxDistance = Math.max(700, 440 * cameraScale);
   }, [ready, rotating, cameraScale]);
   useEffect(() => {
-    if (!ready || !selectedId) return;
-    const place = places.find((p) => p.id === selectedId);
-    if (place)
-      globe.current?.pointOfView(
-        {
-          lat: place.latitude,
-          lng: place.longitude,
-          altitude: 2.7 * cameraScale - 1,
-        },
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 650,
-      );
-  }, [ready, selectedId, places, cameraScale]);
+    if (ready) focusPlace(reset > 0);
+  }, [ready, reset, cameraScale, featured?.latitude, featured?.longitude]);
+  useEffect(() => {
+    if (ready && selected) focusPlace(true);
+  }, [ready, selected?.latitude, selected?.longitude]);
   const markers = useMemo(() => {
     const elements = new Map<string, HTMLButtonElement>();
     let frame = 0;
@@ -123,15 +137,20 @@ export default function GlobeRenderer({
         // Keep the geographic hit target steady while its postcard enlarges.
         const card = document.createElement("span");
         card.className = "marker-card";
+        card.dataset.layers = String(Math.min(3, place.photoCount));
+        if (place.photoCount > 1)
+          button.setAttribute("aria-description", `${place.photoCount} photos`);
+        const paper = document.createElement("span");
+        paper.className = "marker-paper";
         const img = document.createElement("img");
         img.alt = "";
         img.loading = "lazy";
         img.draggable = false;
-        card.append(img);
         const label = document.createElement("span");
         label.className = "marker-label";
         label.textContent = place.name;
-        card.append(label);
+        paper.append(img, label);
+        card.append(paper);
         button.append(card);
       }
       {

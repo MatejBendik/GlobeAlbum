@@ -1324,3 +1324,90 @@ test.describe("visit calendar", () => {
     });
   });
 });
+
+test("centers a public globe on its only place and stacks its postcards", async ({
+  page,
+  context,
+}, testInfo) => {
+  const owner = await account(context, true);
+  await db.globe.update({
+    where: { userId: owner.id },
+    data: { published: true },
+  });
+  const place = await db.place.create({
+    data: {
+      globe: { connect: { userId: owner.id } },
+      name: "Tokyo",
+      sourceCountry: "JP",
+      latitude: 35.6762,
+      longitude: 139.6503,
+      visits: {
+        create: {
+          photos: {
+            create: Array.from({ length: 3 }, () => {
+              const id = randomUUID();
+              return {
+                id,
+                status: "READY",
+                thumbnailKey: `photos/${id}/thumbnail.webp`,
+                displayKey: `photos/${id}/display.webp`,
+              };
+            }),
+          },
+        },
+      },
+    },
+  });
+  await context.clearCookies();
+  await page.route("http://127.0.0.1:8787/image?*", (route) =>
+    route.fulfill({
+      contentType: "image/png",
+      body: readFileSync("tests/fixtures/tiny.png"),
+    }),
+  );
+  await page.goto(`/u/${owner.username}`);
+  const marker = page.getByRole("button", { name: "Open Tokyo gallery" });
+  const canvas = page.locator(".globe-stage canvas").first();
+  const stage = await canvas.boundingBox();
+  expect(stage).not.toBeNull();
+  const centerDistance = async () => {
+    const bounds = await marker.boundingBox();
+    if (!bounds || (await marker.getAttribute("data-facing")) !== "true")
+      return Infinity;
+    return Math.hypot(
+      bounds.x + bounds.width / 2 - (stage!.x + stage!.width / 2),
+      bounds.y + bounds.height / 2 - (stage!.y + stage!.height / 2),
+    );
+  };
+  await expect.poll(centerDistance).toBeLessThan(12);
+  await expect(
+    page.getByRole("button", { name: "Start rotation" }),
+  ).toBeVisible();
+  const card = marker.locator(".marker-card");
+  await expect(card).toHaveAttribute("data-layers", "3");
+  await expect(marker.locator("img")).toHaveCount(1);
+  expect(
+    await card.evaluate((el) =>
+      ["::before", "::after"].map(
+        (layer) => getComputedStyle(el, layer).content,
+      ),
+    ),
+  ).toEqual(['""', '""']);
+
+  const x = stage!.x + stage!.width * 0.25;
+  const y = stage!.y + stage!.height * 0.68;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + stage!.width * 0.35, y, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(centerDistance).toBeGreaterThan(30);
+  await page.getByRole("button", { name: "Reset globe view" }).click();
+  await expect.poll(centerDistance).toBeLessThan(12);
+  await page.screenshot({
+    path: `.local/verification/globe-stack-${testInfo.project.name}.png`,
+  });
+  await marker.click();
+  await expect(page).toHaveURL(new RegExp(`place=${place.id}`));
+  const gallery = page.getByRole("dialog", { name: "Tokyo" });
+  await expect(gallery).toContainText("3 photos");
+});

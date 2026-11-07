@@ -43,6 +43,19 @@ users were deleted. The final queue was empty and accounted storage returned to
 zero. Unexpired reservations remained accounted until their capability/lease
 safety windows elapsed; scheduling deletion alone never releases bytes.
 
+## Globe framing and layered postcards (2026-11-07)
+
+The public Tokyo regression reproduced an off-center, rear-facing marker with
+the former fixed camera. In desktop and Pixel Chromium emulation, a public globe
+with only Tokyo now centers its postcard on arrival and after a drag followed by
+Reset globe view. The three-photo fixture shows two decorative sheets around one
+cover thumbnail and opens the gallery with all three photos. Ten focused browser
+scenarios passed, including postcard zoom/hover, direct landing photo clicks,
+theme changes, and the no-WebGL place list.
+
+Camera and HTML layer behavior checked on 2026-11-07.
+[react-globe.gl camera and HTML layer API](https://github.com/vasturiano/react-globe.gl).
+
 ## Authentication appearance and visit calendar (2026-11-06)
 
 The theme regression first reproduced a dark root attribute with a white

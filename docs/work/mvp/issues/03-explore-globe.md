@@ -39,3 +39,10 @@ move the complete list into a floating right panel, closed initially and opened
 automatically without WebGL. Add persisted light/dark mode with an actual white
 light-mode material. Desktop/mobile interaction, Escape/focus handling, public
 land-dot loading and portrait framing are verified. Physical devices remain gated.
+
+Since the refinement on 2026-11-07, postcards with two or more ready photos show
+layered paper behind a single cover thumbnail. The starting and reset camera
+positions prioritize the selected place, then the first cover-bearing place,
+then the first saved place. Single-place globes start still and reset pauses
+rotation. The [browser verification](../../../validation.md) covers a public
+Tokyo globe, drag/reset, layered postcards and gallery access.

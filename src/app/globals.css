@@ -639,19 +639,41 @@ select:focus-visible {
   z-index: 1000 !important;
 }
 .marker-card {
+  position: relative;
   display: block;
-  padding: 8px 8px 0;
-  border: 1px solid #ffffff60;
-  border-radius: 3px;
-  background: #f3f0e8;
-  color: #403c35;
-  box-shadow: 0 3px 7px #0009;
+  isolation: isolate;
   rotate: -6deg;
   scale: 1;
   transition:
     scale 160ms ease,
-    rotate 160ms ease,
-    box-shadow 160ms ease;
+    rotate 160ms ease;
+}
+.marker-paper,
+.marker-card::before,
+.marker-card::after {
+  border: 1px solid #ffffff60;
+  border-radius: 3px;
+  background: #f3f0e8;
+  box-shadow: 0 3px 7px #0009;
+}
+.marker-paper {
+  position: relative;
+  z-index: 1;
+  display: block;
+  padding: 8px 8px 0;
+  color: #403c35;
+}
+.marker-card[data-layers="2"]::before,
+.marker-card[data-layers="3"]::before,
+.marker-card[data-layers="3"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform: translate(-5px, 3px) rotate(-7deg);
+}
+.marker-card[data-layers="3"]::after {
+  transform: translate(5px, -3px) rotate(7deg);
 }
 .photo-marker:nth-child(2n) .marker-card {
   rotate: 7deg;
@@ -662,7 +684,7 @@ select:focus-visible {
   object-fit: cover;
   pointer-events: none;
 }
-.marker-card > .marker-label {
+.marker-paper > .marker-label {
   display: block;
   font-size: 12px;
   letter-spacing: 0.02em;
@@ -675,7 +697,6 @@ select:focus-visible {
 .photo-marker:focus-visible .marker-card {
   rotate: 0deg;
   scale: 1.16;
-  box-shadow: 0 8px 20px #0004;
 }
 .photo-marker:hover,
 .photo-marker:focus-visible {
@@ -1429,7 +1450,7 @@ select:focus-visible {
   width: 112px;
   height: 114px;
 }
-.hero-stage .marker-card > .marker-label {
+.hero-stage .marker-paper > .marker-label {
   font-size: 12px;
   padding-bottom: 10px;
 }
@@ -2154,7 +2175,9 @@ body,
 [data-theme="light"] .marker-selected {
   filter: drop-shadow(0 0 9px #5b765540);
 }
-[data-theme="light"] .marker-card {
+[data-theme="light"] .marker-paper,
+[data-theme="light"] .marker-card::before,
+[data-theme="light"] .marker-card::after {
   box-shadow: 0 3px 10px #35403230;
   border-color: #fff;
 }

@@ -29,7 +29,9 @@ export function GlobeStage({
   const container = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [supported, setSupported] = useState<boolean | null>(null);
-  const [rotating, setRotating] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(true);
+  const [rotationOverride, setRotationOverride] = useState<boolean>();
+  const rotating = rotationOverride ?? (!reducedMotion && places.length !== 1);
   const [reset, setReset] = useState(0);
   const handleFailure = useCallback(() => {
     setSupported(false);
@@ -42,8 +44,11 @@ export function GlobeStage({
     if (!context) onUnavailable?.();
     context?.getExtension("WEBGL_lose_context")?.loseContext();
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setRotating(!media.matches);
-    const change = () => setRotating(!media.matches);
+    const change = () => {
+      setReducedMotion(media.matches);
+      setRotationOverride(undefined);
+    };
+    change();
     media.addEventListener("change", change);
     return () => media.removeEventListener("change", change);
   }, [onUnavailable]);
@@ -67,8 +72,8 @@ export function GlobeStage({
       <div className="globe-glow" />
       {supported && size.width > 0 ? (
         <Renderer
-          key={reset}
           {...size}
+          reset={reset}
           places={places}
           selectedId={selectedId}
           onSelect={onSelect}
@@ -102,7 +107,7 @@ export function GlobeStage({
               size="icon"
               className="stage-button"
               aria-label={rotating ? "Pause rotation" : "Start rotation"}
-              onClick={() => setRotating(!rotating)}
+              onClick={() => setRotationOverride(!rotating)}
             >
               {rotating ? <Pause /> : <Play />}
             </Button>
@@ -112,7 +117,10 @@ export function GlobeStage({
               size="icon"
               className="stage-button"
               aria-label="Reset globe view"
-              onClick={() => setReset(reset + 1)}
+              onClick={() => {
+                setRotationOverride(false);
+                setReset((value) => value + 1);
+              }}
             >
               <LocateFixed />
             </Button>
