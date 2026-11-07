@@ -38,4 +38,5 @@ DayPicker styled with the app palette. React Hook Form Controller retains Zod
 validation and the existing YYYY-MM-DD contract. Browser verification covers
 month/year choice, keyboard selection, editing, clearing, focus restoration and
 Escape without dismissing the parent form. A UTC+14 case checks the saved date
-independently in PostgreSQL. The calendar code loads only when opened.
+independently in PostgreSQL. The place form scenario also checks that the
+complete calendar fits on first open after confirming a manual map point.

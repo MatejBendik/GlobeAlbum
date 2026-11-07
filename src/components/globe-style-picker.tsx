@@ -5,8 +5,11 @@ import { GLOBE_STYLES, type GlobeStyle } from "@/lib/globe-style";
 
 const options = {
   dotted: { name: "Dotted", description: "Minimal land dots" },
-  atlas: { name: "Atlas", description: "Monochrome country outlines" },
-  orbit: { name: "World Map", description: "Colored land and country names" },
+  atlas: {
+    name: "Minimal",
+    description: "Grayscale outlines and country names",
+  },
+  orbit: { name: "Classic", description: "Colored land and country names" },
 };
 
 export function GlobeStylePicker({

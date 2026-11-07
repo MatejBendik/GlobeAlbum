@@ -53,6 +53,7 @@ Orbit and saves the selected preset for visitors. Browser coverage verifies the
 opening rotation, reset, persistence after reload and the public style across
 the visitor's light and dark modes. See [verification](../../../validation.md).
 
-The current Atlas preset uses monochrome country outlines. World Map replaces
-the former Orbit appearance and uses colored land and Natural Earth country
-labels. The stored preset identifier stays the same for published globes.
+Minimal and Classic show Natural Earth country names on the globe. Minimal
+uses grayscale outlines, and Classic adds colored land and country tooltips.
+The browser style scenario covers both presets and verifies that the saved
+choice reaches the public globe.

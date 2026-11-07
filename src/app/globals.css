@@ -762,6 +762,14 @@ select:focus-visible {
   color: #edf4e9;
   text-shadow: 0 1px 3px #182c32;
 }
+[data-globe-style="atlas"] .globe-country-label {
+  color: #292929;
+  text-shadow: 0 1px 3px #fff;
+}
+[data-globe-style="atlas"][data-globe-theme="dark"] .globe-country-label {
+  color: #f2f2f2;
+  text-shadow: 0 1px 3px #171717;
+}
 .globe-loading,
 .globe-unavailable {
   position: absolute;

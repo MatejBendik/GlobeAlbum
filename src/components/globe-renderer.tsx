@@ -69,7 +69,7 @@ export default function GlobeRenderer({
   const dark = resolvedTheme === "dark";
   const palette = colors[globeStyle][dark ? "dark" : "light"];
   const showCountries = globeStyle !== "dotted";
-  const showNames = globeStyle === "orbit";
+  const classic = globeStyle === "orbit";
   const [countries, setCountries] = useState<Country[]>([]);
   const visited = useMemo(
     () => new Set(places.map((place) => place.country)),
@@ -77,7 +77,7 @@ export default function GlobeRenderer({
   );
   const labels = useMemo(
     () =>
-      showNames
+      showCountries
         ? countries
             .slice()
             .sort(
@@ -86,7 +86,7 @@ export default function GlobeRenderer({
                 a.rank - b.rank,
             )
         : [],
-    [countries, showNames, visited],
+    [countries, showCountries, visited],
   );
   const surfaceMarkers = useMemo(
     () => [...places, ...labels],
@@ -399,11 +399,10 @@ export default function GlobeRenderer({
         atmosphereAltitude={0.075}
         polygonsData={showCountries ? countries : emptyLayer}
         polygonAltitude={0.01}
-        polygonCapColor={() =>
-          showNames ? (dark ? "#4c6655" : "#a5c3a0") : ""
-        }
+        polygonLabel={classic ? "name" : () => ""}
+        polygonCapColor={() => (classic ? (dark ? "#4c6655" : "#a5c3a0") : "")}
         polygonStrokeColor={() =>
-          showNames
+          classic
             ? dark
               ? "#789c83"
               : "#718f76"

@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useRef, useState, type ComponentProps } from "react";
 import * as Popover from "@radix-ui/react-popover";
 import {
@@ -9,20 +8,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import type { ChevronProps } from "react-day-picker";
+import { DayPicker, type ChevronProps } from "react-day-picker";
 import { Button } from "./button";
-
-const Calendar = dynamic(
-  () => import("react-day-picker").then((module) => module.DayPicker),
-  {
-    ssr: false,
-    loading: () => (
-      <p className="field-hint" role="status">
-        Loading calendar…
-      </p>
-    ),
-  },
-);
 
 function CalendarChevron({ orientation }: ChevronProps) {
   return orientation === "left" ? (
@@ -98,7 +85,6 @@ export function DatePicker({ value, onChange, ...props }: DatePickerProps) {
           onOpenAutoFocus={(event) => {
             event.preventDefault();
             // Transfer focus after Radix pauses the parent dialog's focus scope.
-            // A deferred calendar also focuses its active day when it mounts.
             (
               content.current?.querySelector<HTMLButtonElement>(
                 '.rdp-day_button[tabindex="0"]',
@@ -107,7 +93,7 @@ export function DatePicker({ value, onChange, ...props }: DatePickerProps) {
           }}
           onEscapeKeyDown={(event) => event.stopPropagation()}
         >
-          <Calendar
+          <DayPicker
             mode="single"
             selected={selected}
             defaultMonth={selected}

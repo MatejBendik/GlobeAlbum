@@ -1248,6 +1248,30 @@ test("keeps the landing theme on sign-in and sign-up surfaces", async ({
 
 test.describe("visit calendar", () => {
   test.use({ timezoneId: "Pacific/Kiritimati" });
+  test("fits on first open after confirming a point on the map", async ({
+    page,
+    context,
+  }) => {
+    await account(context, true);
+    await page.goto("/studio");
+    await page.getByRole("button", { name: "Add place", exact: true }).click();
+    const add = page.getByRole("dialog");
+    await add.getByLabel("City or town").fill("Frankfurt");
+    await add.getByRole("button", { name: "Choose location on a map" }).click();
+    await add.getByLabel("Country or territory").selectOption("DE");
+    await add.getByRole("button", { name: "Use map center" }).click();
+    await add.getByRole("button", { name: /Visit date/ }).click();
+    const calendar = page.getByRole("dialog", { name: "Choose visit date" });
+    await expect(calendar.getByRole("grid")).toBeVisible();
+    await expect
+      .poll(() =>
+        calendar
+          .locator(".rdp-root")
+          .evaluate((root) => root.scrollHeight - root.clientHeight),
+      )
+      .toBeLessThanOrEqual(1);
+  });
+
   test("edits and clears a date without timezone shifts and keeps the parent dialog open on Escape", async ({
     page,
     context,
@@ -1436,6 +1460,7 @@ test("saves a globe style and shares it across viewer themes", async ({
   page,
   context,
 }, testInfo) => {
+  test.setTimeout(60_000);
   const owner = await account(context, true);
   await db.globe.update({
     where: { userId: owner.id },
@@ -1486,13 +1511,24 @@ test("saves a globe style and shares it across viewer themes", async ({
     page.getByRole("button", { name: "Start rotation" }),
   ).toBeVisible();
   await page.getByText("Globe style", { exact: true }).click();
-  const atlas = page.getByRole("button", { name: /^Atlas/ });
-  const worldMap = page.getByRole("button", { name: /^World Map/ });
+  const minimal = page.getByRole("button", { name: /^Minimal/ });
+  const classic = page.getByRole("button", { name: /^Classic/ });
+  const labels = globe.locator(".globe-country-label[data-label-visible]");
+  const tooltip = globe.locator(".float-tooltip-kap");
+  async function hoverFrance() {
+    const france = labels.filter({ hasText: /^France$/ });
+    await expect(france).toBeVisible();
+    const bounds = (await france.boundingBox())!;
+    await page.mouse.move(
+      bounds.x + bounds.width / 2,
+      bounds.y + bounds.height / 2,
+    );
+  }
   const geometry = page.waitForResponse(
     (response) =>
       response.url().endsWith("/atlas-countries.geojson") && response.ok(),
   );
-  await atlas.click();
+  await minimal.click();
   const countries = await (await geometry).json();
   expect(countries).toHaveLength(177);
   expect(countries).toEqual(
@@ -1501,9 +1537,14 @@ test("saves a globe style and shares it across viewer themes", async ({
       expect.objectContaining({ code: "SK", name: "Slovakia" }),
     ]),
   );
-  await expect(atlas).toHaveAttribute("aria-pressed", "true");
-  await expect(atlas).toBeEnabled();
+  await expect(minimal).toHaveAttribute("aria-pressed", "true");
+  await expect(minimal).toBeEnabled();
   await expect(globe).toHaveAttribute("data-globe-style", "atlas");
+  await expect(labels.filter({ hasText: /^Slovakia$/ })).toBeVisible();
+  if (testInfo.project.name === "desktop") {
+    await hoverFrance();
+    await expect(tooltip).toBeHidden();
+  }
   expect(
     (await db.globe.findUniqueOrThrow({ where: { userId: owner.id } })).style,
   ).toBe("atlas");
@@ -1516,9 +1557,9 @@ test("saves a globe style and shares it across viewer themes", async ({
   await page.screenshot({
     path: `.local/verification/globe-atlas-dark-${testInfo.project.name}.png`,
   });
-  await worldMap.click();
-  await expect(worldMap).toHaveAttribute("aria-pressed", "true");
-  await expect(worldMap).toBeEnabled();
+  await classic.click();
+  await expect(classic).toHaveAttribute("aria-pressed", "true");
+  await expect(classic).toBeEnabled();
   await page.reload();
   await expect(globe).toHaveAttribute("data-globe-style", "orbit");
   await expect(globe).toHaveAttribute("data-globe-theme", "dark");
@@ -1527,9 +1568,13 @@ test("saves a globe style and shares it across viewer themes", async ({
   await page.goto(`/u/${owner.username}`);
   await expect(globe).toHaveAttribute("data-globe-style", "orbit");
   await expect(page.getByText("Globe style", { exact: true })).toHaveCount(0);
-  const labels = globe.locator(".globe-country-label[data-label-visible]");
   await expect.poll(() => labels.count()).toBeGreaterThan(4);
   await expect(labels.filter({ hasText: /^Slovakia$/ })).toBeVisible();
+  if (testInfo.project.name === "desktop") {
+    await hoverFrance();
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toHaveText("France");
+  }
   expect(
     await labels.evaluateAll((elements) => {
       const bounds = elements.map((element) => element.getBoundingClientRect());
