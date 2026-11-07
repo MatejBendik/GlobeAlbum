@@ -1688,7 +1688,8 @@ test("saves a globe style and shares it across viewer themes", async ({
   await expect(
     page.getByRole("button", { name: "Start rotation" }),
   ).toBeVisible();
-  await page.getByText("Globe style", { exact: true }).click();
+  const stylePicker = page.getByText("Globe style", { exact: true });
+  await stylePicker.click();
   const minimal = page.getByRole("button", { name: /^Minimal/ });
   const classic = page.getByRole("button", { name: /^Classic/ });
   const labels = globe.locator(".globe-country-label[data-label-visible]");
@@ -1706,7 +1707,10 @@ test("saves a globe style and shares it across viewer themes", async ({
     (response) =>
       response.url().endsWith("/atlas-countries.geojson") && response.ok(),
   );
-  await minimal.click();
+  if (testInfo.project.name === "mobile") await minimal.tap();
+  else await minimal.press("Enter");
+  await expect(minimal).toBeHidden({ timeout: 2_000 });
+  await expect(stylePicker).toBeFocused();
   const countries = await (await geometry).json();
   expect(countries).toHaveLength(177);
   expect(countries).toEqual(
@@ -1715,8 +1719,6 @@ test("saves a globe style and shares it across viewer themes", async ({
       expect.objectContaining({ code: "SK", name: "Slovakia" }),
     ]),
   );
-  await expect(minimal).toHaveAttribute("aria-pressed", "true");
-  await expect(minimal).toBeEnabled();
   await expect(globe).toHaveAttribute("data-globe-style", "atlas");
   await expect(labels.filter({ hasText: /^Slovakia$/ })).toBeVisible();
   if (testInfo.project.name === "desktop") {
@@ -1735,9 +1737,15 @@ test("saves a globe style and shares it across viewer themes", async ({
   await page.screenshot({
     path: `.local/verification/globe-atlas-dark-${testInfo.project.name}.png`,
   });
+  await stylePicker.click();
+  await expect(minimal).toHaveAttribute("aria-pressed", "true");
   await classic.click();
+  await expect(classic).toBeHidden();
+  await stylePicker.click();
   await expect(classic).toHaveAttribute("aria-pressed", "true");
   await expect(classic).toBeEnabled();
+  await classic.click();
+  await expect(classic).toBeHidden();
   await page.reload();
   await expect(globe).toHaveAttribute("data-globe-style", "orbit");
   await expect(globe).toHaveAttribute("data-globe-theme", "dark");

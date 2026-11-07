@@ -57,3 +57,11 @@ Minimal and Classic show Natural Earth country names on the globe. Minimal
 uses grayscale outlines, and Classic adds colored land and country tooltips.
 The browser style scenario covers both presets and verifies that the saved
 choice reaches the public globe.
+
+On 2026-11-07, Playwright reproduced the open picker after a mobile tap and
+verified the fix with touch on mobile and keyboard and pointer on desktop.
+Selection closes the picker and restores focus to its trigger, including when
+reselecting the active style. The test still covers persistence after reload
+and public rendering. The fix uses the native
+[`details.open` property](https://html.spec.whatwg.org/multipage/interactive-elements.html#the-details-element)
+(verified 2026-11-07).

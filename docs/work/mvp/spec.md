@@ -117,8 +117,9 @@ starts from that view even for a single place. Reset pauses rotation, and the
 initial rotation respects the viewer's reduced-motion preference.
 
 The owner can select Dotted, Minimal or Classic in the left-hand Globe style panel.
-The preview updates immediately and saves the choice to the globe. A published
-link uses the saved style with the visitor's own light or dark palette. Existing
+Selecting an option closes the panel, returns focus to its trigger, and
+immediately previews the style while saving it to the globe. A published link
+uses the saved style with the visitor's own light or dark palette. Existing
 globes default to Dotted. Minimal shows grayscale outlines and country names.
 Classic shows green land, blue water and country names, with a tooltip on hover.
 The saved style identifiers remain compatible with existing globes.
