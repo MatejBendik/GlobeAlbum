@@ -77,15 +77,19 @@ export default {
       }
     }
     if (url.pathname === "/upload") {
+      const origin = request.headers.get("origin");
+      if (
+        !origin ||
+        (!isAllowedAppOrigin(origin, env.APP_ORIGIN) &&
+          !isAllowedAppOrigin(origin, env.LOCAL_APP_ORIGIN))
+      )
+        return reply({ error: "Origin not allowed." }, 403);
       const cors = {
-        "Access-Control-Allow-Origin":
-          request.headers.get("origin") || env.APP_ORIGIN,
+        "Access-Control-Allow-Origin": origin,
         "Access-Control-Allow-Methods": "PUT, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
         Vary: "Origin",
       };
-      if (!isAllowedAppOrigin(request.headers.get("origin"), env.APP_ORIGIN))
-        return reply({ error: "Origin not allowed." }, 403);
       if (request.method === "OPTIONS")
         return new Response(null, { status: 204, headers: cors });
       if (request.method !== "PUT")

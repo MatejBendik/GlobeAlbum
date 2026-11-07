@@ -11,6 +11,9 @@
     "logs": { "enabled": true, "invocation_logs": false },
     "traces": { "enabled": true, "head_sampling_rate": 0 },
   },
-  "vars": { "APP_ORIGIN": "http://127.0.0.1:3000" },
+  "vars": {
+    "APP_ORIGIN": "https://globealbum.vercel.app",
+    "LOCAL_APP_ORIGIN": "http://127.0.0.1:3000",
+  },
   "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "globealbum-photos" }],
 }
