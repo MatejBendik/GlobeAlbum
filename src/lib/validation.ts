@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { COUNTRY_CODES } from "./countries";
 import { LIMITS } from "./limits";
+import { GLOBE_STYLES } from "./globe-style";
+
+export const globeStyleSchema = z.enum(GLOBE_STYLES);
 
 const country = z
   .string()

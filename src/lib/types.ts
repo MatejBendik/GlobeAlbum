@@ -1,3 +1,5 @@
+import type { GlobeStyle } from "./globe-style";
+
 export type PhotoDto = {
   id: string;
   caption: string;
@@ -20,6 +22,7 @@ export type GlobeDto = {
   username: string;
   displayName: string;
   published: boolean;
+  style: GlobeStyle;
   places: PlaceDto[];
   countryCount: number;
   photoCount: number;

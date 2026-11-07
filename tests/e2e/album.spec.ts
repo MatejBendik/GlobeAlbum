@@ -1379,10 +1379,15 @@ test("centers a public globe on its only place and stacks its postcards", async 
       bounds.y + bounds.height / 2 - (stage!.y + stage!.height / 2),
     );
   };
-  await expect.poll(centerDistance).toBeLessThan(12);
-  await expect(
-    page.getByRole("button", { name: "Start rotation" }),
-  ).toBeVisible();
+  // The postcard may move slightly between the first render and this sample.
+  await expect.poll(centerDistance).toBeLessThan(32);
+  const initialDistance = await centerDistance();
+  const pause = page.getByRole("button", { name: "Pause rotation" });
+  await expect(pause).toBeVisible();
+  await expect
+    .poll(centerDistance, { timeout: 10_000 })
+    .toBeGreaterThan(initialDistance + 15);
+  await pause.click();
   const card = marker.locator(".marker-card");
   await expect(card).toHaveAttribute("data-layers", "3");
   await expect(marker.locator("img")).toHaveCount(1);
@@ -1410,4 +1415,84 @@ test("centers a public globe on its only place and stacks its postcards", async 
   await expect(page).toHaveURL(new RegExp(`place=${place.id}`));
   const gallery = page.getByRole("dialog", { name: "Tokyo" });
   await expect(gallery).toContainText("3 photos");
+});
+
+test("saves a globe style and shares it across viewer themes", async ({
+  page,
+  context,
+}, testInfo) => {
+  const owner = await account(context, true);
+  await db.globe.update({
+    where: { userId: owner.id },
+    data: {
+      published: true,
+      places: {
+        create: [
+          {
+            name: "Paris",
+            sourceCountry: "FR",
+            latitude: 48.86,
+            longitude: 2.35,
+          },
+          {
+            name: "Oia",
+            sourceCountry: "GR",
+            latitude: 36.46,
+            longitude: 25.37,
+          },
+        ],
+      },
+    },
+  });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/studio");
+  const globe = page.locator("[data-globe-style]");
+  await expect(globe).toHaveAttribute("data-globe-style", "dotted");
+  await expect(
+    page.getByRole("button", { name: "Start rotation" }),
+  ).toBeVisible();
+  await page.getByText("Globe style", { exact: true }).click();
+  const atlas = page.getByRole("button", { name: /^Atlas/ });
+  const orbit = page.getByRole("button", { name: /^Orbit/ });
+  const geometry = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/atlas-countries.geojson") && response.ok(),
+  );
+  await atlas.click();
+  expect(await (await geometry).json()).toHaveLength(177);
+  await expect(atlas).toHaveAttribute("aria-pressed", "true");
+  await expect(atlas).toBeEnabled();
+  await expect(globe).toHaveAttribute("data-globe-style", "atlas");
+  expect(
+    (await db.globe.findUniqueOrThrow({ where: { userId: owner.id } })).style,
+  ).toBe("atlas");
+  await page.screenshot({
+    path: `.local/verification/globe-atlas-light-${testInfo.project.name}.png`,
+  });
+
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
+  await expect(globe).toHaveAttribute("data-globe-theme", "dark");
+  await page.screenshot({
+    path: `.local/verification/globe-atlas-dark-${testInfo.project.name}.png`,
+  });
+  await orbit.click();
+  await expect(orbit).toHaveAttribute("aria-pressed", "true");
+  await expect(orbit).toBeEnabled();
+  await page.reload();
+  await expect(globe).toHaveAttribute("data-globe-style", "orbit");
+  await expect(globe).toHaveAttribute("data-globe-theme", "dark");
+
+  await context.clearCookies();
+  await page.goto(`/u/${owner.username}`);
+  await expect(globe).toHaveAttribute("data-globe-style", "orbit");
+  await expect(page.getByText("Globe style", { exact: true })).toHaveCount(0);
+  await page.screenshot({
+    path: `.local/verification/globe-orbit-dark-${testInfo.project.name}.png`,
+  });
+  await page.getByRole("button", { name: "Switch to light mode" }).click();
+  await expect(globe).toHaveAttribute("data-globe-theme", "light");
+  await expect(globe).toHaveAttribute("data-globe-style", "orbit");
+  await page.screenshot({
+    path: `.local/verification/globe-orbit-light-${testInfo.project.name}.png`,
+  });
 });

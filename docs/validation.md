@@ -43,6 +43,30 @@ users were deleted. The final queue was empty and accounted storage returned to
 zero. Unexpired reservations remained accounted until their capability/lease
 safety windows elapsed; scheduling deletion alone never releases bytes.
 
+## Globe styles and opening rotation (2026-11-07)
+
+Eight desktop/mobile Chromium scenarios passed after adding Dotted, Atlas and
+Orbit to the owner's left-hand style panel. Tests verified the Atlas geometry
+response, a persisted choice in PostgreSQL, reload, anonymous sharing and both
+viewer palettes. Tokyo starts near the center and then moves automatically.
+Reset returns to Tokyo and pauses the rotation. The reduced-motion check starts
+with rotation paused. The 53 Vitest cases also passed.
+
+The preset shares the existing globe renderer, postcard and gallery behavior.
+Atlas loads a compact 177-feature Natural Earth country asset on demand. Orbit
+uses the existing graticule and arc layers for its blue palette and decorative
+links. The reference implementations informed the design. Checked 2026-11-07.
+[Aceternity 3D Globe](https://ui.aceternity.com/components/3d-globe),
+[21st globe gallery](https://21st.dev/community/components/s/globe),
+[react-globe.gl](https://github.com/vasturiano/react-globe.gl).
+
+The additive Prisma migration passed on a temporary clone of the configured
+Neon branch. Both existing globes retained Dotted, and a rolled-back write
+verified the Orbit value on the clone. The same migration then passed on the
+configured main branch, keeping both globes on Dotted. The temporary branch
+was removed. The production build passed, and the local production server
+returned HTTP 200 for an existing published globe and the Atlas asset.
+
 ## Globe framing and layered postcards (2026-11-07)
 
 The public Tokyo regression reproduced an off-center, rear-facing marker with

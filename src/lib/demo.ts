@@ -61,6 +61,7 @@ export const demoGlobe: GlobeDto = {
   username: "the-long-way-home",
   displayName: "The long way home",
   published: true,
+  style: "dotted",
   countryCount: 5,
   photoCount: 6,
   visitCount: 8,

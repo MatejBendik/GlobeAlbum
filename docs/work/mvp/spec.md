@@ -107,8 +107,15 @@ larger frame, while other places remain available as dots and in the place list.
 Following the user request on 2026-11-07, a place with multiple ready photos
 shows layered paper behind its cover postcard. The marker opens its complete
 place gallery. The starting and reset views center the selected place, the first
-place with a cover, or the first saved place, in that order. A single-place globe
-starts still. Reset pauses automatic rotation and respects reduced motion.
+place with a cover, or the first saved place, in that order. Automatic rotation
+starts from that view even for a single place. Reset pauses rotation, and the
+initial rotation respects the viewer's reduced-motion preference.
+
+The owner can select Dotted, Atlas or Orbit in the left-hand Globe style panel.
+The preview updates immediately and saves the choice to the globe. A published
+link uses the saved style with the visitor's own light or dark palette. Existing
+globes default to Dotted. Atlas uses country outlines and Orbit shows a blue
+grid with up to six decorative arcs between saved places.
 
 ### Globe workspace and navigation refinement
 

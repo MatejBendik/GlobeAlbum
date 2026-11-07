@@ -6,6 +6,7 @@ src/generated
 worker/worker-configuration.d.ts
 package-lock.json
 public/land-dots.json
+public/atlas-countries.geojson
 playwright-report
 test-results
 coverage

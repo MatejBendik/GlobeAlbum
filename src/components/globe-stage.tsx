@@ -2,6 +2,7 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Globe2, LocateFixed, Pause, Play, List } from "lucide-react";
+import type { GlobeStyle } from "@/lib/globe-style";
 import type { PlaceDto } from "@/lib/types";
 import { Button } from "./ui/button";
 const Renderer = dynamic(() => import("./globe-renderer"), {
@@ -15,12 +16,14 @@ const Renderer = dynamic(() => import("./globe-renderer"), {
 });
 export function GlobeStage({
   places,
+  globeStyle = "dotted",
   selectedId,
   onSelect,
   hero = false,
   onUnavailable,
 }: {
   places: PlaceDto[];
+  globeStyle?: GlobeStyle;
   selectedId?: string;
   onSelect: (id: string) => void;
   hero?: boolean;
@@ -31,7 +34,7 @@ export function GlobeStage({
   const [supported, setSupported] = useState<boolean | null>(null);
   const [reducedMotion, setReducedMotion] = useState(true);
   const [rotationOverride, setRotationOverride] = useState<boolean>();
-  const rotating = rotationOverride ?? (!reducedMotion && places.length !== 1);
+  const rotating = rotationOverride ?? !reducedMotion;
   const [reset, setReset] = useState(0);
   const handleFailure = useCallback(() => {
     setSupported(false);
@@ -75,6 +78,7 @@ export function GlobeStage({
           {...size}
           reset={reset}
           places={places}
+          globeStyle={globeStyle}
           selectedId={selectedId}
           onSelect={onSelect}
           rotating={rotating}

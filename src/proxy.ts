@@ -11,6 +11,7 @@ export default auth.middleware({
     "/sign-up",
     "/api",
     "/land-dots.json",
+    "/atlas-countries.geojson",
   ],
 });
 export const config = {

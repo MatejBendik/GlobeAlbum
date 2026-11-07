@@ -46,3 +46,9 @@ positions prioritize the selected place, then the first cover-bearing place,
 then the first saved place. Single-place globes start still and reset pauses
 rotation. The [browser verification](../../../validation.md) covers a public
 Tokyo globe, drag/reset, layered postcards and gallery access.
+
+The later 2026-11-07 update restores automatic rotation after the opening view
+centers even a single place. The owner style panel previews Dotted, Atlas and
+Orbit and saves the selected preset for visitors. Browser coverage verifies the
+opening rotation, reset, persistence after reload and the public style across
+the visitor's light and dark modes. See [verification](../../../validation.md).

@@ -12,6 +12,7 @@ import {
   captionSchema,
   countrySchema,
   displayNameSchema,
+  globeStyleSchema,
 } from "./validation";
 import { photoUrl, storageConfigured, workerUrl, objectSize } from "./storage";
 import { signUploadGrant } from "./upload-grant";
@@ -210,6 +211,17 @@ export async function setPublication(userId: string, published: boolean) {
     return tx.globe.update({ where: { id: globe.id }, data: { published } });
   });
 }
+export async function setGlobeStyle(userId: string, value: unknown) {
+  const style = globeStyleSchema.parse(value);
+  return locked(async (tx) => {
+    const globe = await ownerGlobe(tx, userId);
+    return tx.globe.update({
+      where: { id: globe.id },
+      data: { style },
+      select: { username: true },
+    });
+  });
+}
 export async function renameGlobe(userId: string, name: unknown) {
   const displayName = displayNameSchema.parse(name);
   return locked(async (tx) => {
@@ -326,6 +338,7 @@ export async function readGlobe(
     username: globe.username,
     displayName: globe.displayName,
     published: globe.published,
+    style: globe.style,
     places,
     countryCount: new Set(places.map((p) => p.country)).size,
     photoCount: places.reduce((n, p) => n + p.photoCount, 0),

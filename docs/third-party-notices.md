@@ -9,7 +9,10 @@ Recorded 2026-11-05.
   AlignUI source or second UI registry was copied into this application.
 - `public/land-dots.json` contains sampled land points derived from Natural Earth
   public-domain country geometry. Source: https://www.naturalearthdata.com/about/terms-of-use/
-  These are decorative points, not authoritative geographic boundaries.
+  The Atlas style uses a compact export of country outlines from the same public-domain
+  dataset. The bundled asset keeps geometry rounded to three decimal places.
+  Source verified 2026-11-07.
+  [Natural Earth v5.1.2 country geometry](https://github.com/nvkelso/natural-earth-vector/blob/v5.1.2/geojson/ne_110m_admin_0_countries.geojson).
 - GeoNames data requires attribution under CC BY. The place form links to
   GeoNames. Persisted provider identifiers remain separate from internal IDs.
   Source: https://www.geonames.org/export/

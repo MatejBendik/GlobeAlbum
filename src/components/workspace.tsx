@@ -1,6 +1,13 @@
 "use client";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useOptimistic,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -22,7 +29,8 @@ import { AccountMenu } from "./account-menu";
 import { ThemeToggle } from "./theme-provider";
 import type { GlobeDto } from "@/lib/types";
 import { countryName } from "@/lib/countries";
-import { publicationAction } from "@/app/actions";
+import { globeStyleAction, publicationAction } from "@/app/actions";
+import type { GlobeStyle } from "@/lib/globe-style";
 import { LIMITS } from "@/lib/limits";
 import { Brand } from "./brand";
 import { Button } from "./ui/button";
@@ -33,6 +41,7 @@ import {
   DialogDescription,
 } from "./ui/dialog";
 import { GlobeStage } from "./globe-stage";
+import { GlobeStylePicker } from "./globe-style-picker";
 import { PlaceGallery } from "./place-gallery";
 import { AddPlaceDialog } from "./add-place-dialog";
 
@@ -56,6 +65,22 @@ export function Workspace({
     [copied, setCopied] = useState(false),
     [error, setError] = useState(""),
     [pending, setPending] = useState(false);
+  const [globeStyle, previewStyle] = useOptimistic(globe.style);
+  const [stylePending, startStyleSave] = useTransition();
+  const [styleError, setStyleError] = useState("");
+  function changeStyle(value: GlobeStyle) {
+    if (stylePending || value === globeStyle) return;
+    setStyleError("");
+    startStyleSave(async () => {
+      previewStyle(value);
+      try {
+        const result = await globeStyleAction(value);
+        if (result.error) setStyleError(result.error);
+      } catch {
+        setStyleError("Could not save the globe style. Please try again.");
+      }
+    });
+  }
   const listButton = useRef<HTMLButtonElement>(null);
   const openPlaces = useCallback(() => setPlacesOpen(true), []);
   function closePlaces() {
@@ -173,6 +198,7 @@ export function Workspace({
         <section className="globe-workspace" aria-label="Globe view">
           <GlobeStage
             places={globe.places}
+            globeStyle={globeStyle}
             selectedId={selected}
             onSelect={choose}
             onUnavailable={openPlaces}
@@ -192,6 +218,14 @@ export function Workspace({
               <strong>{globe.countryCount}</strong>{" "}
               {globe.countryCount === 1 ? "country" : "countries"}
             </p>
+            {owner && (
+              <GlobeStylePicker
+                value={globeStyle}
+                pending={stylePending}
+                error={styleError}
+                onChange={changeStyle}
+              />
+            )}
           </div>
           <div className="workspace-floating-actions">
             <Button

@@ -83,6 +83,12 @@ export async function editVisitAction(visitId: string, value: unknown) {
 export async function publicationAction(published: boolean) {
   return execute((id) => domain.setPublication(id, published));
 }
+export async function globeStyleAction(value: unknown) {
+  return execute(async (id) => {
+    const { username } = await domain.setGlobeStyle(id, value);
+    revalidatePath(`/u/${username}`);
+  });
+}
 export async function renameAction(name: string) {
   const result = await execute((id) => domain.renameGlobe(id, name));
   if (!result.error) revalidatePath("/settings");

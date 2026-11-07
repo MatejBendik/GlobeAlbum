@@ -3,11 +3,29 @@ import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import Globe, { type GlobeMethods } from "react-globe.gl";
 import { useTheme } from "next-themes";
 import { MeshPhongMaterial } from "three";
+import type { GlobeStyle } from "@/lib/globe-style";
 import type { PlaceDto } from "@/lib/types";
 import { choosePostcards } from "@/lib/marker-layout";
 
+const colors = {
+  dotted: {
+    light: { ocean: "#f4f3ee", atmosphere: "#d9d6cb", dots: "#858b88" },
+    dark: { ocean: "#14171b", atmosphere: "#8597b4", dots: "#6c737e" },
+  },
+  atlas: {
+    light: { ocean: "#d4e9e9", atmosphere: "#8db8bb", dots: "#668c7a" },
+    dark: { ocean: "#182c32", atmosphere: "#609694", dots: "#80aaa1" },
+  },
+  orbit: {
+    light: { ocean: "#c6e4f4", atmosphere: "#739cce", dots: "#427a9e" },
+    dark: { ocean: "#10253c", atmosphere: "#6a9edc", dots: "#6db3da" },
+  },
+};
+const emptyLayer: object[] = [];
+
 export default function GlobeRenderer({
   places,
+  globeStyle,
   selectedId,
   onSelect,
   rotating,
@@ -17,6 +35,7 @@ export default function GlobeRenderer({
   onFailure,
 }: {
   places: PlaceDto[];
+  globeStyle: GlobeStyle;
   selectedId?: string;
   onSelect: (id: string) => void;
   rotating: boolean;
@@ -27,6 +46,34 @@ export default function GlobeRenderer({
 }) {
   const { resolvedTheme } = useTheme();
   const dark = resolvedTheme === "dark";
+  const palette = colors[globeStyle][dark ? "dark" : "light"];
+  const atlas = globeStyle === "atlas";
+  const orbit = globeStyle === "orbit";
+  const [countries, setCountries] = useState<object[]>([]);
+  const arcs = useMemo(
+    () =>
+      orbit
+        ? places.slice(1, 7).map((place, index) => ({
+            startLat: places[index].latitude,
+            startLng: places[index].longitude,
+            endLat: place.latitude,
+            endLng: place.longitude,
+          }))
+        : emptyLayer,
+    [orbit, places],
+  );
+  useEffect(() => {
+    if (!atlas || countries.length) return;
+    const controller = new AbortController();
+    fetch("/atlas-countries.geojson", { signal: controller.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error("Atlas geometry unavailable");
+        return response.json();
+      })
+      .then(setCountries)
+      .catch(() => {});
+    return () => controller.abort();
+  }, [atlas, countries.length]);
   // Perspective projection fits height; compensate for narrow portrait viewports.
   const cameraScale = Math.max(1, height / width);
   const featured = places.find((place) => place.coverUrl) ?? places[0];
@@ -58,10 +105,10 @@ export default function GlobeRenderer({
   const material = useMemo(
     () =>
       new MeshPhongMaterial({
-        color: dark ? "#14171b" : "#f4f3ee",
+        color: palette.ocean,
         shininess: 4,
       }),
-    [dark],
+    [palette.ocean],
   );
   useEffect(() => {
     const controller = new AbortController();
@@ -188,6 +235,7 @@ export default function GlobeRenderer({
   return (
     <div
       data-globe-theme={dark ? "dark" : "light"}
+      data-globe-style={globeStyle}
       onContextMenu={(event) => event.preventDefault()}
     >
       <Globe
@@ -197,13 +245,26 @@ export default function GlobeRenderer({
         backgroundColor="rgba(0,0,0,0)"
         globeMaterial={material}
         showAtmosphere
-        atmosphereColor={dark ? "#8597b4" : "#d9d6cb"}
-        atmosphereAltitude={0.075}
-        showGraticules={false}
-        pointsData={dots}
+        atmosphereColor={palette.atmosphere}
+        atmosphereAltitude={orbit ? 0.13 : 0.075}
+        showGraticules={orbit}
+        polygonsData={atlas ? countries : emptyLayer}
+        polygonAltitude={0.01}
+        polygonCapColor={() => (dark ? "#4c6655" : "#a5c3a0")}
+        polygonStrokeColor={() => (dark ? "#789c83" : "#718f76")}
+        polygonSideColor={() => "transparent"}
+        polygonsTransitionDuration={0}
+        arcsData={arcs}
+        arcColor={() =>
+          dark ? ["#62b8ee", "#b2dedb"] : ["#3476b0", "#387f91"]
+        }
+        arcAltitudeAutoScale={0.27}
+        arcStroke={0.28}
+        arcsTransitionDuration={0}
+        pointsData={atlas && countries.length ? emptyLayer : dots}
         pointLat="lat"
         pointLng="lng"
-        pointColor={() => (dark ? "#6c737e" : "#858b88")}
+        pointColor={() => palette.dots}
         pointRadius={0.19}
         pointAltitude={0.003}
         pointResolution={4}
