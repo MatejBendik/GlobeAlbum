@@ -2,6 +2,8 @@
 
 Status: approved; implementation authorized by the user. Subsequent instructions authorize the required Cloudflare resources. Purchases, paid upgrades and Vercel deployment remain separate.
 Approved and researched: 2026-11-05. Auth scope amended by explicit user instruction on 2026-11-06; see [ADR 0005](../../adr/0005-managed-neon-auth.md).
+The user authorized Vercel deployment on 2026-11-07. See the
+[deployment setup](../../setup.md#vercel-production-deployment).
 
 ## Problem Statement
 

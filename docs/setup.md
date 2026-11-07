@@ -1,6 +1,6 @@
 # Development and service setup
 
-Updated: 2026-11-06. No application deployment to Vercel has been performed.
+Updated 2026-11-07. GlobeAlbum runs at [globealbum.vercel.app](https://globealbum.vercel.app).
 
 ## Neon project and environment
 
@@ -49,10 +49,10 @@ in ignored `.env.local` for operations only. Neon uses the owned Google Cloud cl
 configured in project `globealbum`; see [Google OAuth setup](google-oauth.md).
 Register exact application origins with Neon Auth; the local origin above was
 added using `neon neon-auth domain add http://127.0.0.1:3000`.
-Keep the Worker's `APP_ORIGIN` aligned. With an HTTP loopback origin, both
-`localhost` and `127.0.0.1` at the same port are accepted by the app and Worker;
-hosted origins remain exact. Changing to a production origin still requires
-updating both configurations.
+Keep the Vercel and Worker `APP_ORIGIN` values aligned. The Worker also allows
+its explicit `LOCAL_APP_ORIGIN` for local testing against real R2. An HTTP
+loopback configuration accepts both `localhost` and `127.0.0.1` at the same
+port. Hosted origins must match exactly.
 
 Current branch configuration: email/password enabled, registration open, email
 verification not required, no signup email. Shared SMTP remains a development
@@ -151,7 +151,8 @@ Created with the user's authorization after they manually activated R2:
 - Private Standard R2 bucket: `globealbum-photos`, WEUR location hint.
 - Worker: `globealbum-images`.
 - URL: `https://globealbum-images.matejbendik-mb.workers.dev`.
-- Bindings: `PHOTOS` (R2), `APP_ORIGIN` (allowed browser origin). No Images binding.
+- Bindings include `PHOTOS` (R2), `APP_ORIGIN` (hosted browser origin) and
+  `LOCAL_APP_ORIGIN` (loopback browser origin).
 - Secret: `IMAGE_WORKER_SECRET`, shared with the Next.js server.
 - Bucket lifecycle: delete `quarantine/` objects and abort multipart uploads after one day.
 - No public bucket domain, no Images Paid or Workers Paid upgrade.
@@ -200,12 +201,35 @@ margin has elapsed, preventing replay from recreating an already-cleaned key.
 Until scheduled maintenance runs, the private source can remain in quarantine;
 the one-day bucket lifecycle provides a second cleanup path.
 
-## Vercel release gate
+## Vercel production deployment
 
-Vercel is the approved Next.js host. Do not silently switch hosts or buy Pro.
-Resolve Hobby's non-commercial eligibility, configure production-only secrets,
-Neon trusted origins, production OAuth/SMTP, connections, Worker origin, cron, and usage monitoring,
-then run the release checks. Deployment requires a separate user instruction.
+Vercel project `matejbendiks-projects/globealbum` is connected to the private
+GitHub repository `MatejBendik/GlobeAlbum`. Pushes to `main` trigger
+production deployments. The existing Hobby plan hosts the personal,
+non-commercial MVP. The project uses Node 24 and places functions in Frankfurt
+near Neon. Production runtime variables are scoped to Production. Preview
+deployments need their own service configuration before testing writes.
+
+The pooled `DATABASE_URL` uses `sslmode=verify-full`. Set
+`NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET`,
+`NEON_AUTH_ADMIN_API_KEY`, `NEON_AUTH_PROJECT_ID`, `NEON_AUTH_BRANCH_ID`,
+`APP_ORIGIN`, `IMAGE_WORKER_URL`, `IMAGE_WORKER_SECRET`,
+`GEONAMES_USERNAME`, `GOOGLE_CLIENT_ID` and `CRON_SECRET` for the same
+deployment. Keep the direct migration connection in the operator environment.
+Google's client secret is configured in Neon. See [Google OAuth](google-oauth.md)
+for the Console fields and [verification](validation.md) for remaining beta gates.
+
+Vercel registers `/api/maintenance` daily in the 03:00–03:59 UTC window.
+Check the project's Cron Jobs settings and request logs for invocations. Follow
+the maintenance notes above for retry queues and storage accounting.
+
+Deployment references verified 2026-11-07:
+
+- https://vercel.com/docs/cli/git
+- https://vercel.com/docs/functions/configuring-functions/region
+- https://vercel.com/docs/schedules/cron-jobs/usage-and-pricing
+- https://vercel.com/docs/environment-variables/sensitive-environment-variables
+- https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 
 Primary references, verified 2026-11-05:
 

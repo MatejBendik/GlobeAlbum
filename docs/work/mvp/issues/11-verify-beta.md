@@ -16,18 +16,18 @@ Verify and prepare the public beta, as a complete end-to-end user behavior.
 
 - [x] Build/type checks and meaningful domain/integration/browser tests pass.
 - [ ] Real Google, Neon, R2 and HEIC checks and physical-device evidence are recorded before release.
-- [ ] Vercel plan eligibility, storage lifecycle/CORS, cron, secrets and usage monitoring are checked before deployment.
-- [ ] No deployment or paid upgrade occurs without a separate instruction.
+- [x] Deployment is explicitly authorized, with Hobby, private storage lifecycle/CORS and Production-scoped variables verified.
+- [ ] Scheduled cron execution and usage monitoring are checked before the public beta.
 
 ## Validation evidence
 
-Updated 2026-11-06. Production build, Worker checks, 53 Vitest tests and 45 browser
-scenarios pass (one intentional mobile-hover skip). Real Neon, Google registration
-and linking, GeoNames, R2 PNG/HEIC and owner JPEG recovery are recorded in
-validation. Physical devices, hosted Linux codec packaging/resource measurements,
-production auth email/recovery, deployment cron and Vercel eligibility remain
-open. Automated managed identity cleanup is verified. Cloudflare uses R2 only;
-no Images plan, paid upgrade or Vercel deployment was performed.
+Updated 2026-11-07. GitHub `main` deploys to Vercel Hobby. The hosted test
+covered returning Google login, managed email registration and deletion,
+GeoNames, private upload of PNG/JPEG/WebP/HEIC through R2 and Vercel/Linux,
+publication and hiding. Vercel registered the daily maintenance cron. A manual
+authorized invocation cleared the test cleanup jobs and their R2 objects.
+Physical devices, representative resource measurements, production auth
+email/recovery, the first scheduled invocation and beta feedback remain open.
 
 See [verification and release gates](../../../validation.md). Unchecked criteria remain pending, even when their code exists.
 

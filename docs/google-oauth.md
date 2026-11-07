@@ -67,11 +67,24 @@ sign-in retains Neon's working redirect/verification flow.
 
 ## Release notes
 
-Google may display the callback host (`neon.tech`) on its consent screen even
-when the owned client is used. Before a public release, add the actual app domain
-and published privacy disclosures, review branding/verification and audience
-status, and register the real hosting origin with Google and Neon. Vercel
-deployment, a domain purchase and paid upgrades remain separate instructions.
+The 2026-11-07 deployment uses `https://globealbum.vercel.app`, which is
+registered as a trusted origin on the existing Neon branch. A returning Google
+user signed in through the hosted app, reached the existing studio and retained
+the session on reload.
+
+In [Google Auth Platform → Clients](https://console.cloud.google.com/auth/clients?project=globealbum),
+open **GlobeAlbum Web (Neon Auth)** and add `https://globealbum.vercel.app`
+under **Authorized JavaScript origins** for **Connect Google** in Profile
+settings. Keep the existing Neon callback in **Authorized redirect URIs**:
+
+```text
+https://ep-lucky-frog-b9lv2ak8.neonauth.c-7.eu-central-1.aws.neon.tech/neondb/auth/callback/google
+```
+
+Google may display the Neon callback host on the consent screen. Branding,
+privacy disclosures and audience review remain public beta gates.
+The [Google Identity Services setup guide](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid)
+and [Neon OAuth guide](https://neon.com/docs/auth/guides/setup-oauth) were checked on 2026-11-07.
 
 ## Verification evidence
 

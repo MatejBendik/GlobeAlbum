@@ -1,7 +1,40 @@
 # Verification and release gates
 
-Updated: 2026-11-06. Implementation is authorized; production release is not.
+Updated 2026-11-07. The user authorized the Vercel deployment. The beta gates
+below still apply.
 Checks below distinguish actual cloud behavior from test fixtures and emulation.
+
+## Vercel deployment (2026-11-07)
+
+- Vercel built commit `019bc73` from GitHub `main`, with the Next.js preset
+  and Node 24. [The production domain](https://globealbum.vercel.app)
+  serves the landing page and demo. Signed-out access to Studio redirects to
+  sign-in. The deployed Cloudflare Worker accepts the production origin and
+  loopback development, and denies an unrelated origin.
+- A returning Google session entered the existing studio and survived reload.
+  The hosted email/password journey verified signup, sign-out, wrong-password
+  rejection, sign-in, session restoration, a private globe, live GeoNames
+  selection, publication, hiding, account deletion and re-registration.
+  Neon confirmed managed identity removal and denial of the old session.
+  Google Identity Services returned 403 for **Connect Google** because the
+  Vercel origin had yet to be added to the OAuth client at test time.
+- Actual browser uploads sent PNG, JPEG, WebP and two HEIC samples to private
+  R2. Vercel/Linux processed all five in roughly ten seconds for the batch,
+  including network transfers and a 701 KiB HEIC sample. All ten resulting WebP
+  thumbnails and displays had private no-store headers and no EXIF/XMP chunks.
+  The anonymous gallery worked while published and returned 404 after hiding.
+  The batch elapsed time does not measure CPU/memory under representative load.
+- The daily cron was registered in the production project. The maintenance
+  endpoint returned 401 without the bearer secret. A manual authorized run
+  cleared the fixture cleanup jobs once they became due. A separate Worker
+  check found all 27 fixture object keys absent from R2. Scheduled invocation
+  and representative usage monitoring remain open.
+- The hosted demo rendered its globe and postcards in Pixel Chromium
+  emulation without horizontal overflow. With WebGL disabled, the place list
+  and Kyoto gallery still worked. Physical devices remain a separate gate.
+- Local Vitest passed 54 tests. The hosted run used actual providers and
+  disposable accounts. Earlier local browser runs used the service doubles
+  described below.
 
 ## Observed evidence
 
@@ -435,7 +468,8 @@ Sources verified 2026-11-05:
 ## Before beta
 
 - [x] Replace the failing Images dependency with the user-approved R2-only flow; full PNG/HEIC cloud smoke passes.
-- [ ] Verify native/WASM packaging and bounded CPU/memory in the actual hosted Linux runtime.
+- [x] Verify native Sharp and HEIC WASM packaging in the actual hosted Linux runtime.
+- [ ] Measure bounded CPU/memory with representative hosted workloads.
 - [x] Verify real Google linking, returning session, reload and sign-out.
 - [x] Verify fresh Google registration after confirmed deletion and removal of the old Google-linked identity.
 - [x] Verify real Neon pooled runtime reads/writes and direct migrations.
@@ -452,7 +486,7 @@ Sources verified 2026-11-05:
       and initial loading. No unmeasured performance claim is approved.
 - [ ] Run cleanup against real stored objects, confirm accounting reconciliation
       and monitor oldest pending jobs; verify cron in the deployed environment.
-- [ ] Resolve Vercel Hobby eligibility and obtain a separate deployment instruction.
-- [ ] Configure production origin/callbacks/secrets and review usage monitoring.
+- [x] Deploy the personal non-commercial MVP on Hobby under the user's 2026-11-07 instruction.
+- [ ] Confirm the hosted Google Identity Services origin for account linking and review usage monitoring.
 - [ ] Record the agreed usability outcome: 5 of 10 testers independently add
       three places and five photos, then share with another person.

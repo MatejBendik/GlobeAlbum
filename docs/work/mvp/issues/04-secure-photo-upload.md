@@ -2,7 +2,7 @@
 
 Type: task
 Status: ready-for-agent
-Execution: implemented and cloud smoke verified; physical-device/hosted-runtime gates remain
+Execution: hosted photo journey verified; physical-device and resource checks remain
 
 ## What to build
 
@@ -20,6 +20,11 @@ Add a photo securely, including HEIC, as a complete end-to-end user behavior.
 - [x] Real R2 byte enforcement and real HEIC processing are release-gate checks.
 
 ## Validation evidence
+
+On 2026-11-07 the production browser journey uploaded PNG, JPEG, WebP and two
+HEIC samples to actual R2. Vercel/Linux produced ten private WebP variants with
+no EXIF/XMP chunks. The anonymous gallery became unavailable after hiding the
+globe. Representative hosted resource and physical-device checks remain open.
 
 Updated 2026-11-06. Full actual R2 PNG/HEIC smoke passes upload, replay rejection,
 private WebP reads without EXIF/XMP, idempotent completion, size enforcement and

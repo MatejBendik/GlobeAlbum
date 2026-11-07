@@ -864,6 +864,9 @@ test("requires sign-in and onboarding before opening settings", async ({
   page,
   context,
 }) => {
+  const sessionProbe = await page.request.head("/api/auth/get-session");
+  expect(sessionProbe.status()).toBe(200);
+  expect(await sessionProbe.text()).toBe("");
   await page.goto("/settings");
   await expect(page).toHaveURL(/sign-in/);
   await expect(page.getByLabel("Sign-in email")).toHaveCount(0);

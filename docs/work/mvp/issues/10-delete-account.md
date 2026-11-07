@@ -21,6 +21,10 @@ Delete an account and revoke its content, as a complete end-to-end user behavior
 
 ## Validation evidence
 
+The 2026-11-07 Vercel browser smoke confirmed Settings deletion, managed
+identity removal, stale-session denial and same-email re-registration with a
+fresh identity and no restored globe.
+
 Updated 2026-11-06. Local browser/domain tests and the real Neon smoke remove
 application ownership, retain cleanup/fence records and prevent identity
 resynchronization. Managed `/delete-user` returns 404 on this branch. Operator
