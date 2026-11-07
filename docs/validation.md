@@ -67,6 +67,18 @@ configured main branch, keeping both globes on Dotted. The temporary branch
 was removed. The production build passed, and the local production server
 returned HTTP 200 for an existing published globe and the Atlas asset.
 
+## Geographic pins, zoom and country names (2026-11-07)
+
+The browser checks cover fixed-size pins, postcards above their saved
+coordinates, camera-dependent postcard size, and hover enlargement. The
+published London and Košice fixture shows both postcards at the default
+desktop view, with both pins visible. World Map uses horizontal labels from
+Natural Earth and suppresses label-to-label overlap; postcards may cover
+labels. Atlas keeps grayscale outlines in both themes. The existing stored
+Orbit value now selects World Map, so no database migration is needed.
+
+Sources and data fields are recorded in [globe and geography](research/globe-and-geography.md).
+
 ## Globe framing and layered postcards (2026-11-07)
 
 The public Tokyo regression reproduced an off-center, rear-facing marker with

@@ -5,7 +5,15 @@ export type ProjectedMarker = {
   selected: boolean;
 };
 
-export function choosePostcards(markers: ProjectedMarker[], maximum: number) {
+export function postcardScale(cameraDistance: number) {
+  return Math.min(1.18, Math.max(0.48, 2 / cameraDistance));
+}
+
+export function choosePostcards(
+  markers: ProjectedMarker[],
+  maximum: number,
+  scale: number,
+) {
   const placed: ProjectedMarker[] = [];
   const prioritized = [...markers].sort(
     (a, b) => Number(b.selected) - Number(a.selected),
@@ -15,8 +23,8 @@ export function choosePostcards(markers: ProjectedMarker[], maximum: number) {
     if (
       placed.some(
         (other) =>
-          Math.abs(other.x - marker.x) < 164 &&
-          Math.abs(other.y - marker.y) < 190,
+          Math.abs(other.x - marker.x) < 150 * scale &&
+          Math.abs(other.y - marker.y) < 178 * scale,
       )
     )
       continue;

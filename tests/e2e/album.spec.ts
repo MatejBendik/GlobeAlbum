@@ -705,7 +705,7 @@ test("opens the landing photo directly and keeps places in a floating panel", as
     .locator('.hero-globe-composition .photo-marker[data-facing="true"]')
     .first();
   await expect(marker).toBeVisible();
-  await marker.click({ position: { x: 25, y: 20 } });
+  await marker.locator(".marker-paper").click();
   await expect(page.getByRole("dialog")).toBeVisible();
   await expect(
     page.getByRole("dialog").locator(".gallery-main-image"),
@@ -1149,38 +1149,53 @@ test("keeps primary button fills stable throughout hover", async ({
   }
 });
 
-test("keeps postcards readable at zoom limits and enlarges them on hover", async ({
+test("scales postcards with zoom while keeping the place pin visible", async ({
   page,
 }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/demo");
-  const marker = page.locator('.photo-marker[data-facing="true"]').first();
-  await expect(marker).toBeVisible();
-  const initial = await marker.boundingBox();
-  expect(initial!.width).toBeGreaterThanOrEqual(120);
+  const marker = page.getByRole("button", { name: "Open Paris gallery" });
+  const photo = marker.locator(".marker-paper");
+  const pin = marker.locator(".marker-core");
+  await expect(photo).toBeVisible();
+  await expect(pin).toBeVisible();
+  const initial = (await photo.boundingBox())!;
+  const pinBounds = (await pin.boundingBox())!;
+  expect(initial.y + initial.height).toBeLessThan(pinBounds.y);
   const canvas = page.locator(".globe-stage canvas").first();
   const canvasBounds = await canvas.boundingBox();
-  await page.mouse.move(
-    canvasBounds!.x + 10,
-    canvasBounds!.y + canvasBounds!.height / 2,
-  );
+  const center = {
+    // Wheel over the canvas next to the central pin rather than its button.
+    x: canvasBounds!.x + canvasBounds!.width / 2 - 30,
+    y: canvasBounds!.y + canvasBounds!.height / 2,
+  };
+  await page.mouse.move(center.x, center.y);
   await page.mouse.wheel(0, -12000);
+  await page.mouse.move(5, 80);
   await expect
-    .poll(async () => (await marker.boundingBox())?.width ?? 0)
-    .toBeGreaterThanOrEqual(120);
+    .poll(async () => (await photo.boundingBox())?.width ?? 0)
+    .toBeGreaterThan(initial.width * 1.3);
+  await expect(pin).toHaveCSS("width", "11px");
   await page.screenshot({
     path: `.local/verification/postcards-close-${testInfo.project.name}.png`,
   });
-  await page.mouse.wheel(0, 12000);
+  await page.getByRole("button", { name: "Reset globe view" }).click();
   await expect
-    .poll(async () => (await marker.boundingBox())?.width ?? 0)
-    .toBeGreaterThanOrEqual(120);
+    .poll(async () => (await photo.boundingBox())?.width ?? Infinity)
+    .toBeLessThan(initial.width * 1.05);
+  await page.mouse.move(center.x, center.y);
+  await page.mouse.wheel(0, 12000);
+  await page.mouse.move(5, 80);
+  await expect
+    .poll(async () => (await photo.boundingBox())?.width ?? Infinity)
+    .toBeLessThan(initial.width * 0.85);
+  await expect(photo).toBeVisible();
+  await expect(pin).toHaveCSS("width", "11px");
   if (testInfo.project.name === "desktop") {
     await page.mouse.move(5, 80);
-    await expect(marker.locator(".marker-card")).toHaveCSS("scale", "1");
     const image = marker.locator("img");
     const before = await image.boundingBox();
-    await marker.hover();
+    await photo.hover();
     await expect
       .poll(async () => (await image.boundingBox())?.width ?? 0)
       .toBeGreaterThan(before!.width * 1.02);
@@ -1429,21 +1444,40 @@ test("saves a globe style and shares it across viewer themes", async ({
       places: {
         create: [
           {
-            name: "Paris",
-            sourceCountry: "FR",
-            latitude: 48.86,
-            longitude: 2.35,
+            name: "London",
+            sourceCountry: "GB",
+            latitude: 51.5072,
+            longitude: -0.1276,
           },
           {
-            name: "Oia",
-            sourceCountry: "GR",
-            latitude: 36.46,
-            longitude: 25.37,
+            name: "Košice",
+            sourceCountry: "SK",
+            latitude: 48.7164,
+            longitude: 21.2611,
           },
-        ],
+        ].map((place) => ({
+          ...place,
+          visits: {
+            create: {
+              photos: {
+                create: {
+                  status: "READY",
+                  thumbnailKey: `photos/${randomUUID()}/thumbnail.webp`,
+                  displayKey: `photos/${randomUUID()}/display.webp`,
+                },
+              },
+            },
+          },
+        })),
       },
     },
   });
+  await page.route("http://127.0.0.1:8787/image?*", (route) =>
+    route.fulfill({
+      contentType: "image/png",
+      body: readFileSync("tests/fixtures/tiny.png"),
+    }),
+  );
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/studio");
   const globe = page.locator("[data-globe-style]");
@@ -1453,13 +1487,20 @@ test("saves a globe style and shares it across viewer themes", async ({
   ).toBeVisible();
   await page.getByText("Globe style", { exact: true }).click();
   const atlas = page.getByRole("button", { name: /^Atlas/ });
-  const orbit = page.getByRole("button", { name: /^Orbit/ });
+  const worldMap = page.getByRole("button", { name: /^World Map/ });
   const geometry = page.waitForResponse(
     (response) =>
       response.url().endsWith("/atlas-countries.geojson") && response.ok(),
   );
   await atlas.click();
-  expect(await (await geometry).json()).toHaveLength(177);
+  const countries = await (await geometry).json();
+  expect(countries).toHaveLength(177);
+  expect(countries).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ code: "GB", name: "United Kingdom" }),
+      expect.objectContaining({ code: "SK", name: "Slovakia" }),
+    ]),
+  );
   await expect(atlas).toHaveAttribute("aria-pressed", "true");
   await expect(atlas).toBeEnabled();
   await expect(globe).toHaveAttribute("data-globe-style", "atlas");
@@ -1475,9 +1516,9 @@ test("saves a globe style and shares it across viewer themes", async ({
   await page.screenshot({
     path: `.local/verification/globe-atlas-dark-${testInfo.project.name}.png`,
   });
-  await orbit.click();
-  await expect(orbit).toHaveAttribute("aria-pressed", "true");
-  await expect(orbit).toBeEnabled();
+  await worldMap.click();
+  await expect(worldMap).toHaveAttribute("aria-pressed", "true");
+  await expect(worldMap).toBeEnabled();
   await page.reload();
   await expect(globe).toHaveAttribute("data-globe-style", "orbit");
   await expect(globe).toHaveAttribute("data-globe-theme", "dark");
@@ -1486,6 +1527,32 @@ test("saves a globe style and shares it across viewer themes", async ({
   await page.goto(`/u/${owner.username}`);
   await expect(globe).toHaveAttribute("data-globe-style", "orbit");
   await expect(page.getByText("Globe style", { exact: true })).toHaveCount(0);
+  const labels = globe.locator(".globe-country-label[data-label-visible]");
+  await expect.poll(() => labels.count()).toBeGreaterThan(4);
+  await expect(labels.filter({ hasText: /^Slovakia$/ })).toBeVisible();
+  expect(
+    await labels.evaluateAll((elements) => {
+      const bounds = elements.map((element) => element.getBoundingClientRect());
+      return bounds.some((a, i) =>
+        bounds
+          .slice(i + 1)
+          .some(
+            (b) =>
+              a.left < b.right &&
+              a.right > b.left &&
+              a.top < b.bottom &&
+              a.bottom > b.top,
+          ),
+      );
+    }),
+  ).toBe(false);
+  for (const name of ["London", "Košice"]) {
+    const marker = page.getByRole("button", { name: `Open ${name} gallery` });
+    await expect(marker).toHaveAttribute("data-facing", "true");
+    await expect(marker.locator(".marker-core")).toBeVisible();
+    if (testInfo.project.name === "desktop")
+      await expect(marker.locator(".marker-paper")).toBeVisible();
+  }
   await page.screenshot({
     path: `.local/verification/globe-orbit-dark-${testInfo.project.name}.png`,
   });

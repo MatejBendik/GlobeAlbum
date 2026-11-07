@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import { MeshPhongMaterial } from "three";
 import type { GlobeStyle } from "@/lib/globe-style";
 import type { PlaceDto } from "@/lib/types";
-import { choosePostcards } from "@/lib/marker-layout";
+import { choosePostcards, postcardScale } from "@/lib/marker-layout";
 
 const colors = {
   dotted: {
@@ -13,15 +13,36 @@ const colors = {
     dark: { ocean: "#14171b", atmosphere: "#8597b4", dots: "#6c737e" },
   },
   atlas: {
+    light: { ocean: "#f2f2f2", atmosphere: "#dedede", dots: "#777777" },
+    dark: { ocean: "#1c1c1c", atmosphere: "#999999", dots: "#929292" },
+  },
+  orbit: {
     light: { ocean: "#d4e9e9", atmosphere: "#8db8bb", dots: "#668c7a" },
     dark: { ocean: "#182c32", atmosphere: "#609694", dots: "#80aaa1" },
   },
-  orbit: {
-    light: { ocean: "#c6e4f4", atmosphere: "#739cce", dots: "#427a9e" },
-    dark: { ocean: "#10253c", atmosphere: "#6a9edc", dots: "#6db3da" },
-  },
 };
 const emptyLayer: object[] = [];
+const surfaceAltitude = 0;
+const keepSurfaceElementsMounted = () => {};
+
+type Country = {
+  geometry: { type: "Polygon" | "MultiPolygon"; coordinates: unknown[] };
+  name: string;
+  code: string;
+  latitude: number;
+  longitude: number;
+  rank: number;
+};
+type SurfaceMarker = PlaceDto | Country;
+const isCountry = (marker: SurfaceMarker): marker is Country =>
+  "geometry" in marker;
+
+type LabelBounds = { left: number; right: number; top: number; bottom: number };
+function overlaps(a: LabelBounds, b: LabelBounds) {
+  return (
+    a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
+  );
+}
 
 export default function GlobeRenderer({
   places,
@@ -47,23 +68,32 @@ export default function GlobeRenderer({
   const { resolvedTheme } = useTheme();
   const dark = resolvedTheme === "dark";
   const palette = colors[globeStyle][dark ? "dark" : "light"];
-  const atlas = globeStyle === "atlas";
-  const orbit = globeStyle === "orbit";
-  const [countries, setCountries] = useState<object[]>([]);
-  const arcs = useMemo(
+  const showCountries = globeStyle !== "dotted";
+  const showNames = globeStyle === "orbit";
+  const [countries, setCountries] = useState<Country[]>([]);
+  const visited = useMemo(
+    () => new Set(places.map((place) => place.country)),
+    [places],
+  );
+  const labels = useMemo(
     () =>
-      orbit
-        ? places.slice(1, 7).map((place, index) => ({
-            startLat: places[index].latitude,
-            startLng: places[index].longitude,
-            endLat: place.latitude,
-            endLng: place.longitude,
-          }))
-        : emptyLayer,
-    [orbit, places],
+      showNames
+        ? countries
+            .slice()
+            .sort(
+              (a, b) =>
+                Number(visited.has(b.code)) - Number(visited.has(a.code)) ||
+                a.rank - b.rank,
+            )
+        : [],
+    [countries, showNames, visited],
+  );
+  const surfaceMarkers = useMemo(
+    () => [...places, ...labels],
+    [places, labels],
   );
   useEffect(() => {
-    if (!atlas || countries.length) return;
+    if (!showCountries || countries.length) return;
     const controller = new AbortController();
     fetch("/atlas-countries.geojson", { signal: controller.signal })
       .then((response) => {
@@ -73,7 +103,7 @@ export default function GlobeRenderer({
       .then(setCountries)
       .catch(() => {});
     return () => controller.abort();
-  }, [atlas, countries.length]);
+  }, [showCountries, countries.length]);
   // Perspective projection fits height; compensate for narrow portrait viewports.
   const cameraScale = Math.max(1, height / width);
   const featured = places.find((place) => place.coverUrl) ?? places[0];
@@ -99,6 +129,7 @@ export default function GlobeRenderer({
         : 0,
     );
   });
+  const stage = useRef<HTMLDivElement>(null);
   const globe = useRef<GlobeMethods | undefined>(undefined),
     [dots, setDots] = useState<{ lat: number; lng: number }[]>([]),
     [ready, setReady] = useState(false);
@@ -146,23 +177,68 @@ export default function GlobeRenderer({
   }, [ready, selected?.latitude, selected?.longitude]);
   const markers = useMemo(() => {
     const elements = new Map<string, HTMLButtonElement>();
+    const labelElements = new Map<Country, HTMLSpanElement>();
+    const labelWidths = new WeakMap<HTMLSpanElement, number>();
     let frame = 0;
+    let lastScale = 0;
     function layout() {
-      if (!globe.current) return;
-      const visible = places.filter(
-        (place) =>
-          place.coverUrl && elements.get(place.id)?.dataset.facing === "true",
+      const current = globe.current;
+      if (!current) return;
+      const camera = current.camera();
+      camera.updateMatrixWorld();
+      const radius = current.getGlobeRadius();
+      const limb = radius * radius;
+      const labelLimb = limb + camera.position.length() * radius * 0.08;
+      const facesCamera = (marker: SurfaceMarker, threshold: number) => {
+        const { x, y, z } = current.getCoords(
+          marker.latitude,
+          marker.longitude,
+          surfaceAltitude,
+        );
+        // A surface point is visible when the camera lies above its tangent plane.
+        return (
+          x * camera.position.x +
+            y * camera.position.y +
+            z * camera.position.z >
+          threshold
+        );
+      };
+      const distance = (1 + current.pointOfView().altitude) / cameraScale;
+      const scale = postcardScale(distance);
+      if (scale !== lastScale) {
+        stage.current?.style.setProperty("--postcard-scale", String(scale));
+        lastScale = scale;
+      }
+      const visible = places.filter((place) => {
+        const button = elements.get(place.id);
+        if (!button) return false;
+        const visible = facesCamera(place, limb);
+        const facing = String(visible);
+        if (button.dataset.facing !== facing) {
+          button.dataset.facing = facing;
+          button.style.opacity = visible ? "1" : "0";
+          button.style.pointerEvents = visible ? "auto" : "none";
+          button.tabIndex = visible ? 0 : -1;
+        }
+        return visible;
+      });
+      const candidates = visible
+        .map((place) => ({
+          id: place.id,
+          coverUrl: place.coverUrl,
+          selected: place.id === selectedId,
+          ...current.getScreenCoords(
+            place.latitude,
+            place.longitude,
+            surfaceAltitude,
+          ),
+        }))
+        .filter(({ x, y }) => x >= 0 && x <= width && y >= 0 && y <= height);
+      const shown = choosePostcards(
+        candidates.filter((place) => place.coverUrl),
+        width < 600 ? 5 : 9,
+        scale,
       );
-      const candidates = visible.map((place) => ({
-        id: place.id,
-        selected: place.id === selectedId,
-        ...globe.current!.getScreenCoords(
-          place.latitude,
-          place.longitude,
-          0.045,
-        ),
-      }));
-      const shown = choosePostcards(candidates, width < 600 ? 5 : 9);
       for (const place of places) {
         const button = elements.get(place.id);
         if (!button) continue;
@@ -173,11 +249,83 @@ export default function GlobeRenderer({
         if (postcard && image && !image.getAttribute("src") && place.coverUrl)
           image.src = place.coverUrl;
       }
+      if (!labels.length) return;
+      const occupied: LabelBounds[] = candidates.map(({ x, y }) => ({
+        left: x - 7,
+        right: x + 7,
+        top: y - 7,
+        bottom: y + 7,
+      }));
+      const rank =
+        distance < 1.65 ? 7 : distance < 1.9 ? 4 : distance < 2.5 ? 3 : 2;
+      for (const country of labels) {
+        const label = labelElements.get(country);
+        if (!label) continue;
+        let shown = false;
+        const isVisited = visited.has(country.code);
+        if (
+          (country.rank <= rank || isVisited) &&
+          facesCamera(country, labelLimb)
+        ) {
+          const { x, y } = current.getScreenCoords(
+            country.latitude,
+            country.longitude,
+          );
+          let labelWidth = labelWidths.get(label);
+          if (!labelWidth) {
+            labelWidth = label.offsetWidth;
+            if (labelWidth) labelWidths.set(label, labelWidth);
+          }
+          const halfWidth = labelWidth / 2 + 4;
+          // Keep visited country names legible next to their place pins.
+          for (const offset of isVisited ? [0, 18, -18] : [0]) {
+            const bounds = {
+              left: x - halfWidth,
+              right: x + halfWidth,
+              top: y + offset - 10,
+              bottom: y + offset + 10,
+            };
+            if (
+              bounds.left < 0 ||
+              bounds.right > width ||
+              bounds.top < 0 ||
+              bounds.bottom > height ||
+              occupied.some((other) => overlaps(bounds, other))
+            )
+              continue;
+            label.style.setProperty("--label-offset", `${offset}px`);
+            occupied.push(bounds);
+            shown = true;
+            break;
+          }
+        }
+        label.toggleAttribute("data-label-visible", shown);
+      }
+    }
+    function scheduleLayout() {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        layout();
+      });
     }
     function element(object: object) {
-      const place = object as PlaceDto;
+      const marker = object as SurfaceMarker;
+      if (isCountry(marker)) {
+        const label = document.createElement("span");
+        label.className = "globe-country-label";
+        label.textContent = marker.name;
+        label.setAttribute("aria-hidden", "true");
+        labelElements.set(marker, label);
+        scheduleLayout();
+        return label;
+      }
+      const place = marker;
       const button = document.createElement("button");
       button.type = "button";
+      button.tabIndex = -1;
+      button.style.opacity = "0";
+      button.style.pointerEvents = "none";
       button.className = `globe-marker dot-marker ${selectedId === place.id ? "marker-selected" : ""}`;
       button.setAttribute("aria-label", `Open ${place.name} gallery`);
       if (place.coverUrl) {
@@ -200,40 +348,42 @@ export default function GlobeRenderer({
         card.append(paper);
         button.append(card);
       }
-      {
-        const dot = document.createElement("span");
-        dot.className = "marker-core";
-        button.append(dot);
-      }
+      const dot = document.createElement("span");
+      dot.className = "marker-core";
+      button.append(dot);
       button.onclick = (event) => {
         event.stopPropagation();
         onSelect(place.id);
       };
       elements.set(place.id, button);
+      scheduleLayout();
       return button;
     }
     return {
       element,
-      layout,
-      visibility(el: HTMLElement, visible: boolean) {
-        el.dataset.facing = String(visible);
-        el.style.opacity = visible ? "1" : "0";
-        el.style.pointerEvents = visible ? "auto" : "none";
-        el.tabIndex = visible ? 0 : -1;
-        if (!frame)
-          frame = requestAnimationFrame(() => {
-            frame = 0;
-            layout();
-          });
-      },
+      scheduleLayout,
       dispose() {
         if (frame) cancelAnimationFrame(frame);
+        frame = 0;
       },
     };
-  }, [places, width, selectedId, onSelect]);
-  useEffect(() => () => markers.dispose(), [markers]);
+  }, [
+    cameraScale,
+    height,
+    labels,
+    onSelect,
+    places,
+    selectedId,
+    visited,
+    width,
+  ]);
+  useEffect(() => {
+    markers.scheduleLayout();
+    return () => markers.dispose();
+  }, [markers, ready]);
   return (
     <div
+      ref={stage}
       data-globe-theme={dark ? "dark" : "light"}
       data-globe-style={globeStyle}
       onContextMenu={(event) => event.preventDefault()}
@@ -246,22 +396,24 @@ export default function GlobeRenderer({
         globeMaterial={material}
         showAtmosphere
         atmosphereColor={palette.atmosphere}
-        atmosphereAltitude={orbit ? 0.13 : 0.075}
-        showGraticules={orbit}
-        polygonsData={atlas ? countries : emptyLayer}
+        atmosphereAltitude={0.075}
+        polygonsData={showCountries ? countries : emptyLayer}
         polygonAltitude={0.01}
-        polygonCapColor={() => (dark ? "#4c6655" : "#a5c3a0")}
-        polygonStrokeColor={() => (dark ? "#789c83" : "#718f76")}
-        polygonSideColor={() => "transparent"}
-        polygonsTransitionDuration={0}
-        arcsData={arcs}
-        arcColor={() =>
-          dark ? ["#62b8ee", "#b2dedb"] : ["#3476b0", "#387f91"]
+        polygonCapColor={() =>
+          showNames ? (dark ? "#4c6655" : "#a5c3a0") : ""
         }
-        arcAltitudeAutoScale={0.27}
-        arcStroke={0.28}
-        arcsTransitionDuration={0}
-        pointsData={atlas && countries.length ? emptyLayer : dots}
+        polygonStrokeColor={() =>
+          showNames
+            ? dark
+              ? "#789c83"
+              : "#718f76"
+            : dark
+              ? "#8c8c8c"
+              : "#767676"
+        }
+        polygonSideColor={() => ""}
+        polygonsTransitionDuration={0}
+        pointsData={showCountries && countries.length ? emptyLayer : dots}
         pointLat="lat"
         pointLng="lng"
         pointColor={() => palette.dots}
@@ -269,13 +421,14 @@ export default function GlobeRenderer({
         pointAltitude={0.003}
         pointResolution={4}
         pointsMerge
-        htmlElementsData={places}
+        htmlElementsData={surfaceMarkers}
         htmlLat="latitude"
         htmlLng="longitude"
-        htmlAltitude={0.045}
+        htmlAltitude={surfaceAltitude}
+        htmlTransitionDuration={0}
         htmlElement={markers.element}
-        htmlElementVisibilityModifier={markers.visibility}
-        onZoom={markers.layout}
+        htmlElementVisibilityModifier={keepSurfaceElementsMounted}
+        onZoom={markers.scheduleLayout}
       />
     </div>
   );

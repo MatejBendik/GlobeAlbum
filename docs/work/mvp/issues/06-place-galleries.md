@@ -14,7 +14,7 @@ Browse photo postcards and place galleries, as a complete end-to-end user behavi
 
 ## Acceptance criteria
 
-- [x] Place covers appear as bounded postcards while remaining places use dots.
+- [x] Place pins show the saved coordinates, with a cover postcard above each pin where space permits.
 - [x] One lazy-loaded place gallery combines visits with captions and arrows/keyboard/swipes.
 - [ ] Expired media links refresh through authorization without loading originals.
 
@@ -31,3 +31,7 @@ Approved in discovery; implementation explicitly authorized.
 2026-11-06 refinement: clicking a landing postcard immediately opens its example
 place gallery on the current page, with no second click on the place-note link.
 This is verified from the photo area on desktop and mobile with reduced motion.
+
+The 2026-11-07 marker refinement gives each visible place a stable pin. Its
+postcard scales with the camera distance, and collision spacing uses the same
+scale, so nearby covers can appear together when there is room.

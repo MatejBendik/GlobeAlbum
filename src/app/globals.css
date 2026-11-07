@@ -631,21 +631,29 @@ select:focus-visible {
   display: none;
 }
 .globe-marker {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
   transition: filter 0.2s;
 }
 .photo-marker {
-  width: 130px;
   /* CSS2DRenderer assigns inline depth order; dots must not cover photos. */
   z-index: 1000 !important;
 }
 .marker-card {
-  position: relative;
+  position: absolute;
+  bottom: calc(50% + 16px);
+  left: 50%;
+  width: 130px;
   display: block;
   isolation: isolate;
+  translate: -50% 0;
+  transform-origin: center bottom;
   rotate: -6deg;
-  scale: 1;
+  scale: var(--postcard-scale, 1);
   transition:
-    scale 160ms ease,
+    transform 160ms ease,
     rotate 160ms ease;
 }
 .marker-paper,
@@ -696,7 +704,7 @@ select:focus-visible {
 .photo-marker:hover .marker-card,
 .photo-marker:focus-visible .marker-card {
   rotate: 0deg;
-  scale: 1.16;
+  transform: scale(1.16);
 }
 .photo-marker:hover,
 .photo-marker:focus-visible {
@@ -705,32 +713,54 @@ select:focus-visible {
 .marker-selected {
   filter: drop-shadow(0 0 9px #cfd9ef60);
 }
-.dot-marker {
-  display: grid;
-  place-items: center;
-  height: 28px;
-  width: 28px;
-}
 .marker-core {
-  width: 5px;
-  height: 5px;
-  background: #ddd6c4;
+  width: 11px;
+  height: 11px;
+  background: var(--pin-fill, #2674c8);
+  border: 1.5px solid var(--pin-edge, #fff);
   border-radius: 50%;
-  box-shadow:
-    0 0 0 3px #ddd6c417,
-    0 0 12px #ddd6c450;
+  box-shadow: 0 0 0 3px var(--pin-halo, #2674c83d);
 }
-.dot-marker img,
-.dot-marker .marker-card,
-.dot-marker .marker-label,
-.photo-marker .marker-core {
+[data-globe-theme="dark"] {
+  --pin-fill: #87bfff;
+  --pin-edge: #172230;
+  --pin-halo: #87bfff4d;
+}
+[data-globe-style="atlas"] {
+  --pin-fill: #4b4b4b;
+  --pin-halo: #4b4b4b3d;
+}
+[data-globe-style="atlas"][data-globe-theme="dark"] {
+  --pin-fill: #dedede;
+  --pin-edge: #242424;
+  --pin-halo: #dedede4d;
+}
+.dot-marker .marker-card {
   display: none;
 }
-.dot-marker:hover .marker-core {
-  box-shadow: 0 0 0 6px #ddd6c425;
+.globe-marker:is(:hover, :focus-visible) .marker-core {
+  box-shadow: 0 0 0 5px var(--pin-halo, #2674c83d);
 }
 .dot-marker:focus-visible {
   z-index: 10001 !important;
+}
+.globe-country-label {
+  visibility: hidden;
+  pointer-events: none;
+  translate: 0 var(--label-offset, 0px);
+  color: #253b32;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+  text-shadow: 0 1px 3px #e0f1dc;
+}
+.globe-country-label[data-label-visible] {
+  visibility: visible;
+}
+[data-globe-theme="dark"] .globe-country-label {
+  color: #edf4e9;
+  text-shadow: 0 1px 3px #182c32;
 }
 .globe-loading,
 .globe-unavailable {
@@ -1442,17 +1472,6 @@ select:focus-visible {
   bottom: 0;
   left: 39%;
   right: -6%;
-}
-.hero-stage .photo-marker {
-  width: 130px;
-}
-.hero-stage .photo-marker img {
-  width: 112px;
-  height: 114px;
-}
-.hero-stage .marker-paper > .marker-label {
-  font-size: 12px;
-  padding-bottom: 10px;
 }
 .hero-place-note {
   position: absolute;
@@ -2168,10 +2187,6 @@ body,
   );
   border-color: var(--line);
 }
-[data-theme="light"] .marker-core {
-  background: #4d6555;
-  box-shadow: 0 0 0 4px #4d655518;
-}
 [data-theme="light"] .marker-selected {
   filter: drop-shadow(0 0 9px #5b765540);
 }
@@ -2633,21 +2648,27 @@ body,
 }
 .globe-style-swatch[data-style="atlas"] {
   background:
-    radial-gradient(ellipse at 33% 25%, #a5c3a0 27%, transparent 30%),
-    radial-gradient(ellipse at 65% 67%, #a5c3a0 28%, transparent 31%), #d4e9e9;
+    radial-gradient(
+      ellipse at 29% 20%,
+      transparent 30%,
+      #8c8c8c 31% 34%,
+      transparent 36%
+    ),
+    radial-gradient(
+      ellipse at 76% 78%,
+      transparent 29%,
+      #8c8c8c 30% 33%,
+      transparent 35%
+    ),
+    var(--surface);
 }
 .globe-style-swatch[data-style="orbit"] {
   background:
-    repeating-linear-gradient(0deg, transparent 0 5px, #84aed0 6px 7px),
-    radial-gradient(circle at 35% 30%, #d9eff9, #6297c7);
-}
-[data-theme="dark"] .globe-style-swatch[data-style="atlas"] {
-  background:
-    radial-gradient(ellipse at 33% 25%, #63856b 27%, transparent 30%),
-    radial-gradient(ellipse at 65% 67%, #63856b 28%, transparent 31%), #182c32;
+    radial-gradient(ellipse at 33% 25%, #a5c3a0 27%, transparent 30%),
+    radial-gradient(ellipse at 65% 67%, #a5c3a0 28%, transparent 31%), #d4e9e9;
 }
 [data-theme="dark"] .globe-style-swatch[data-style="orbit"] {
   background:
-    repeating-linear-gradient(0deg, transparent 0 5px, #47749e 6px 7px),
-    radial-gradient(circle at 35% 30%, #356590, #10253c);
+    radial-gradient(ellipse at 33% 25%, #63856b 27%, transparent 30%),
+    radial-gradient(ellipse at 65% 67%, #63856b 28%, transparent 31%), #182c32;
 }

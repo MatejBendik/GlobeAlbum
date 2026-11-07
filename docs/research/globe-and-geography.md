@@ -58,13 +58,24 @@ The installed Three.js CSS2DRenderer writes each marker's inline `transform` for
 screen positioning. A stable button wraps a visual postcard; independent `scale`
 and `rotate` on that child avoid competing with positioning or moving the hit target.
 This is a source-code observation, not a claim that postcards scale in world
-units. Their CSS-pixel dimensions remain fixed as the camera zooms.
+units. The current renderer scales the visual frame with camera distance and
+keeps the pin and button hit target fixed in screen pixels.
 
 Primary references checked 2026-11-06:
 
 - https://www.geonames.org/export/geonames-search.html
 - https://github.com/vasturiano/react-globe.gl
 - https://github.com/mrdoob/three.js/blob/r187/examples/jsm/renderers/CSS2DRenderer.js
+
+## Country labels — 2026-11-07
+
+The [Natural Earth 1:110m Admin 0 Countries export](https://github.com/nvkelso/natural-earth-vector/blob/v5.1.2/geojson/ne_110m_admin_0_countries.geojson)
+includes a short name, an anchor and a rank for each country shape. World Map
+uses those fields in the existing renderer's HTML layer. Labels stay horizontal
+and legible, with priority for visited countries and more detail at closer zoom.
+The renderer skips names that would overlap another name; postcards can cover
+them. Atlas reuses only the outlines. Both use a bundled asset without a map
+service request. Natural Earth data is [public domain](https://www.naturalearthdata.com/about/terms-of-use/).
 
 Primary references:
 

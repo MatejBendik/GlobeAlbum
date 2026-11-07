@@ -97,12 +97,15 @@ background, and retain it when navigating from the landing page or reloading.
 
 ### Globe and galleries
 
-One logical marker per place. Bounded cover postcards plus dots limit visual overlap. Load compact marker DTOs first and gallery metadata on demand. Never preload originals. Retain the complete accessible place list, reduced-motion behavior, keyboard controls and WebGL fallback. Target iOS/Safari 17+ and current Chrome, Edge and Firefox. Test physical devices before claiming mobile validation.
-
-User-requested refinement (2026-11-06): double the original postcard width to
-130 CSS pixels and keep it readable throughout the allowed zoom range. Enlarge
-the postcard on hover or keyboard focus. Collision spacing accounts for the
-larger frame, while other places remain available as dots and in the place list.
+One logical marker per place. A visible pin marks its saved coordinates even
+when a cover postcard appears above it. Postcards shrink as the viewer zooms out,
+grow within a bounded range as they zoom in, and enlarge on hover or keyboard
+focus. Projected collision spacing follows the current card size; dense places
+keep their pins and remain in the place list. Load compact marker DTOs first
+and gallery metadata on demand. Never preload originals. Retain the complete
+accessible place list, reduced-motion behavior, keyboard controls and WebGL
+fallback. Target iOS/Safari 17+ and current Chrome, Edge and Firefox. Test
+physical devices before claiming mobile validation.
 
 Following the user request on 2026-11-07, a place with multiple ready photos
 shows layered paper behind its cover postcard. The marker opens its complete
@@ -111,11 +114,12 @@ place with a cover, or the first saved place, in that order. Automatic rotation
 starts from that view even for a single place. Reset pauses rotation, and the
 initial rotation respects the viewer's reduced-motion preference.
 
-The owner can select Dotted, Atlas or Orbit in the left-hand Globe style panel.
+The owner can select Dotted, Atlas or World Map in the left-hand Globe style panel.
 The preview updates immediately and saves the choice to the globe. A published
 link uses the saved style with the visitor's own light or dark palette. Existing
-globes default to Dotted. Atlas uses country outlines and Orbit shows a blue
-grid with up to six decorative arcs between saved places.
+globes default to Dotted. Atlas shows grayscale country outlines without land
+fills. World Map uses green land, blue water and country names. It retains the
+former Orbit storage value so existing preferences and links remain valid.
 
 ### Globe workspace and navigation refinement
 

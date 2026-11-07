@@ -10,6 +10,7 @@ describe("dense place markers", () => {
         { id: "kyoto", x: 300, y: 250, selected: false },
       ],
       5,
+      1,
     );
     expect([...selected]).toEqual(["venice", "kyoto"]);
   });
@@ -20,6 +21,14 @@ describe("dense place markers", () => {
       y: 0,
       selected: false,
     }));
-    expect(choosePostcards(markers, 5).size).toBe(5);
+    expect(choosePostcards(markers, 5, 1).size).toBe(5);
+  });
+  it("shows both covers when their current zoom footprint fits", () => {
+    const markers = [
+      { id: "kosice", x: 400, y: 260, selected: false },
+      { id: "london", x: 285, y: 240, selected: false },
+    ];
+    expect(choosePostcards(markers, 5, 1).size).toBe(1);
+    expect(choosePostcards(markers, 5, 0.69).size).toBe(2);
   });
 });
