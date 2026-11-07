@@ -25,7 +25,27 @@ export async function currentIdentity() {
     );
   if (!session?.user) return { user: null, deleted: false };
   const user = await syncIdentity(session.user);
-  return { user, deleted: user === null };
+  return {
+    user: user && { ...user, avatarUrl: googleAvatarUrl(session.user.image) },
+    deleted: user === null,
+  };
+}
+
+function googleAvatarUrl(value: string | null | undefined) {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    if (
+      url.origin === "https://lh3.googleusercontent.com" &&
+      !url.username &&
+      !url.password
+    ) {
+      return url.href;
+    }
+  } catch {
+    return null;
+  }
+  return null;
 }
 export async function currentUser() {
   return (await currentIdentity()).user;

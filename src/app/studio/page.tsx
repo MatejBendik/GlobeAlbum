@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { readGlobe } from "@/lib/domain";
+import { toNavigationViewer } from "@/lib/navigation-viewer";
 import { Workspace } from "@/components/workspace";
 
 export default async function StudioPage({
@@ -16,14 +17,7 @@ export default async function StudioPage({
   if (!globe) redirect("/onboarding");
   return (
     <Suspense>
-      <Workspace
-        globe={globe}
-        owner
-        viewer={{
-          displayName: globe.displayName,
-          profileHref: globe.published ? `/u/${globe.username}` : null,
-        }}
-      />
+      <Workspace globe={globe} owner viewer={toNavigationViewer(user, globe)} />
     </Suspense>
   );
 }

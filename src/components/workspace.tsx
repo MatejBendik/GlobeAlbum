@@ -25,14 +25,12 @@ import {
   X,
 } from "lucide-react";
 import type { NavigationViewer } from "@/lib/navigation-viewer";
-import { AccountMenu } from "./account-menu";
-import { ThemeToggle } from "./theme-provider";
+import { PageHeader } from "./page-header";
 import type { GlobeDto } from "@/lib/types";
 import { countryName } from "@/lib/countries";
 import { globeStyleAction, publicationAction } from "@/app/actions";
 import type { GlobeStyle } from "@/lib/globe-style";
 import { LIMITS } from "@/lib/limits";
-import { Brand } from "./brand";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -89,6 +87,11 @@ export function Workspace({
   }
   const selected = params.get("place") ?? undefined;
   const active = globe.places.find((place) => place.id === selected);
+  const visitorAction = demo
+    ? "Back home"
+    : viewer
+      ? "My globe"
+      : "Create your globe";
   const choose = useCallback(
     (id: string) => {
       setPlacesOpen(false);
@@ -143,57 +146,54 @@ export function Workspace({
   }
   return (
     <main className="workspace">
-      <header className="workspace-header">
-        <Brand />
-        <div className="workspace-nav">
-          {owner ? (
-            <>
-              <span
-                className={`visibility-label ${globe.published ? "is-published" : ""}`}
+      <PageHeader viewer={viewer}>
+        {owner ? (
+          <>
+            <span
+              className={`visibility-label ${globe.published ? "is-published" : ""}`}
+            >
+              {globe.published ? (
+                <Globe2 size={13} />
+              ) : (
+                <LockKeyhole size={13} />
+              )}
+              <span>{globe.published ? "Published" : "Only you"}</span>
+            </span>
+            <Button
+              aria-label="Share globe"
+              variant="secondary"
+              className="compact-nav-action"
+              onClick={() => setSharing(true)}
+            >
+              <Share2 />
+              <span>Share globe</span>
+            </Button>
+            <Button
+              aria-label="Add place"
+              className="compact-nav-action"
+              onClick={() => setAdding(true)}
+            >
+              <Plus />
+              <span>Add place</span>
+            </Button>
+          </>
+        ) : (
+          <>
+            <span className="header-caption">
+              {demo ? "An example collection" : "A personal travel collection"}
+            </span>
+            <Button asChild variant="secondary" className="compact-nav-action">
+              <Link
+                href={demo ? "/" : viewer ? "/studio" : "/sign-in"}
+                aria-label={visitorAction}
               >
-                {globe.published ? (
-                  <Globe2 size={13} />
-                ) : (
-                  <LockKeyhole size={13} />
-                )}
-                <span>{globe.published ? "Published" : "Only you"}</span>
-              </span>
-              <Button
-                aria-label="Share globe"
-                variant="secondary"
-                onClick={() => setSharing(true)}
-              >
-                <Share2 />
-                <span>Share globe</span>
-              </Button>
-              <Button aria-label="Add place" onClick={() => setAdding(true)}>
-                <Plus />
-                <span>Add place</span>
-              </Button>
-            </>
-          ) : (
-            <>
-              <span className="header-caption">
-                {demo
-                  ? "An example collection"
-                  : "A personal travel collection"}
-              </span>
-              <Button asChild variant="secondary">
-                <Link href={demo ? "/" : viewer ? "/studio" : "/sign-in"}>
-                  {demo ? <ArrowLeft /> : viewer ? <Globe2 /> : <Plus />}
-                  {demo
-                    ? "Back home"
-                    : viewer
-                      ? "My globe"
-                      : "Create your globe"}
-                </Link>
-              </Button>
-            </>
-          )}
-          <ThemeToggle />
-          {viewer && <AccountMenu viewer={viewer} />}
-        </div>
-      </header>
+                {demo ? <ArrowLeft /> : viewer ? <Globe2 /> : <Plus />}
+                <span>{visitorAction}</span>
+              </Link>
+            </Button>
+          </>
+        )}
+      </PageHeader>
       <div className="workspace-body">
         <section className="globe-workspace" aria-label="Globe view">
           <GlobeStage

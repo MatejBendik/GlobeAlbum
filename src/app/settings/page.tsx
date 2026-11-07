@@ -4,12 +4,11 @@ import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { currentUser, getAuth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { AccountMenu } from "@/components/account-menu";
-import { Brand } from "@/components/brand";
+import { PageHeader } from "@/components/page-header";
 import { ProfileSettings } from "@/components/profile-settings";
-import { ThemeToggle } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { OAuthNotice } from "@/components/oauth-notice";
+import { toNavigationViewer } from "@/lib/navigation-viewer";
 
 export const metadata: Metadata = {
   title: "Profile settings",
@@ -37,24 +36,14 @@ export default async function SettingsPage({
 
   return (
     <div className="settings-page">
-      <header className="workspace-header">
-        <Brand />
-        <nav className="workspace-nav" aria-label="Account navigation">
-          <Button asChild variant="ghost" className="settings-back">
-            <Link href="/studio" aria-label="Back to my globe">
-              <ArrowLeft />
-              <span>My globe</span>
-            </Link>
-          </Button>
-          <ThemeToggle />
-          <AccountMenu
-            viewer={{
-              displayName: globe.displayName,
-              profileHref: globe.published ? `/u/${globe.username}` : null,
-            }}
-          />
-        </nav>
-      </header>
+      <PageHeader viewer={toNavigationViewer(user, globe)}>
+        <Button asChild variant="ghost" className="compact-nav-action">
+          <Link href="/studio" aria-label="Back to my globe">
+            <ArrowLeft />
+            <span>My globe</span>
+          </Link>
+        </Button>
+      </PageHeader>
       <main className="settings-content">
         <div className="settings-heading">
           <p className="settings-eyebrow">Your account</p>

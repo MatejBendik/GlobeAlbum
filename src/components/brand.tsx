@@ -11,7 +11,7 @@ export function Brand({ dark = false }: { dark?: boolean }) {
       <span className="brand-symbol">
         <Globe2 size={22} strokeWidth={1.4} />
       </span>
-      GlobeAlbum<span className="brand-dot">®</span>
+      GlobeAlbum
     </Link>
   );
 }

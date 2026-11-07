@@ -1,5 +1,5 @@
 "use client";
-import { startTransition } from "react";
+import { startTransition, useState } from "react";
 import Link from "next/link";
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import {
@@ -12,6 +12,26 @@ import {
 import type { NavigationViewer } from "@/lib/navigation-viewer";
 import { signOutAction } from "@/app/actions";
 import { Button } from "./ui/button";
+
+function AccountAvatar({ url }: { url: string | null }) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  return (
+    <span className="account-avatar" aria-hidden="true">
+      <UserRound />
+      {url && failedUrl !== url && (
+        <img
+          src={url}
+          alt=""
+          width={24}
+          height={24}
+          referrerPolicy="no-referrer"
+          onError={() => setFailedUrl(url)}
+        />
+      )}
+    </span>
+  );
+}
+
 export function AccountMenu({ viewer }: { viewer: NavigationViewer }) {
   return (
     <Menu.Root>
@@ -21,7 +41,7 @@ export function AccountMenu({ viewer }: { viewer: NavigationViewer }) {
           aria-label="Account menu"
           className="account-trigger"
         >
-          <UserRound />
+          <AccountAvatar url={viewer.avatarUrl} />
           <span className="account-name">{viewer.displayName}</span>
           <ChevronDown />
         </Button>
@@ -29,7 +49,8 @@ export function AccountMenu({ viewer }: { viewer: NavigationViewer }) {
       <Menu.Portal>
         <Menu.Content className="account-menu" align="end" sideOffset={10}>
           <Menu.Label className="account-menu-label">
-            {viewer.displayName}
+            <AccountAvatar url={viewer.avatarUrl} />
+            <span>{viewer.displayName}</span>
           </Menu.Label>
           <Menu.Item asChild>
             <Link href="/studio">

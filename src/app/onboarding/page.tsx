@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { Brand } from "@/components/brand";
+import { PageHeader } from "@/components/page-header";
+import { toNavigationViewer } from "@/lib/navigation-viewer";
 import { OnboardingForm } from "@/components/onboarding-form";
 
 export default async function OnboardingPage() {
@@ -11,10 +12,7 @@ export default async function OnboardingPage() {
     redirect("/studio");
   return (
     <main className="auth-page">
-      <header>
-        <Brand />
-        <span className="muted text-sm">YOUR FIRST STEP</span>
-      </header>
+      <PageHeader viewer={toNavigationViewer(user)} />
       <section className="onboarding-content">
         <span className="eyebrow">MAKE YOURSELF AT HOME</span>
         <h1>

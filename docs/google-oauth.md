@@ -86,10 +86,32 @@ Keep the existing Neon callback in **Authorized redirect URIs**.
 https://ep-lucky-frog-b9lv2ak8.neonauth.c-7.eu-central-1.aws.neon.tech/neondb/auth/callback/google
 ```
 
-Google may display the Neon callback host on the consent screen. Branding,
-privacy disclosures and audience review remain public beta gates.
+Google's **Continue to neon.tech** label comes from the managed callback
+hostname. Connecting a custom domain to Vercel changes the app URL; the
+existing Managed Better Auth callback still lives on Neon.
+
+After connecting and verifying `globealbum.com`, open
+[Google Auth Platform → Branding](https://console.cloud.google.com/auth/branding?project=globealbum).
+Use `GlobeAlbum` for the app name and add the verified `globealbum.com`
+under **Authorized domains**. Set the home page to `https://globealbum.com/`,
+the privacy policy to `https://globealbum.com/privacy`, and the terms to
+`https://globealbum.com/terms`. Submit the branding for verification and
+publish it after approval. Check **Audience** separately before inviting
+public users. Under **Clients**, add `https://globealbum.com` to
+**Authorized JavaScript origins**. Keep the Neon redirect URI above and add
+the new app origin to Neon's trusted origins. Update the Vercel and Worker
+application origin together during the domain cutover.
+
+Verified branding can show the app name and logo on Google's consent screen.
+The provider hostname on the account sign-in screen may still show
+`neon.tech`. Showing an owned hostname in that field requires a supported
+OAuth callback on the owned domain. The current Neon documentation and CLI
+do not expose a custom host for the managed callback.
+
 The [Google Identity Services setup guide](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid)
-and [Neon OAuth guide](https://neon.com/docs/auth/guides/setup-oauth) were checked on 2026-11-07.
+and [Neon OAuth guide](https://neon.com/docs/auth/guides/setup-oauth) were checked
+alongside [Google's branding guide](https://support.google.com/cloud/answer/15549049)
+on 2026-11-07.
 
 ## Verification evidence
 

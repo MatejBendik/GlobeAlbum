@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, ArrowUpRight, MapPin, Camera, Send } from "lucide-react";
-import { Brand } from "@/components/brand";
 import { Button } from "@/components/ui/button";
 import { navigationViewer } from "@/lib/navigation-viewer";
-import { AccountMenu } from "@/components/account-menu";
-import { ThemeToggle } from "@/components/theme-provider";
+import { PageHeader } from "@/components/page-header";
 import { HeroGlobe } from "@/components/hero-globe";
 
 export default async function HomePage() {
@@ -12,27 +10,22 @@ export default async function HomePage() {
   return (
     <main className="home-page">
       <section className="home-hero">
-        <header className="home-header">
-          <Brand />
-          <nav aria-label="Main navigation">
-            <ThemeToggle />
-            {viewer ? (
-              <AccountMenu viewer={viewer} />
-            ) : (
-              <>
-                {" "}
-                <Link className="home-nav-link" href="/demo">
-                  Explore an example <ArrowUpRight size={14} />
+        <PageHeader viewer={viewer}>
+          {!viewer && (
+            <>
+              <Button asChild variant="ghost" className="home-nav-link">
+                <Link href="/demo">
+                  Explore an example <ArrowUpRight />
                 </Link>
-                <Button asChild variant="secondary">
-                  <Link href="/sign-in">
-                    Make it yours <ArrowRight />
-                  </Link>
-                </Button>
-              </>
-            )}
-          </nav>
-        </header>
+              </Button>
+              <Button asChild variant="secondary">
+                <Link href="/sign-in">
+                  Make it yours <ArrowRight />
+                </Link>
+              </Button>
+            </>
+          )}
+        </PageHeader>
         <div className="hero-content">
           <div className="hero-copy">
             <span className="hero-eyebrow">
@@ -114,14 +107,6 @@ export default async function HomePage() {
           </article>
         </div>
       </section>
-      <footer className="home-footer">
-        <Brand />
-        <span>Made for a life well travelled.</span>
-        <Link href={viewer ? "/studio" : "/sign-in"}>
-          {viewer ? "Open your globe" : "Start your collection"}{" "}
-          <ArrowUpRight size={15} />
-        </Link>
-      </footer>
     </main>
   );
 }

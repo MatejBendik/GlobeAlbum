@@ -18,6 +18,8 @@ Verify and prepare the public beta, as a complete end-to-end user behavior.
 - [ ] Real Google, Neon, R2 and HEIC checks and physical-device evidence are recorded before release.
 - [x] Deployment is explicitly authorized, with Hobby, private storage lifecycle/CORS and Production-scoped variables verified.
 - [ ] Scheduled cron execution and usage monitoring are checked before the public beta.
+- [x] Privacy and terms pages are available before sign-in, including account deletion and content reporting information.
+- [ ] Complete the operator review in the [legal release notes](../../../legal-readiness.md) before inviting public beta testers.
 
 ## Validation evidence
 
@@ -28,6 +30,11 @@ publication and hiding. Vercel registered the daily maintenance cron. A manual
 authorized invocation cleared the test cleanup jobs and their R2 objects.
 Physical devices, representative resource measurements, production auth
 email/recovery, the first scheduled invocation and beta feedback remain open.
+
+The desktop and mobile navigation checks cover the public notices, the
+footer referral URL, shared header dimensions and a signed-in Google avatar
+using the local Auth contract fixture. The anonymous public globe response
+does not contain the owner's Google avatar URL.
 
 See [verification and release gates](../../../validation.md). Unchecked criteria remain pending, even when their code exists.
 

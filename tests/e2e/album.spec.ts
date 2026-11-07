@@ -48,7 +48,11 @@ async function selectVisitDate(
   await expect(calendar).not.toBeVisible();
 }
 
-async function account(context: BrowserContext, onboarded = false) {
+async function account(
+  context: BrowserContext,
+  onboarded = false,
+  image?: string,
+) {
   const id = randomUUID();
   const username = `tester-${id.slice(0, 8)}`;
   await db.user.create({
@@ -57,6 +61,7 @@ async function account(context: BrowserContext, onboarded = false) {
       email: `${id}@example.test`,
       name: "Jamie",
       emailVerified: true,
+      image,
     },
   });
   const response = await fetch("http://127.0.0.1:8788/test/session", {
@@ -81,6 +86,110 @@ async function account(context: BrowserContext, onboarded = false) {
     });
   return { id, username };
 }
+
+test("exposes public notices and the tagged portfolio link", async ({
+  page,
+}) => {
+  await page.goto("/sign-up");
+  const registration = page.getByRole("main");
+  await expect(
+    registration.getByRole("link", { name: "Terms of Service" }),
+  ).toHaveAttribute("href", "/terms");
+  await registration.getByRole("link", { name: "Privacy Policy" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Privacy Policy" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Retention and account deletion" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Switch to dark mode" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  const footer = page.getByRole("contentinfo");
+  const portfolio = new URL(
+    (await footer
+      .getByRole("link", { name: "Matej Bendík" })
+      .getAttribute("href"))!,
+  );
+  expect(portfolio.hostname).toBe("www.matejbendik.com");
+  expect(portfolio.searchParams.get("utm_source")).toBe("globealbum");
+  await footer.getByRole("link", { name: "Report content" }).click();
+  await expect(page).toHaveURL(/\/terms#report-content$/);
+  await expect(
+    page.getByRole("link", { name: "Email a content report" }),
+  ).toHaveAttribute("href", /^mailto:matejbendik\.mb@gmail\.com\?/);
+});
+
+test("keeps the theme beside the signed-in account and its private avatar", async ({
+  page,
+  context,
+  browser,
+}) => {
+  const avatar = "https://lh3.googleusercontent.com/account-picture";
+  await page.route(avatar, (route) =>
+    route.fulfill({
+      contentType: "image/png",
+      body: readFileSync("tests/fixtures/tiny.png"),
+    }),
+  );
+  const owner = await account(context, true, avatar);
+  await db.globe.update({
+    where: { userId: owner.id },
+    data: { published: true },
+  });
+  const headerSizes: number[][] = [];
+  for (const route of [
+    "/",
+    "/demo",
+    "/studio",
+    "/settings",
+    "/privacy",
+    `/u/${owner.username}`,
+  ]) {
+    await page.goto(route);
+    const controls = page.locator(".account-controls");
+    const toggle = controls.getByRole("button", {
+      name: "Switch to dark mode",
+    });
+    const trigger = controls.getByRole("button", { name: "Account menu" });
+    await expect(toggle).toBeEnabled();
+    await expect(trigger.locator("img")).toBeVisible();
+    await expect(trigger.locator("img")).toHaveAttribute("src", avatar);
+    await expect(trigger.locator("img")).toHaveAttribute(
+      "referrerpolicy",
+      "no-referrer",
+    );
+    const [header, logo, themeButton, accountButton] = await Promise.all([
+      page.locator(".site-header").boundingBox(),
+      page.locator(".site-header .brand").boundingBox(),
+      toggle.boundingBox(),
+      trigger.boundingBox(),
+    ]);
+    expect(themeButton!.x).toBeLessThan(accountButton!.x);
+    headerSizes.push([
+      header!.height,
+      logo!.x,
+      logo!.height,
+      themeButton!.height,
+      accountButton!.height,
+      accountButton!.width,
+    ]);
+  }
+  expect(headerSizes).toEqual(headerSizes.map(() => headerSizes[0]));
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await expect(page.getByRole("menu").locator("img")).toBeVisible();
+
+  const visitor = await browser.newContext({ baseURL: TEST_ORIGIN });
+  try {
+    const publicPage = await visitor.newPage();
+    const response = await publicPage.goto(`/u/${owner.username}`);
+    await expect(
+      publicPage.getByRole("heading", { name: "Jamie's globe" }),
+    ).toBeVisible();
+    expect(await response!.text()).not.toContain(avatar);
+  } finally {
+    await visitor.close();
+  }
+});
 
 test("creates a private collection, adds a visit, publishes and hides it", async ({
   page,

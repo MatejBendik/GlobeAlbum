@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { Brand } from "@/components/brand";
+import { PageHeader } from "@/components/page-header";
+import { AuthLegalNotice } from "@/components/auth-legal-notice";
 import { EmailAuthForm } from "@/components/email-auth-form";
 import { SignInButton } from "@/components/sign-in-button";
 import { authConfigured, currentIdentity } from "@/lib/auth";
 import { OAuthNotice } from "@/components/oauth-notice";
+import { Button } from "@/components/ui/button";
 
 export default async function SignUpPage({
   searchParams,
@@ -17,12 +19,13 @@ export default async function SignUpPage({
   const { error } = await searchParams;
   return (
     <main className="auth-page">
-      <header>
-        <Brand />
-        <Link href="/">
-          <ArrowLeft size={14} /> Back home
-        </Link>
-      </header>
+      <PageHeader>
+        <Button asChild variant="ghost">
+          <Link href="/">
+            <ArrowLeft /> Back home
+          </Link>
+        </Button>
+      </PageHeader>
       <section className="auth-content">
         <span className="eyebrow">YOUR MEMORIES, YOUR WORLD</span>
         <h1>Create your account.</h1>
@@ -30,6 +33,7 @@ export default async function SignUpPage({
           Your globe starts private. Choose its public name after signing up.
         </p>
         <OAuthNotice error={deleted ? "account_deleted" : error} />
+        <AuthLegalNotice />
         <SignInButton
           enabled={authConfigured()}
           restartDeletedAccount={deleted}
@@ -40,7 +44,6 @@ export default async function SignUpPage({
           Already have an account? <Link href="/sign-in">Sign in</Link>
         </p>
       </section>
-      <footer>One globe. The places that made you.</footer>
     </main>
   );
 }

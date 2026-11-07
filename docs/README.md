@@ -10,6 +10,8 @@ Resume interrupted work from the [implementation checkpoint](work/mvp/progress.m
 - [Neon setup changes](neon-setup.md): project link, skills/MCP installation, auth amendment and real-service evidence.
 - [Google OAuth setup](google-oauth.md): owned Google client, private credentials,
   managed callback, explicit linking and real-service verification limits.
+- [Legal release notes](legal-readiness.md): public notices, data handling
+  evidence and operator tasks before public beta.
 - [Verification](validation.md): observed results, R2-only processing repair and outstanding release gates.
 - [Stack rationale](research/stack.md), [globe/geography](research/globe-and-geography.md), [cost model](research/costs.md).
 - [Delivery tickets](work/mvp/issues/): acceptance evidence, separate from triage readiness.

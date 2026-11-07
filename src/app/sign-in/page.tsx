@@ -2,10 +2,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, Globe2 } from "lucide-react";
 import { authConfigured, currentIdentity } from "@/lib/auth";
-import { Brand } from "@/components/brand";
+import { PageHeader } from "@/components/page-header";
+import { AuthLegalNotice } from "@/components/auth-legal-notice";
 import { SignInButton } from "@/components/sign-in-button";
 import { EmailAuthForm } from "@/components/email-auth-form";
 import { OAuthNotice } from "@/components/oauth-notice";
+import { Button } from "@/components/ui/button";
 
 export default async function SignInPage({
   searchParams,
@@ -17,12 +19,13 @@ export default async function SignInPage({
   const { error } = await searchParams;
   return (
     <main className="auth-page">
-      <header>
-        <Brand />
-        <Link href="/">
-          <ArrowLeft size={14} /> Back home
-        </Link>
-      </header>
+      <PageHeader>
+        <Button asChild variant="ghost">
+          <Link href="/">
+            <ArrowLeft /> Back home
+          </Link>
+        </Button>
+      </PageHeader>
       <section className="auth-content">
         <div className="auth-orbit">
           <Globe2 size={38} strokeWidth={0.9} />
@@ -39,6 +42,7 @@ export default async function SignInPage({
           Your memories start private.
         </p>
         <OAuthNotice error={deleted ? "account_deleted" : error} />
+        <AuthLegalNotice />
         <SignInButton
           enabled={authConfigured()}
           restartDeletedAccount={deleted}
@@ -52,7 +56,6 @@ export default async function SignInPage({
           Just looking? Explore an example →
         </Link>
       </section>
-      <footer>One globe. The places that made you.</footer>
     </main>
   );
 }

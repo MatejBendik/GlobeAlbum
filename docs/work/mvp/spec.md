@@ -148,6 +148,15 @@ choice persists in this browser across reloads; it does not change publication,
 photo visibility or other users' appearance. Theme switching supersedes its
 original deferred status. Photographs retain their original colors.
 
+User-confirmed on 2026-11-07: use one header with the same dimensions and
+spacing across the site. Keep the theme control immediately to the left
+of the account menu. Use the Google profile avatar from the signed-in
+session when available, with a generic fallback. Show the privacy policy,
+terms, reporting link and tagged author portfolio link in the shared footer.
+The account avatar remains private to its owner. See
+[legal release notes](../../legal-readiness.md) for the confirmed operator
+and remaining review.
+
 ### Photos
 
 User-confirmed refinement (2026-11-06): use Cloudflare only for R2 storage;

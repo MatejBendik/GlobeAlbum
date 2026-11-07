@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Globe2, LockKeyhole, LogOut } from "lucide-react";
 import {
@@ -206,7 +207,10 @@ export function ProfileSettings({
               <h3>Delete account</h3>
               <p>
                 Permanently delete your globe, places, visits and photos. This
-                cannot be undone.
+                cannot be undone.{" "}
+                <Link className="underline" href="/privacy#account-deletion">
+                  What happens to your data
+                </Link>
               </p>
             </div>
             <div className="field">

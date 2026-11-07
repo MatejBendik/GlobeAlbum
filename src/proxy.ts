@@ -9,6 +9,8 @@ export default auth.middleware({
     "/u",
     "/sign-in",
     "/sign-up",
+    "/privacy",
+    "/terms",
     "/api",
     "/land-dots.json",
     "/atlas-countries.geojson",

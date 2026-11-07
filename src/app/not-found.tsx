@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { Brand } from "@/components/brand";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { navigationViewer } from "@/lib/navigation-viewer";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const viewer = await navigationViewer().catch(() => null);
   return (
     <main className="auth-page">
-      <header>
-        <Brand />
-      </header>
+      <PageHeader viewer={viewer} />
       <section className="auth-content">
         <span className="eyebrow">A QUIET CORNER OF THE WORLD</span>
         <h1>
