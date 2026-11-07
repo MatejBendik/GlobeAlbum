@@ -153,9 +153,22 @@ spacing across the site. Keep the theme control immediately to the left
 of the account menu. Use the Google profile avatar from the signed-in
 session when available, with a generic fallback. Show the privacy policy,
 terms, reporting link and tagged author portfolio link in the shared footer.
-The account avatar remains private to its owner. See
+The Google account avatar remains private to its owner. See
 [legal release notes](../../legal-readiness.md) for the confirmed operator
 and remaining review.
+
+The 2026-11-07 profile photo refinement shows the Google photo as the owner's
+fallback in settings and studio. The owner can upload or remove a separate
+profile photo in settings. An uploaded avatar takes precedence in the account
+menu and appears next to the owner name on a published globe. Private globes
+restrict avatar access to the owner.
+
+The implementation accepts one static JPEG, PNG, WebP or HEIC file up to 4 MB
+and stores a square WebP of up to 320 pixels under the private R2
+`avatars/` prefix. It charges the shared storage and processing budgets.
+Replacing or removing an avatar and deleting an account queue durable cleanup.
+The application checks current publication before issuing a short-lived R2
+read capability.
 
 ### Photos
 

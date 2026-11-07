@@ -12,10 +12,11 @@ source, medium and campaign. The application does not collect link clicks.
 The notices describe the managed account, public globe fields, media
 processing, optional third-party requests, cookies and theme storage,
 deletion and the data rights contact. The Google avatar comes from the
-existing verified session and is used to identify the signed-in account
-in its own menu. The browser fetches the avatar without a referrer.
+existing verified session and identifies the signed-in account in its own
+menu, settings and studio. The browser fetches the avatar without a referrer.
 GlobeAlbum does not write the avatar URL into its application user record or
-include it in an anonymous public globe response.
+include it in an anonymous public globe response. A photo uploaded separately
+in Settings is displayed beside the owner's name while the globe is published.
 
 Before opening the public beta, the operator should review the following with
 a Slovak privacy professional as needed for the intended audience and service.

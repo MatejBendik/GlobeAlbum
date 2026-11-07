@@ -172,6 +172,20 @@ upload/read capabilities and uses the protected Worker control interface.
 Browser CORS belongs on `/upload` in the Worker; browser requests do not go
 directly to the R2 S3 endpoint.
 
+Profile photo uploads send a raw image body of up to 4 MB to the authenticated
+Next.js endpoint. Sharp produces one WebP, and the Worker stores it under the
+private `avatars/` prefix using the existing `/variant` operation. A public
+avatar request checks the globe's current visibility and avatar revision
+before redirecting to a signed Worker URL. The existing cleanup queue releases
+bytes only after the object is removed.
+
+Avatar implementation references verified on 2026-11-07:
+
+- [Vercel Functions request payload limit](https://vercel.com/docs/functions/limitations)
+- [Cloudflare R2 Worker API](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/)
+- [Sharp resize options](https://sharp.pixelplumbing.com/api-resize/)
+- [Prisma production migrations](https://www.prisma.io/docs/orm/prisma-migrate/workflows/development-and-production)
+
 For reviewed Worker changes:
 
 ```sh

@@ -4,6 +4,8 @@ export const LIMITS = {
   photos: 50,
   fileBytes: 20_000_000,
   variantBytes: 4_000_000,
+  avatarFileBytes: 4_000_000,
+  avatarVariantBytes: 512_000,
   storageBytes: 8_000_000_000,
   monthlyTransformations: 4_000,
   imageUrlSeconds: 60,

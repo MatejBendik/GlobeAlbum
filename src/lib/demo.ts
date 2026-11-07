@@ -58,6 +58,7 @@ const entries = [
   ],
 ] as const;
 export const demoGlobe: GlobeDto = {
+  avatarUrl: null,
   username: "the-long-way-home",
   displayName: "The long way home",
   published: true,

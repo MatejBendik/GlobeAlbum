@@ -59,6 +59,15 @@ export function storageConfigured() {
   );
 }
 
+export function globeAvatarUrl(globe: {
+  username: string;
+  avatarKey: string | null;
+}) {
+  if (!globe.avatarKey || !storageConfigured()) return null;
+  const revision = globe.avatarKey.slice("avatars/".length, -".webp".length);
+  return `/api/avatars/${encodeURIComponent(globe.username)}?v=${revision}`;
+}
+
 export function workerUrl() {
   if (!storageConfigured()) {
     throw new AppError(

@@ -30,17 +30,17 @@ export default function PrivacyPage() {
           and secure your account. Neon Auth manages authentication, including
           password hashes for email accounts and provider identifiers and
           credentials for Google sign-in. Google can provide your profile name,
-          email and photo URL when you choose Google sign-in. Your avatar is
-          shown in your own account menu when available. GlobeAlbum does not
-          request access to your Gmail inbox.
+          email and photo URL when you choose Google sign-in. Your Google photo
+          can appear in your own account menu, settings and studio. GlobeAlbum
+          does not request access to your Gmail inbox.
         </li>
         <li>
           <strong>Your globe.</strong> We store your display name, profile
           address, style and visibility settings, saved places and coordinates,
-          optional visit dates, photos and captions to show and share the album
-          you create. Other members can include people in the photos and
-          captions they upload. If someone has included you, you can contact us
-          about that content.
+          optional visit dates, photos, captions and an optional uploaded
+          profile photo to show and share the album you create. Other members
+          can include people in the photos and captions they upload. If someone
+          has included you, you can contact us about that content.
         </li>
         <li>
           <strong>Operations and support.</strong> We use session and request
@@ -67,8 +67,9 @@ export default function PrivacyPage() {
       <p>
         New globes are private. If you publish your globe, anyone with its link
         can see your public name, profile address, saved places, photo galleries
-        and captions. Your email address, account avatar and visit dates stay
-        private. GlobeAlbum removes original photo metadata from the versions it
+        and captions, along with any profile photo you upload in Settings. Your
+        email address, Google account photo and visit dates stay private.
+        GlobeAlbum removes original photo metadata from the versions it
         displays. You can make the globe private again in Studio. Previously
         issued image links can continue working for up to 60 seconds. People who
         already viewed your globe may have kept copies.
@@ -115,7 +116,9 @@ export default function PrivacyPage() {
         We retain your account and globe while you keep them. Original uploads
         are held temporarily for processing and cleanup. After processing, the
         album uses smaller display and thumbnail copies. The quarantine storage
-        has a one-day expiry rule for leftover originals.
+        has a one-day expiry rule for leftover originals. For an uploaded
+        profile photo, we store only the processed version and schedule its
+        removal when you replace it, remove it or delete your account.
       </p>
       <p>
         Go to <Link href="/settings">Profile settings</Link>, choose{" "}

@@ -208,14 +208,19 @@ select:focus-visible {
 .settings-avatar {
   width: 52px;
   height: 52px;
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
   border: 1px solid var(--line);
-  border-radius: 50%;
-  background: var(--surface-soft);
-  color: var(--text-soft);
   font-size: 22px;
+}
+.field .settings-avatar-input {
+  max-width: 100%;
+  min-width: 0;
+}
+.settings-avatar-input::file-selector-button {
+  margin-right: 10px;
+  cursor: pointer;
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .settings-identity > div:nth-child(2) {
   min-width: 0;
@@ -2201,12 +2206,23 @@ body,
   pointer-events: none;
   max-width: calc(100% - 220px);
 }
+.collection-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
 .collection-summary h1 {
   font-size: clamp(19px, 2vw, 28px);
   line-height: 1.2;
-  margin: 10px 0;
   font-weight: 500;
   letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.globe-avatar {
+  width: 36px;
+  height: 36px;
 }
 .collection-summary .collection-stats {
   color: var(--text-soft);
@@ -2294,23 +2310,26 @@ body,
 .account-trigger {
   max-width: 220px;
 }
-.account-avatar {
+.profile-avatar {
   position: relative;
   display: inline-grid;
-  width: 22px;
-  height: 22px;
   place-items: center;
   flex: none;
   border-radius: 50%;
   background: var(--surface-soft);
+  color: var(--text-soft);
   overflow: hidden;
 }
-.account-avatar img {
+.profile-avatar img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.account-avatar {
+  width: 22px;
+  height: 22px;
 }
 .account-name {
   overflow: hidden;
@@ -2390,6 +2409,10 @@ body,
   }
   .collection-summary h1 {
     font-size: 21px;
+  }
+  .globe-avatar {
+    width: 28px;
+    height: 28px;
   }
   .collection-summary .eyebrow {
     font-size: 8px;

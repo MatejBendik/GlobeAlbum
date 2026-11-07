@@ -5,42 +5,47 @@ import { LIMITS } from "./limits";
 import { AppError } from "./errors";
 import { readPhotoSource, writePhotoVariant } from "./storage";
 
+async function decodePhoto(bytes: Uint8Array) {
+  const format = inspectPhoto(bytes);
+  const options = {
+    limitInputPixels: LIMITS.maxPixels,
+    failOn: "warning" as const,
+  };
+  let image = sharp(bytes, options);
+  const metadata = await image.metadata();
+  if (
+    !metadata.width ||
+    !metadata.height ||
+    metadata.width * metadata.height > LIMITS.maxPixels
+  )
+    throw new Error("Invalid dimensions");
+  if (format === "heic") {
+    // The portable Sharp build lacks an HEVC decoder. Decode locally using
+    // libheif WASM; no photographs are sent to another image service.
+    const { default: decode } = await import("heic-decode");
+    const decoded = await decode({ buffer: bytes });
+    if (
+      !decoded.width ||
+      !decoded.height ||
+      decoded.width * decoded.height > LIMITS.maxPixels ||
+      decoded.data.byteLength !== decoded.width * decoded.height * 4
+    )
+      throw new Error("Invalid decoded dimensions");
+    image = sharp(decoded.data, {
+      ...options,
+      raw: {
+        width: decoded.width,
+        height: decoded.height,
+        channels: 4,
+      },
+    });
+  }
+  return image;
+}
+
 export async function createPhotoVariants(bytes: Uint8Array) {
   try {
-    const format = inspectPhoto(bytes);
-    const options = {
-      limitInputPixels: LIMITS.maxPixels,
-      failOn: "warning" as const,
-    };
-    let image = sharp(bytes, options);
-    const metadata = await image.metadata();
-    if (
-      !metadata.width ||
-      !metadata.height ||
-      metadata.width * metadata.height > LIMITS.maxPixels
-    )
-      throw new Error("Invalid dimensions");
-    if (format === "heic") {
-      // The portable Sharp build lacks an HEVC decoder. Decode locally using
-      // libheif WASM; no photographs are sent to another image service.
-      const { default: decode } = await import("heic-decode");
-      const decoded = await decode({ buffer: bytes });
-      if (
-        !decoded.width ||
-        !decoded.height ||
-        decoded.width * decoded.height > LIMITS.maxPixels ||
-        decoded.data.byteLength !== decoded.width * decoded.height * 4
-      )
-        throw new Error("Invalid decoded dimensions");
-      image = sharp(decoded.data, {
-        ...options,
-        raw: {
-          width: decoded.width,
-          height: decoded.height,
-          channels: 4,
-        },
-      });
-    }
+    const image = await decodePhoto(bytes);
     const variants: Buffer[] = [];
     let total = 0;
     for (const [width, quality] of [
@@ -92,4 +97,26 @@ export async function processStoredPhoto(input: {
   const variants = await createPhotoVariants(bytes);
   await writePhotoVariant(input.thumbnailKey, variants.thumbnail);
   await writePhotoVariant(input.displayKey, variants.display);
+}
+
+export async function createAvatarVariant(bytes: Uint8Array) {
+  try {
+    const image = await decodePhoto(bytes);
+    const avatar = await image
+      .autoOrient()
+      .toColourspace("srgb")
+      .resize(320, 320, { fit: "cover", withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .timeout({ seconds: 30 })
+      .toBuffer();
+    if (avatar.length > LIMITS.avatarVariantBytes)
+      throw new Error("Avatar exceeds its output limit.");
+    return avatar;
+  } catch {
+    throw new AppError(
+      "Choose a readable, still JPEG, PNG, WebP or HEIC image.",
+      422,
+      "PROCESSING",
+    );
+  }
 }

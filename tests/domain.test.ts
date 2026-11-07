@@ -67,6 +67,39 @@ beforeEach(async () => {
     });
   }
 });
+
+it("keeps the previous avatar and accounts for a failed replacement until cleanup", async () => {
+  const image = readFileSync("tests/fixtures/tiny.png");
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValueOnce(new Response(null, { status: 201 })),
+  );
+  await domain.changeGlobeAvatar("alice", image);
+  const globe = await getDb().globe.findUniqueOrThrow({
+    where: { userId: "alice" },
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(new Response(null, { status: 503 })),
+  );
+  await expect(domain.changeGlobeAvatar("alice", image)).rejects.toMatchObject({
+    status: 503,
+  });
+  const current = await getDb().globe.findUniqueOrThrow({
+    where: { userId: "alice" },
+  });
+  expect(current.avatarKey).toBe(globe.avatarKey);
+  const pending = await getDb().cleanupJob.findFirstOrThrow();
+  expect(pending.keys[0]).toMatch(/^avatars\/.+\.webp$/);
+  expect(pending.keys[0]).not.toBe(globe.avatarKey);
+  expect(pending.notBefore.getTime()).toBeGreaterThan(Date.now());
+  const usage = await getDb().usage.findUniqueOrThrow({
+    where: { id: "global" },
+  });
+  expect(usage.accountedBytes).toBe(
+    BigInt(globe.avatarBytes) + pending.releaseBytes,
+  );
+});
 afterAll(async () => {
   await getDb().$disconnect();
 });

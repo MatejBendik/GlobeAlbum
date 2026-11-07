@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import type { NavigationViewer } from "@/lib/navigation-viewer";
 import { PageHeader } from "./page-header";
+import { ProfileAvatar } from "./profile-avatar";
 import type { GlobeDto } from "@/lib/types";
 import { countryName } from "@/lib/countries";
 import { globeStyleAction, publicationAction } from "@/app/actions";
@@ -87,6 +88,8 @@ export function Workspace({
   }
   const selected = params.get("place") ?? undefined;
   const active = globe.places.find((place) => place.id === selected);
+  const avatarUrl =
+    globe.avatarUrl ?? (owner ? viewer?.avatarUrl : null) ?? null;
   const visitorAction = demo
     ? "Back home"
     : viewer
@@ -211,7 +214,14 @@ export function Workspace({
                   ? "EXAMPLE COLLECTION"
                   : "TRAVEL COLLECTION"}
             </span>
-            <h1>{globe.displayName}</h1>
+            <div className="collection-heading">
+              {avatarUrl && (
+                <ProfileAvatar url={avatarUrl} className="globe-avatar">
+                  {globe.displayName.trim().charAt(0).toUpperCase()}
+                </ProfileAvatar>
+              )}
+              <h1>{globe.displayName}</h1>
+            </div>
             <p className="collection-stats">
               <strong>{globe.places.length}</strong>{" "}
               {globe.places.length === 1 ? "place" : "places"} in{" "}

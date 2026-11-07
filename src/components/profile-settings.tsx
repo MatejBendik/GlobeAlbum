@@ -11,9 +11,13 @@ import {
 } from "@/app/actions";
 import { Button } from "./ui/button";
 import { GoogleAccountLink } from "./google-account-link";
+import { ProfileAvatar } from "./profile-avatar";
+import { AvatarForm } from "./avatar-form";
 
 export function ProfileSettings({
   displayName,
+  avatarUrl,
+  hasCustomAvatar,
   username,
   email,
   published,
@@ -22,6 +26,8 @@ export function ProfileSettings({
   googleClientId,
 }: {
   displayName: string;
+  avatarUrl: string | null;
+  hasCustomAvatar: boolean;
   username: string;
   email: string;
   published: boolean;
@@ -41,9 +47,9 @@ export function ProfileSettings({
   return (
     <>
       <div className="settings-identity">
-        <div className="settings-avatar" aria-hidden="true">
+        <ProfileAvatar url={avatarUrl} className="settings-avatar">
           {displayName.trim().charAt(0).toUpperCase()}
-        </div>
+        </ProfileAvatar>
         <div>
           <p className="settings-identity-name">{displayName}</p>
           <p className="settings-identity-address">/u/{username}</p>
@@ -53,6 +59,17 @@ export function ProfileSettings({
           {published ? "Published globe" : "Private globe"}
         </span>
       </div>
+
+      <section className="settings-section" aria-labelledby="avatar-heading">
+        <div className="settings-section-intro">
+          <h2 id="avatar-heading">Profile photo</h2>
+          <p>
+            Your uploaded photo appears next to your name on your published
+            globe.
+          </p>
+        </div>
+        <AvatarForm hasCustomAvatar={hasCustomAvatar} />
+      </section>
 
       <section className="settings-section" aria-labelledby="profile-heading">
         <div className="settings-section-intro">

@@ -1,14 +1,24 @@
 import { z } from "zod";
 import { LIMITS } from "./limits";
 
+export const quarantineObjectKey = z
+  .string()
+  .regex(/^quarantine\/[a-zA-Z0-9-]+$/);
+export const mediaObjectKey = z
+  .string()
+  .regex(
+    /^(photos\/[a-zA-Z0-9-]+\/(thumbnail|display)\.webp|avatars\/[a-zA-Z0-9-]+\.webp)$/,
+  );
+export const storedObjectKey = z.union([quarantineObjectKey, mediaObjectKey]);
+
 const schema = z.object({
-  key: z.string().regex(/^quarantine\/[a-zA-Z0-9-]+$/),
+  key: quarantineObjectKey,
   bytes: z.number().int().positive().max(LIMITS.fileBytes),
   exp: z.number().int().positive(),
 });
 export type UploadGrant = z.infer<typeof schema>;
 const mediaSchema = z.object({
-  key: z.string().regex(/^photos\/[a-zA-Z0-9-]+\/(thumbnail|display)\.webp$/),
+  key: mediaObjectKey,
   exp: z.number().int().positive(),
 });
 const encode = (bytes: Uint8Array) =>

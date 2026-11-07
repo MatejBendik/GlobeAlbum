@@ -9,6 +9,7 @@ import { ProfileSettings } from "@/components/profile-settings";
 import { Button } from "@/components/ui/button";
 import { OAuthNotice } from "@/components/oauth-notice";
 import { toNavigationViewer } from "@/lib/navigation-viewer";
+import { globeAvatarUrl } from "@/lib/storage";
 
 export const metadata: Metadata = {
   title: "Profile settings",
@@ -25,7 +26,12 @@ export default async function SettingsPage({
   const [globe, accounts, { error }] = await Promise.all([
     getDb().globe.findUnique({
       where: { userId: user.id },
-      select: { displayName: true, username: true, published: true },
+      select: {
+        displayName: true,
+        username: true,
+        published: true,
+        avatarKey: true,
+      },
     }),
     getAuth()
       .listAccounts()
@@ -33,10 +39,14 @@ export default async function SettingsPage({
     searchParams,
   ]);
   if (!globe) redirect("/onboarding");
+  const viewer = toNavigationViewer(user, {
+    ...globe,
+    avatarUrl: globeAvatarUrl(globe),
+  });
 
   return (
     <div className="settings-page">
-      <PageHeader viewer={toNavigationViewer(user, globe)}>
+      <PageHeader viewer={viewer}>
         <Button asChild variant="ghost" className="compact-nav-action">
           <Link href="/studio" aria-label="Back to my globe">
             <ArrowLeft />
@@ -53,6 +63,8 @@ export default async function SettingsPage({
         <OAuthNotice error={error} linking />
         <ProfileSettings
           displayName={globe.displayName}
+          avatarUrl={viewer.avatarUrl}
+          hasCustomAvatar={!!globe.avatarKey}
           username={globe.username}
           email={user.email}
           published={globe.published}

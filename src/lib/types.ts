@@ -21,6 +21,7 @@ export type PlaceDto = {
 export type GlobeDto = {
   username: string;
   displayName: string;
+  avatarUrl: string | null;
   published: boolean;
   style: GlobeStyle;
   places: PlaceDto[];

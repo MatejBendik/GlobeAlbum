@@ -1,6 +1,12 @@
 import { isAllowedAppOrigin } from "../src/lib/origins";
 import { z } from "zod";
-import { verifyUploadGrant, verifyMediaGrant } from "../src/lib/upload-grant";
+import {
+  mediaObjectKey,
+  quarantineObjectKey,
+  storedObjectKey,
+  verifyUploadGrant,
+  verifyMediaGrant,
+} from "../src/lib/upload-grant";
 import { LIMITS } from "../src/lib/limits";
 import { readBounded, inspectPhoto } from "../src/lib/image-validation";
 
@@ -59,11 +65,7 @@ export default {
         const input = z
           .object({
             operation: z.enum(["head", "delete"]),
-            key: z
-              .string()
-              .regex(
-                /^(quarantine\/[a-zA-Z0-9-]+|photos\/[a-zA-Z0-9-]+\/(thumbnail|display)\.webp)$/,
-              ),
+            key: storedObjectKey,
           })
           .parse(JSON.parse(new TextDecoder().decode(body)));
         if (input.operation === "delete") {
@@ -157,7 +159,7 @@ export default {
       try {
         const input = z
           .object({
-            key: z.string().regex(/^quarantine\/[a-zA-Z0-9-]+$/),
+            key: quarantineObjectKey,
             expectedBytes: z.number().int().positive().max(LIMITS.fileBytes),
           })
           .parse(
@@ -188,14 +190,14 @@ export default {
       if (!(await hasControlAccess(request, env.IMAGE_WORKER_SECRET)))
         return reply({ error: "Unauthorized" }, 401);
       try {
-        const key = z
-          .string()
-          .regex(/^photos\/[a-zA-Z0-9-]+\/(thumbnail|display)\.webp$/)
-          .parse(request.headers.get("X-Object-Key"));
+        const key = mediaObjectKey.parse(request.headers.get("X-Object-Key"));
+        const limit = key.startsWith("avatars/")
+          ? LIMITS.avatarVariantBytes
+          : LIMITS.variantBytes;
         const expected = Number(request.headers.get("content-length"));
-        if (!expected || expected > LIMITS.variantBytes)
+        if (!Number.isInteger(expected) || expected <= 0 || expected > limit)
           return reply({ error: "Invalid variant size." }, 413);
-        const bytes = await readBounded(request.body!, LIMITS.variantBytes);
+        const bytes = await readBounded(request.body!, limit);
         if (bytes.length !== expected || inspectPhoto(bytes) !== "webp")
           return reply({ error: "Invalid variant." }, 422);
         await env.PHOTOS.put(key, bytes, {

@@ -14,9 +14,16 @@ import {
   displayNameSchema,
   globeStyleSchema,
 } from "./validation";
-import { photoUrl, storageConfigured, workerUrl, objectSize } from "./storage";
+import {
+  globeAvatarUrl,
+  photoUrl,
+  storageConfigured,
+  workerUrl,
+  objectSize,
+  writePhotoVariant,
+} from "./storage";
 import { signUploadGrant } from "./upload-grant";
-import { processStoredPhoto } from "./photo-processing";
+import { createAvatarVariant, processStoredPhoto } from "./photo-processing";
 import type { GlobeDto, GalleryDto } from "./types";
 
 export type Transaction = Prisma.TransactionClient;
@@ -91,6 +98,107 @@ async function rateLimit(
       "RATE_LIMIT",
     );
 }
+
+async function reserveStorage(tx: Transaction, bytes: number) {
+  const usage = await tx.usage.upsert({
+    where: { id: "global" },
+    create: { id: "global" },
+    update: {},
+  });
+  if (usage.accountedBytes + BigInt(bytes) > BigInt(LIMITS.storageBytes))
+    throw new AppError(
+      "The beta storage allowance is full. New uploads are paused.",
+      409,
+      "QUOTA",
+    );
+  await tx.usage.update({
+    where: { id: "global" },
+    data: { accountedBytes: { increment: bytes } },
+  });
+}
+
+async function reserveProcessing(
+  tx: Transaction,
+  month: string,
+  count: number,
+) {
+  const processing = await tx.monthlyUsage.upsert({
+    where: { id: month },
+    create: { id: month },
+    update: {},
+  });
+  if (processing.transformations + count > LIMITS.monthlyTransformations)
+    throw new AppError(
+      "The monthly processing allowance is full. New uploads are paused.",
+      409,
+      "QUOTA",
+    );
+  await tx.monthlyUsage.update({
+    where: { id: month },
+    data: { transformations: { increment: count } },
+  });
+}
+
+async function enqueueAvatar(
+  tx: Transaction,
+  globe: { avatarKey: string | null; avatarBytes: number },
+) {
+  if (globe.avatarKey)
+    await tx.cleanupJob.create({
+      data: {
+        keys: [globe.avatarKey],
+        releaseBytes: BigInt(globe.avatarBytes),
+      },
+    });
+}
+
+export async function changeGlobeAvatar(userId: string, bytes: Uint8Array) {
+  workerUrl();
+  await locked(async (tx) => {
+    await ownerGlobe(tx, userId);
+    await rateLimit(tx, userId, "avatar", 10);
+    await reserveProcessing(tx, utcMonth(), 1);
+  });
+  const avatar = await createAvatarVariant(bytes);
+  const key = `avatars/${randomUUID()}.webp`;
+  const pending = await locked(async (tx) => {
+    await ownerGlobe(tx, userId);
+    await reserveStorage(tx, avatar.length);
+    // Record cleanup before the Worker write so a crash leaves recoverable work.
+    return tx.cleanupJob.create({
+      data: {
+        keys: [key],
+        releaseBytes: BigInt(avatar.length),
+        notBefore: new Date(Date.now() + LIMITS.processingLeaseMs),
+      },
+    });
+  });
+  await writePhotoVariant(key, avatar);
+  await locked(async (tx) => {
+    const globe = await ownerGlobe(tx, userId);
+    if (pending.notBefore.getTime() <= Date.now())
+      throw new AppError("This upload expired. Choose the photo again.", 409);
+    await enqueueAvatar(tx, globe);
+    await tx.globe.update({
+      where: { id: globe.id },
+      data: { avatarKey: key, avatarBytes: avatar.length },
+    });
+    await tx.cleanupJob.delete({ where: { id: pending.id } });
+  });
+}
+
+export async function removeGlobeAvatar(userId: string) {
+  await locked(async (tx) => {
+    const globe = await ownerGlobe(tx, userId);
+    if (!globe.avatarKey) return;
+    await enqueueAvatar(tx, globe);
+    await tx.globe.update({
+      where: { id: globe.id },
+      data: { avatarKey: null, avatarBytes: 0 },
+    });
+  });
+}
+
 export async function createGlobe(userId: string, input: unknown) {
   const value = profileSchema.parse(input);
   return locked(async (tx) => {
@@ -337,6 +445,7 @@ export async function readGlobe(
   return {
     username: globe.username,
     displayName: globe.displayName,
+    avatarUrl: globeAvatarUrl(globe),
     published: globe.published,
     style: globe.style,
     places,
@@ -439,32 +548,9 @@ export async function reserveUpload(userId: string, input: unknown) {
         409,
         "QUOTA",
       );
-    const usage = await tx.usage.upsert({
-      where: { id: "global" },
-      create: { id: "global" },
-      update: {},
-    });
     const reservedBytes = value.size + LIMITS.variantBytes;
-    if (
-      usage.accountedBytes + BigInt(reservedBytes) >
-      BigInt(LIMITS.storageBytes)
-    )
-      throw new AppError(
-        "The beta storage allowance is full. New uploads are paused.",
-        409,
-        "QUOTA",
-      );
-    const processing = await tx.monthlyUsage.upsert({
-      where: { id: month },
-      create: { id: month },
-      update: {},
-    });
-    if (processing.transformations + 2 > LIMITS.monthlyTransformations)
-      throw new AppError(
-        "The monthly processing allowance is full. New uploads are paused.",
-        409,
-        "QUOTA",
-      );
+    await reserveStorage(tx, reservedBytes);
+    await reserveProcessing(tx, month, 2);
     const sourceKey = `quarantine/${randomUUID()}`,
       photoKey = randomUUID();
     const photo = await tx.photo.create({
@@ -474,7 +560,7 @@ export async function reserveUpload(userId: string, input: unknown) {
         displayKey: `photos/${photoKey}/display.webp`,
       },
     });
-    const created = await tx.uploadIntent.create({
+    return tx.uploadIntent.create({
       data: {
         photoId: photo.id,
         sourceKey,
@@ -484,15 +570,6 @@ export async function reserveUpload(userId: string, input: unknown) {
         expiresAt: new Date(now.getTime() + LIMITS.uploadLifetimeMs),
       },
     });
-    await tx.usage.update({
-      where: { id: "global" },
-      data: { accountedBytes: { increment: reservedBytes } },
-    });
-    await tx.monthlyUsage.update({
-      where: { id: month },
-      data: { transformations: { increment: 2 } },
-    });
-    return created;
   });
   const grant = await signUploadGrant(
     {
@@ -717,12 +794,14 @@ export async function deleteAccount(userId: string) {
       include: { upload: true },
     });
     await enqueuePhotos(tx, photos);
-    if (globe)
+    if (globe) {
+      await enqueueAvatar(tx, globe);
       await tx.retiredUsername.upsert({
         where: { username: globe.username },
         create: { username: globe.username },
         update: {},
       });
+    }
     await tx.user.delete({ where: { id: userId } });
   });
 }

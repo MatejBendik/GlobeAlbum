@@ -191,6 +191,72 @@ test("keeps the theme beside the signed-in account and its private avatar", asyn
   }
 });
 
+test("publishes only an uploaded profile photo and revokes it when hidden or removed", async ({
+  page,
+  context,
+  browser,
+}) => {
+  const googlePhoto = "https://lh3.googleusercontent.com/account-picture";
+  await page.route(googlePhoto, (route) =>
+    route.fulfill({
+      contentType: "image/png",
+      body: readFileSync("tests/fixtures/tiny.png"),
+    }),
+  );
+  const owner = await account(context, true, googlePhoto);
+  await page.goto("/settings");
+  const settingsAvatar = page.locator(".settings-avatar img");
+  await expect(settingsAvatar).toHaveAttribute("src", googlePhoto);
+  const photoInput = page.getByLabel("Choose a profile photo");
+  await expect(photoInput).toBeEnabled();
+  await photoInput.setInputFiles("tests/fixtures/tiny.png");
+  await page.getByRole("button", { name: "Save photo", exact: true }).click();
+  await expect(settingsAvatar).toHaveAttribute("src", /^\/api\/avatars\//);
+  const avatarUrl = (await settingsAvatar.getAttribute("src"))!;
+  const visitor = await browser.newContext({ baseURL: TEST_ORIGIN });
+  try {
+    expect((await visitor.request.get(avatarUrl)).status()).toBe(404);
+    await page.goto("/studio");
+    await page
+      .getByRole("button", { name: "Share globe", exact: true })
+      .click();
+    await page.getByRole("button", { name: "Publish my globe" }).click();
+    await expect(
+      page.getByRole("button", { name: "Make globe private" }),
+    ).toBeVisible();
+    const publicPage = await visitor.newPage();
+    await publicPage.goto(`/u/${owner.username}`);
+    await expect(
+      publicPage.locator(".collection-heading .globe-avatar img"),
+    ).toHaveAttribute("src", avatarUrl);
+    const image = await visitor.request.get(avatarUrl);
+    expect(image.status()).toBe(200);
+    expect(image.headers()["content-type"]).toBe("image/webp");
+    await page.getByRole("button", { name: "Make globe private" }).click();
+    await expect(
+      page.getByRole("button", { name: "Publish my globe" }),
+    ).toBeVisible();
+    expect((await visitor.request.get(avatarUrl)).status()).toBe(404);
+
+    await page.goto("/settings");
+    await page
+      .getByRole("button", { name: "Remove photo", exact: true })
+      .click();
+    await expect(settingsAvatar).toHaveAttribute("src", googlePhoto);
+    expect((await page.request.get(avatarUrl)).status()).toBe(404);
+    const job = await db.cleanupJob.findFirst({
+      where: {
+        keys: {
+          has: `avatars/${new URL(avatarUrl, TEST_ORIGIN).searchParams.get("v")}.webp`,
+        },
+      },
+    });
+    expect(Number(job?.releaseBytes)).toBeGreaterThan(0);
+  } finally {
+    await visitor.close();
+  }
+});
+
 test("creates a private collection, adds a visit, publishes and hides it", async ({
   page,
   context,
