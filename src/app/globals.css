@@ -1984,6 +1984,7 @@ select:focus-visible {
     grid-template-rows: auto clamp(300px, 100vw, 490px) auto;
   }
   .hero-preview-controls {
+    justify-self: stretch;
     margin: 0 7% 26px;
   }
   .hero-orbit-label {
@@ -1992,9 +1993,13 @@ select:focus-visible {
     margin: 14px 7% 0;
     writing-mode: horizontal-tb;
   }
+  .hero-style-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .hero-style-options .hero-style-button {
     gap: 6px;
-    padding-inline: 8px;
+    padding-inline: 5px;
   }
   .hero-bottom {
     height: 43px;

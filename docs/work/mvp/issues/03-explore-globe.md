@@ -75,3 +75,8 @@ Playwright verified style changes by keyboard and touch, country labels in
 Minimal, the default style on the example route, and direct access to the
 landing postcard gallery in desktop and mobile Chromium. The shared footer
 test checks the portfolio target, opener isolation and referral source.
+
+On 2026-11-08, the mobile style controls were stretched into one row of three
+equal [grid columns](https://www.w3.org/TR/css-grid-1/#track-sizing), with the
+existing side gutters. Playwright verified equal widths, a shared row and
+working selection at a 320 px viewport. Source verified 2026-11-08.

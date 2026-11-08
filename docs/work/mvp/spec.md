@@ -138,6 +138,7 @@ Viewer identity is resolved server-side and includes no email or credentials.
 
 The landing preview offers Dotted, Minimal and Classic beneath its place
 caption. Switching styles updates the preview immediately for any visitor.
+On mobile, three equal-width buttons fill the preview controls in a single row.
 The selection is temporary and local to the preview. Landing captions,
 supporting copy and footer links use larger type.
 

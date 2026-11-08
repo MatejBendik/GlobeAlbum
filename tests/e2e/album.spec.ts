@@ -723,6 +723,8 @@ test("validates email signup and reports the managed invalid-password response",
 test("renders the landing page and example without horizontal overflow", async ({
   page,
 }, testInfo) => {
+  const mobile = testInfo.project.name === "mobile";
+  if (mobile) await page.setViewportSize({ width: 320, height: 800 });
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(
@@ -736,8 +738,21 @@ test("renders the landing page and example without horizontal overflow", async (
   const classic = styles.getByRole("button", { name: "Classic" });
   await expect(globe).toHaveAttribute("data-globe-style", "dotted");
   await expect(dotted).toHaveAttribute("aria-pressed", "true");
-  if (testInfo.project.name === "mobile") await minimal.tap();
-  else await minimal.press("Enter");
+  if (mobile) {
+    const [first, middle, last] = await Promise.all([
+      dotted.boundingBox(),
+      minimal.boundingBox(),
+      classic.boundingBox(),
+    ]);
+    expect(middle!.y).toBe(first!.y);
+    expect(last!.y).toBe(first!.y);
+    expect(middle!.width).toBeCloseTo(first!.width, 1);
+    expect(last!.width).toBeCloseTo(first!.width, 1);
+    expect(last!.x + last!.width).toBeCloseTo(320 - first!.x, 1);
+    await minimal.tap();
+  } else {
+    await minimal.press("Enter");
+  }
   await expect(globe).toHaveAttribute("data-globe-style", "atlas");
   await expect(minimal).toHaveAttribute("aria-pressed", "true");
   await expect(
