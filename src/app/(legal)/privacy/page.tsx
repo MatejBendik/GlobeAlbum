@@ -13,7 +13,7 @@ export default function PrivacyPage() {
     <article className="legal-document">
       <h1>Privacy Policy</h1>
       <p className="legal-date">
-        Updated <time dateTime="2026-11-07">7 November 2026</time>
+        Updated <time dateTime="2026-11-08">8 November 2026</time>
       </p>
       <p>
         {operatorName}, an individual based in Slovakia, operates GlobeAlbum and
@@ -37,10 +37,10 @@ export default function PrivacyPage() {
         <li>
           <strong>Your globe.</strong> We store your display name, profile
           address, style and visibility settings, saved places and coordinates,
-          optional visit dates, photos, captions and an optional uploaded
-          profile photo to show and share the album you create. Other members
-          can include people in the photos and captions they upload. If someone
-          has included you, you can contact us about that content.
+          optional visit dates, photos, captions and an optional profile photo
+          to show and share the album you create. Other members can include
+          people in the photos and captions they upload. If someone has included
+          you, you can contact us about that content.
         </li>
         <li>
           <strong>Operations and support.</strong> We use session and request
@@ -63,16 +63,20 @@ export default function PrivacyPage() {
         site without an account.
       </p>
 
-      <h2>What other people can see</h2>
+      <h2 id="public-profile">What other people can see</h2>
       <p>
         New globes are private. If you publish your globe, anyone with its link
         can see your public name, profile address, saved places, photo galleries
-        and captions, along with any profile photo you upload in Settings. Your
-        email address, Google account photo and visit dates stay private.
-        GlobeAlbum removes original photo metadata from the versions it
-        displays. You can make the globe private again in Studio. Previously
-        issued image links can continue working for up to 60 seconds. People who
-        already viewed your globe may have kept copies.
+        and captions, along with any profile photo you choose in Settings. You
+        can upload a file or select{" "}
+        <strong>Use Google photo on my globe</strong> to save a processed copy
+        of your Google photo for this purpose. Your original Google photo link,
+        email address and visit dates stay private. You can replace or remove
+        the saved profile photo in Settings. GlobeAlbum removes original photo
+        metadata from the versions it displays. You can make the globe private
+        again in Studio. Previously issued image links can continue working for
+        up to 60 seconds. People who already viewed your globe may have kept
+        copies.
       </p>
 
       <h2>Who receives data</h2>
@@ -84,7 +88,9 @@ export default function PrivacyPage() {
         </li>
         <li>
           Google handles optional Google sign-in and serves the account photo
-          when available. Your browser connects to Google when displaying it.
+          when available. Your browser connects to Google when displaying it in
+          your signed-in account. GlobeAlbum requests the image from Google when
+          you choose to save a copy as your profile photo.
         </li>
         <li>
           GeoNames receives the text of city searches. When you open the manual
@@ -116,9 +122,9 @@ export default function PrivacyPage() {
         We retain your account and globe while you keep them. Original uploads
         are held temporarily for processing and cleanup. After processing, the
         album uses smaller display and thumbnail copies. The quarantine storage
-        has a one-day expiry rule for leftover originals. For an uploaded
-        profile photo, we store only the processed version and schedule its
-        removal when you replace it, remove it or delete your account.
+        has a one-day expiry rule for leftover originals. For a saved profile
+        photo, we store only the processed version and schedule its removal when
+        you replace it, remove it or delete your account.
       </p>
       <p>
         Go to <Link href="/settings">Profile settings</Link>, choose{" "}

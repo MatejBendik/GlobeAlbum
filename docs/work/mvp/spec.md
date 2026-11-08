@@ -160,7 +160,7 @@ of the account menu. Use the Google profile avatar from the signed-in
 session when available, with a generic fallback. Show the privacy policy,
 terms, reporting link and tagged author portfolio link in the shared footer.
 The portfolio link opens in a new tab and retains its referral tags.
-The Google account avatar remains private to its owner. See
+The Google account avatar URL remains private to its owner. See
 [legal release notes](../../legal-readiness.md) for the confirmed operator
 and remaining review.
 
@@ -169,6 +169,11 @@ fallback in settings and studio. The owner can upload or remove a separate
 profile photo in settings. An uploaded avatar takes precedence in the account
 menu and appears next to the owner name on a published globe. Private globes
 restrict avatar access to the owner.
+
+On 2026-11-08, the user requested the same photo on the public profile as in
+Studio. Settings offers an explicit choice to save a copy of the Google
+account photo as the globe avatar. The processed copy follows the same
+publication, removal and cleanup rules as a file upload.
 
 The implementation accepts one static JPEG, PNG, WebP or HEIC file up to 4 MB
 and stores a square WebP of up to 320 pixels under the private R2

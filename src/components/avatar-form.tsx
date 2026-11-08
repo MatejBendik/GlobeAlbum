@@ -1,12 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LIMITS } from "@/lib/limits";
 import { PHOTO_ACCEPT } from "@/lib/validation";
 import { Button } from "./ui/button";
 
-export function AvatarForm({ hasCustomAvatar }: { hasCustomAvatar: boolean }) {
+export function AvatarForm({
+  hasCustomAvatar,
+  hasGooglePhoto,
+}: {
+  hasCustomAvatar: boolean;
+  hasGooglePhoto: boolean;
+}) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -16,14 +23,14 @@ export function AvatarForm({ hasCustomAvatar }: { hasCustomAvatar: boolean }) {
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
 
-  function savePhoto(selected: File | null) {
+  function updatePhoto(method: "POST" | "PUT" | "DELETE", selected?: File) {
     setError("");
     setStatus("");
     startTransition(async () => {
       try {
         const response = await fetch("/api/account/avatar", {
-          method: selected ? "POST" : "DELETE",
-          body: selected ?? undefined,
+          method,
+          body: selected,
         });
         if (!response.ok) {
           const result = await response.json().catch(() => null);
@@ -34,7 +41,9 @@ export function AvatarForm({ hasCustomAvatar }: { hasCustomAvatar: boolean }) {
         setFile(null);
         if (input.current) input.current.value = "";
         setStatus(
-          selected ? "Profile photo updated." : "Profile photo removed.",
+          method === "DELETE"
+            ? "Profile photo removed."
+            : "Profile photo updated.",
         );
         router.refresh();
       } catch (error) {
@@ -52,7 +61,7 @@ export function AvatarForm({ hasCustomAvatar }: { hasCustomAvatar: boolean }) {
       className="form-stack settings-form"
       onSubmit={(event) => {
         event.preventDefault();
-        if (file && !pending) savePhoto(file);
+        if (file && !pending) updatePhoto("POST", file);
       }}
     >
       <div className="field">
@@ -91,15 +100,37 @@ export function AvatarForm({ hasCustomAvatar }: { hasCustomAvatar: boolean }) {
             type="button"
             variant="ghost"
             disabled={!ready || pending}
-            onClick={() => savePhoto(null)}
+            onClick={() => updatePhoto("DELETE")}
           >
             Remove photo
           </Button>
         )}
-        <p role="status" className="settings-saved">
-          {status}
-        </p>
       </div>
+      {hasGooglePhoto && (
+        <div className="field">
+          <p id="google-photo-hint" className="field-hint">
+            GlobeAlbum saves a copy of your Google photo for visitors to see
+            while your globe is published. You can remove it here at any time.{" "}
+            <Link className="underline" href="/privacy#public-profile">
+              Privacy Policy
+            </Link>
+          </p>
+          <div>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={!ready || pending}
+              aria-describedby="google-photo-hint"
+              onClick={() => updatePhoto("PUT")}
+            >
+              Use Google photo on my globe
+            </Button>
+          </div>
+        </div>
+      )}
+      <p role="status" className="settings-saved">
+        {status}
+      </p>
     </form>
   );
 }

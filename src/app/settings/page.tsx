@@ -64,6 +64,7 @@ export default async function SettingsPage({
         <ProfileSettings
           displayName={globe.displayName}
           avatarUrl={viewer.avatarUrl}
+          hasGooglePhoto={!!user.avatarUrl}
           hasCustomAvatar={!!globe.avatarKey}
           username={globe.username}
           email={user.email}

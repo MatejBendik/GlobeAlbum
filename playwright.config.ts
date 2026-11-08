@@ -53,6 +53,7 @@ export default defineConfig({
       reuseExistingServer: false,
       timeout: 60_000,
       env: {
+        NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ""} --import=./tests/e2e/google-avatar-stub.mjs`,
         DATABASE_URL: database,
         DIRECT_URL: database,
         APP_ORIGIN: TEST_ORIGIN,

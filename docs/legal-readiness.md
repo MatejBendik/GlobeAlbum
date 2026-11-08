@@ -15,8 +15,14 @@ deletion and the data rights contact. The Google avatar comes from the
 existing verified session and identifies the signed-in account in its own
 menu, settings and studio. The browser fetches the avatar without a referrer.
 GlobeAlbum does not write the avatar URL into its application user record or
-include it in an anonymous public globe response. A photo uploaded separately
-in Settings is displayed beside the owner's name while the globe is published.
+include it in an anonymous public globe response. Since 2026-11-08, Settings
+offers an explicit choice to save a processed copy of the Google photo. An
+in-product disclosure explains public visibility and links to the updated
+notice. The selected photo, whether imported or uploaded, appears beside the
+owner's name while the globe is published and can be removed in Settings.
+
+The [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy)
+was verified on 2026-11-08 for the disclosure and consent before this additional use.
 
 Before opening the public beta, the operator should review the following with
 a Slovak privacy professional as needed for the intended audience and service.

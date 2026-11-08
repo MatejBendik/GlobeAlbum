@@ -28,3 +28,14 @@ See [verification and release gates](../../../validation.md). Unchecked criteria
 ## Comments
 
 Approved in discovery; implementation explicitly authorized.
+
+On 2026-11-08, owners gained an explicit Settings action to use their Google
+account photo as the globe avatar. The server uses the approved session
+picture URL ([Google OpenID Connect](https://developers.google.com/identity/openid-connect/openid-connect#obtainuserinfo))
+and rejects redirects ([Fetch Standard](https://fetch.spec.whatwg.org/#concept-request-redirect-mode)).
+Sources verified 2026-11-08. The processed copy is stored under the existing
+private avatar prefix and served by the publication-aware avatar route.
+Desktop and mobile Playwright tests with local Google and storage fixtures
+verified that an anonymous visitor sees the same avatar as Studio after the
+owner opts in, and that removal revokes the public URL. The original Google
+photo URL remains private.

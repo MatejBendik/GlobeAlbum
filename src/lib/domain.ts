@@ -152,14 +152,19 @@ async function enqueueAvatar(
     });
 }
 
-export async function changeGlobeAvatar(userId: string, bytes: Uint8Array) {
+export async function changeGlobeAvatar(
+  userId: string,
+  photo: Uint8Array | (() => Promise<Uint8Array>),
+) {
   workerUrl();
   await locked(async (tx) => {
     await ownerGlobe(tx, userId);
     await rateLimit(tx, userId, "avatar", 10);
     await reserveProcessing(tx, utcMonth(), 1);
   });
-  const avatar = await createAvatarVariant(bytes);
+  const avatar = await createAvatarVariant(
+    typeof photo === "function" ? await photo() : photo,
+  );
   const key = `avatars/${randomUUID()}.webp`;
   const pending = await locked(async (tx) => {
     await ownerGlobe(tx, userId);

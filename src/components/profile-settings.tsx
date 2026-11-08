@@ -17,6 +17,7 @@ import { AvatarForm } from "./avatar-form";
 export function ProfileSettings({
   displayName,
   avatarUrl,
+  hasGooglePhoto,
   hasCustomAvatar,
   username,
   email,
@@ -27,6 +28,7 @@ export function ProfileSettings({
 }: {
   displayName: string;
   avatarUrl: string | null;
+  hasGooglePhoto: boolean;
   hasCustomAvatar: boolean;
   username: string;
   email: string;
@@ -64,11 +66,14 @@ export function ProfileSettings({
         <div className="settings-section-intro">
           <h2 id="avatar-heading">Profile photo</h2>
           <p>
-            Your uploaded photo appears next to your name on your published
-            globe.
+            Your chosen profile photo appears next to your name on your
+            published globe.
           </p>
         </div>
-        <AvatarForm hasCustomAvatar={hasCustomAvatar} />
+        <AvatarForm
+          hasCustomAvatar={hasCustomAvatar}
+          hasGooglePhoto={hasGooglePhoto}
+        />
       </section>
 
       <section className="settings-section" aria-labelledby="profile-heading">

@@ -190,7 +190,7 @@ test("keeps the theme beside the signed-in account and its private avatar", asyn
   }
 });
 
-test("publishes only an uploaded profile photo and revokes it when hidden or removed", async ({
+test("publishes an uploaded profile photo and revokes it when hidden or removed", async ({
   page,
   context,
   browser,
@@ -251,6 +251,63 @@ test("publishes only an uploaded profile photo and revokes it when hidden or rem
       },
     });
     expect(Number(job?.releaseBytes)).toBeGreaterThan(0);
+  } finally {
+    await visitor.close();
+  }
+});
+
+test("uses a copy of the Google photo on a published globe when the owner chooses it", async ({
+  page,
+  context,
+  browser,
+}) => {
+  const googlePhoto = "https://lh3.googleusercontent.com/account-picture";
+  await page.route(googlePhoto, (route) =>
+    route.fulfill({
+      contentType: "image/png",
+      body: readFileSync("tests/fixtures/tiny.png"),
+    }),
+  );
+  const owner = await account(context, true, googlePhoto);
+  await db.globe.update({
+    where: { userId: owner.id },
+    data: { published: true },
+  });
+  await page.goto("/settings");
+  const settingsAvatar = page.locator(".settings-avatar img");
+  await expect(settingsAvatar).toHaveAttribute("src", googlePhoto);
+  await page
+    .getByRole("button", { name: "Use Google photo on my globe" })
+    .click();
+  await expect(settingsAvatar).toHaveAttribute("src", /^\/api\/avatars\//);
+  const avatarUrl = (await settingsAvatar.getAttribute("src"))!;
+  await page.goto("/studio");
+  await expect(
+    page.locator(".collection-heading .globe-avatar img"),
+  ).toHaveAttribute("src", avatarUrl);
+
+  const visitor = await browser.newContext({ baseURL: TEST_ORIGIN });
+  try {
+    const publicPage = await visitor.newPage();
+    const response = await publicPage.goto(`/u/${owner.username}`);
+    await expect(
+      publicPage.locator(".collection-heading .globe-avatar img"),
+    ).toHaveAttribute("src", avatarUrl);
+    expect(await response!.text()).not.toContain(googlePhoto);
+    const image = await visitor.request.get(avatarUrl);
+    expect(image.status()).toBe(200);
+    expect(image.headers()["content-type"]).toBe("image/webp");
+
+    await page.goto("/settings");
+    await page
+      .getByRole("button", { name: "Remove photo", exact: true })
+      .click();
+    await expect(settingsAvatar).toHaveAttribute("src", googlePhoto);
+    expect((await visitor.request.get(avatarUrl)).status()).toBe(404);
+    await publicPage.reload();
+    await expect(
+      publicPage.locator(".collection-heading .globe-avatar"),
+    ).toHaveCount(0);
   } finally {
     await visitor.close();
   }
