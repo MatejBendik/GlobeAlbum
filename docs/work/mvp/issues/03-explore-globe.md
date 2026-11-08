@@ -65,3 +65,13 @@ reselecting the active style. The test still covers persistence after reload
 and public rendering. The fix uses the native
 [`details.open` property](https://html.spec.whatwg.org/multipage/interactive-elements.html#the-details-element)
 (verified 2026-11-07).
+
+On 2026-11-08, the landing preview gained the same three style presets using
+local [React state](https://react.dev/reference/react/useState) and labeled
+[toggle buttons](https://www.w3.org/WAI/ARIA/apg/patterns/button/). Its portfolio
+link uses [`target="_blank"` with `noopener`](https://html.spec.whatwg.org/multipage/links.html#link-type-noopener)
+and keeps the referral parameters. Sources verified 2026-11-08.
+Playwright verified style changes by keyboard and touch, country labels in
+Minimal, the default style on the example route, and direct access to the
+landing postcard gallery in desktop and mobile Chromium. The shared footer
+test checks the portfolio target, opener isolation and referral source.

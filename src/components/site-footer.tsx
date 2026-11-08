@@ -7,7 +7,11 @@ export function SiteFooter() {
       <Brand />
       <p>
         Made by{" "}
-        <a href="https://www.matejbendik.com/?utm_source=globealbum&utm_medium=referral&utm_campaign=footer">
+        <a
+          href="https://www.matejbendik.com/?utm_source=globealbum&utm_medium=referral&utm_campaign=footer"
+          target="_blank"
+          rel="noopener"
+        >
           Matej Bendík
         </a>
       </p>

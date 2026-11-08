@@ -2,16 +2,11 @@
 
 import { ChevronDown, Palette } from "lucide-react";
 import { useRef } from "react";
-import { GLOBE_STYLES, type GlobeStyle } from "@/lib/globe-style";
-
-const options = {
-  dotted: { name: "Dotted", description: "Minimal land dots" },
-  atlas: {
-    name: "Minimal",
-    description: "Grayscale outlines and country names",
-  },
-  orbit: { name: "Classic", description: "Colored land and country names" },
-};
+import {
+  GLOBE_STYLE_OPTIONS,
+  GLOBE_STYLES,
+  type GlobeStyle,
+} from "@/lib/globe-style";
 
 export function GlobeStylePicker({
   value,
@@ -58,8 +53,8 @@ export function GlobeStylePicker({
                   aria-hidden="true"
                 />
                 <span>
-                  <strong>{options[style].name}</strong>
-                  <small>{options[style].description}</small>
+                  <strong>{GLOBE_STYLE_OPTIONS[style].name}</strong>
+                  <small>{GLOBE_STYLE_OPTIONS[style].description}</small>
                 </span>
               </button>
             ))}

@@ -136,6 +136,11 @@ an account dropdown with My globe, Profile settings, public profile when publish
 and Sign out. Anonymous navigation retains the example/registration actions.
 Viewer identity is resolved server-side and includes no email or credentials.
 
+The landing preview offers Dotted, Minimal and Classic beneath its place
+caption. Switching styles updates the preview immediately for any visitor.
+The selection is temporary and local to the preview. Landing captions,
+supporting copy and footer links use larger type.
+
 User-confirmed refinement (2026-11-06): Profile settings open on the standalone,
 authenticated `/settings` page instead of a workspace dialog. Owners can edit
 their display name, read their immutable globe URL and private sign-in email,
@@ -154,6 +159,7 @@ spacing across the site. Keep the theme control immediately to the left
 of the account menu. Use the Google profile avatar from the signed-in
 session when available, with a generic fallback. Show the privacy policy,
 terms, reporting link and tagged author portfolio link in the shared footer.
+The portfolio link opens in a new tab and retains its referral tags.
 The Google account avatar remains private to its owner. See
 [legal release notes](../../legal-readiness.md) for the confirmed operator
 and remaining review.

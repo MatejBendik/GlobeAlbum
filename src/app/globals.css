@@ -1372,8 +1372,8 @@ select:focus-visible {
   align-items: center;
   gap: 9px;
   color: var(--text-soft);
-  font-size: 8px;
-  letter-spacing: 0.15em;
+  font-size: 12px;
+  letter-spacing: 0.12em;
 }
 .hero-eyebrow > span {
   width: 4px;
@@ -1401,25 +1401,26 @@ select:focus-visible {
 }
 .hero-copy > p {
   color: var(--text-soft);
-  font-size: 12px;
-  line-height: 1.9;
+  font-size: 15px;
+  line-height: 1.7;
   margin-top: 25px;
   max-width: 390px;
 }
 .hero-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 25px;
   margin-top: 32px;
 }
 .hero-primary {
-  font-size: 12px;
+  font-size: 14px;
   height: 44px;
   padding: 0 17px;
 }
 
 .hero-secondary {
-  font-size: 10px;
+  font-size: 14px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1429,7 +1430,7 @@ select:focus-visible {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 9px;
+  font-size: 13px;
   color: var(--text-soft);
   margin-top: 45px;
 }
@@ -1438,42 +1439,67 @@ select:focus-visible {
 }
 .hero-globe-composition {
   position: absolute;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   top: 0;
   bottom: 0;
   left: 39%;
   right: -6%;
 }
+.hero-preview-controls {
+  position: relative;
+  z-index: 1;
+  justify-self: start;
+  margin: 0 0 clamp(18px, 3vw, 36px) 20%;
+}
 .hero-place-note {
-  position: absolute;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  left: 20%;
-  bottom: 9%;
   color: var(--muted);
-  font-size: 11px;
-  z-index: 4;
-  padding: 12px 0;
+  font-size: 14px;
+  line-height: 1.4;
 }
-.hero-place-note > span {
-  display: block;
+.hero-place-note > svg {
+  flex-shrink: 0;
 }
 .hero-place-note small {
   display: block;
-  font-size: 8px;
-  margin-top: 5px;
+  font-size: 12px;
+  margin-top: 3px;
   color: var(--text-soft);
 }
 .hero-place-note > svg:last-child {
-  margin-left: 15px;
+  margin-left: 5px;
   color: var(--text-soft);
+}
+.hero-style-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+.hero-style-options .hero-style-button {
+  min-height: 44px;
+  padding-inline: 10px;
+  font-size: 13px;
+}
+.hero-style-button[aria-pressed="true"] {
+  border-color: var(--muted);
+  background: var(--surface-soft);
+}
+.hero-style-button .globe-style-swatch {
+  flex-basis: 18px;
+  height: 18px;
 }
 .hero-orbit-label {
   position: absolute;
+  z-index: 1;
+  pointer-events: none;
   right: 15%;
-  bottom: 12%;
+  bottom: 20%;
   color: var(--text);
-  font-size: 7px;
+  font-size: 11px;
   writing-mode: vertical-rl;
   letter-spacing: 0.2em;
 }
@@ -1486,8 +1512,8 @@ select:focus-visible {
   align-items: center;
   justify-content: space-between;
   border-top: 1px solid var(--line);
-  font-size: 7px;
-  letter-spacing: 0.15em;
+  font-size: 11px;
+  letter-spacing: 0.12em;
   color: var(--text-soft);
 }
 .hero-bottom > span:last-child {
@@ -1501,6 +1527,9 @@ select:focus-visible {
   grid-template-columns: 1fr 1fr;
   gap: 90px;
   background: var(--surface);
+}
+.home-story .eyebrow {
+  font-size: 12px;
 }
 .home-story h2 {
   font-size: clamp(30px, 3.2vw, 44px);
@@ -1533,12 +1562,12 @@ select:focus-visible {
 }
 .story-steps h3 {
   font-weight: 500;
-  font-size: 14px;
+  font-size: 17px;
   letter-spacing: -0.3px;
 }
 .story-steps p {
-  font-size: 11px;
-  line-height: 1.9;
+  font-size: 15px;
+  line-height: 1.65;
   color: var(--text-soft);
   max-width: 310px;
   margin-top: 7px;
@@ -1552,7 +1581,7 @@ select:focus-visible {
   padding: 28px 5%;
   background: var(--surface);
   color: var(--text-soft);
-  font-size: 12px;
+  font-size: 14px;
 }
 .site-footer .brand {
   justify-self: start;
@@ -1801,12 +1830,12 @@ select:focus-visible {
   .hero-actions {
     gap: 15px;
   }
-  .hero-secondary {
-    font-size: 9px;
-  }
   .hero-globe-composition {
     left: 37%;
     right: -15%;
+  }
+  .hero-orbit-label {
+    right: 22%;
   }
   .hero-footnote {
     max-width: 250px;
@@ -1922,7 +1951,7 @@ select:focus-visible {
   }
   .hero-content {
     display: block;
-    min-height: 850px;
+    min-height: 0;
   }
   .hero-copy {
     padding: 45px 7% 0;
@@ -1937,46 +1966,39 @@ select:focus-visible {
   }
   .hero-copy > p {
     margin-top: 19px;
-    font-size: 11px;
-    line-height: 1.9;
-  }
-  .hero-eyebrow {
-    font-size: 7px;
   }
   .hero-actions {
     margin-top: 23px;
-    gap: 22px;
+    gap: 14px;
   }
   .hero-primary {
-    font-size: 11px;
-    height: 40px;
     padding: 0 15px;
   }
   .hero-footnote {
-    display: none;
+    margin-top: 22px;
+    max-width: none;
   }
   .hero-globe-composition {
-    top: 370px;
-    left: -15%;
-    right: -15%;
-    bottom: 8px;
+    position: relative;
+    inset: auto;
+    grid-template-rows: auto clamp(300px, 100vw, 490px) auto;
   }
-  .hero-stage {
-    min-height: 400px;
-  }
-  .hero-place-note {
-    left: 27%;
-    bottom: 5%;
-    font-size: 9px;
+  .hero-preview-controls {
+    margin: 0 7% 26px;
   }
   .hero-orbit-label {
-    right: 19%;
-    font-size: 6px;
+    position: static;
+    justify-self: end;
+    margin: 14px 7% 0;
+    writing-mode: horizontal-tb;
+  }
+  .hero-style-options .hero-style-button {
+    gap: 6px;
+    padding-inline: 8px;
   }
   .hero-bottom {
     height: 43px;
     padding: 0 6%;
-    font-size: 6px;
   }
   .hero-bottom > span:last-child {
     display: none;
@@ -2122,7 +2144,11 @@ body,
   color: var(--text);
 }
 .home-hero .hero-stage {
+  min-height: 0;
   background: transparent;
+}
+.hero-stage .marker-paper > .marker-label {
+  font-size: 14px;
 }
 .home-hero .globe-glow {
   display: none;

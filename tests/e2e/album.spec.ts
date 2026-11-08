@@ -105,13 +105,12 @@ test("exposes public notices and the tagged portfolio link", async ({
   await page.getByRole("button", { name: "Switch to dark mode" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   const footer = page.getByRole("contentinfo");
-  const portfolio = new URL(
-    (await footer
-      .getByRole("link", { name: "Matej Bendík" })
-      .getAttribute("href"))!,
-  );
+  const portfolioLink = footer.getByRole("link", { name: "Matej Bendík" });
+  const portfolio = new URL((await portfolioLink.getAttribute("href"))!);
   expect(portfolio.hostname).toBe("www.matejbendik.com");
   expect(portfolio.searchParams.get("utm_source")).toBe("globealbum");
+  await expect(portfolioLink).toHaveAttribute("target", "_blank");
+  await expect(portfolioLink).toHaveAttribute("rel", "noopener");
   await footer.getByRole("link", { name: "Report content" }).click();
   await expect(page).toHaveURL(/\/terms#report-content$/);
   await expect(
@@ -667,10 +666,30 @@ test("validates email signup and reports the managed invalid-password response",
 test("renders the landing page and example without horizontal overflow", async ({
   page,
 }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(
     page.getByRole("heading", { name: "GlobeAlbum." }),
   ).toBeVisible();
+  const preview = page.locator(".hero-globe-composition");
+  const globe = preview.locator("[data-globe-style]");
+  const styles = preview.getByRole("group", { name: "Preview globe style" });
+  const dotted = styles.getByRole("button", { name: "Dotted" });
+  const minimal = styles.getByRole("button", { name: "Minimal" });
+  const classic = styles.getByRole("button", { name: "Classic" });
+  await expect(globe).toHaveAttribute("data-globe-style", "dotted");
+  await expect(dotted).toHaveAttribute("aria-pressed", "true");
+  if (testInfo.project.name === "mobile") await minimal.tap();
+  else await minimal.press("Enter");
+  await expect(globe).toHaveAttribute("data-globe-style", "atlas");
+  await expect(minimal).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    globe.locator(".globe-country-label[data-label-visible]").first(),
+  ).toBeVisible();
+  await classic.click();
+  await expect(globe).toHaveAttribute("data-globe-style", "orbit");
+  await expect(classic).toHaveAttribute("aria-pressed", "true");
+  await expect(minimal).toHaveAttribute("aria-pressed", "false");
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -680,11 +699,17 @@ test("renders the landing page and example without horizontal overflow", async (
     path: `.local/verification/landing-${testInfo.project.name}.png`,
     fullPage: true,
   });
+  await dotted.click();
+  await expect(globe).toHaveAttribute("data-globe-style", "dotted");
   await page.goto("/demo");
   await expect(
     page.getByRole("heading", { name: "The long way home" }),
   ).toBeVisible();
   await expect(page.locator(".globe-stage canvas")).toBeVisible();
+  await expect(page.locator("[data-globe-style]")).toHaveAttribute(
+    "data-globe-style",
+    "dotted",
+  );
   await expect(
     page.locator(".globe-marker.photo-marker").first(),
   ).toBeVisible();
