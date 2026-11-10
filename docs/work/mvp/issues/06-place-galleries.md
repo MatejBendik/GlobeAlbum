@@ -35,3 +35,15 @@ This is verified from the photo area on desktop and mobile with reduced motion.
 The 2026-11-07 marker refinement gives each visible place a stable pin. Its
 postcard scales with the camera distance, and collision spacing uses the same
 scale, so nearby covers can appear together when there is room.
+
+On 2026-11-10, clicking a postcard at close zoom reproduced a camera reset and
+replaced the postcard image node after closing. Globe markers now open the
+gallery without refocusing the camera or replacing the existing postcard nodes.
+The gallery updates its deep link with the browser history. Selecting a place
+from the list can still focus the camera. [Next.js Native History API](https://nextjs.org/docs/app/getting-started/linking-and-navigating#native-history-api)
+was checked on 2026-11-10.
+
+Desktop and mobile Chromium verified that the zoom, projected pin position and
+existing postcard image survive opening and closing a gallery. The targeted
+suite also checked landing postcards, the place list, reset and public globe
+rendering.

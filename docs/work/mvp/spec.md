@@ -122,6 +122,10 @@ place with a cover, or the first saved place, in that order. Automatic rotation
 starts from that view even for a single place. Reset pauses rotation, and the
 initial rotation respects the viewer's reduced-motion preference.
 
+Opening or closing a gallery from a globe marker preserves the camera angle
+and zoom. Automatic rotation pauses while the gallery is open and resumes
+after closing if it was running before.
+
 The owner can select Dotted, Minimal or Classic in the left-hand Globe style panel.
 Selecting an option closes the panel, returns focus to its trigger, and
 immediately previews the style while saving it to the globe. A published link

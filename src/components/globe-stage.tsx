@@ -18,6 +18,8 @@ export function GlobeStage({
   places,
   globeStyle = "dotted",
   selectedId,
+  focusRequest,
+  pauseRotation = false,
   onSelect,
   hero = false,
   onUnavailable,
@@ -25,6 +27,8 @@ export function GlobeStage({
   places: PlaceDto[];
   globeStyle?: GlobeStyle;
   selectedId?: string;
+  focusRequest?: { placeId: string };
+  pauseRotation?: boolean;
   onSelect: (id: string) => void;
   hero?: boolean;
   onUnavailable?: () => void;
@@ -80,8 +84,9 @@ export function GlobeStage({
           places={places}
           globeStyle={globeStyle}
           selectedId={selectedId}
+          focusRequest={focusRequest}
           onSelect={onSelect}
-          rotating={rotating}
+          rotating={rotating && !pauseRotation}
           onFailure={handleFailure}
         />
       ) : supported === false ? (

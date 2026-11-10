@@ -48,6 +48,7 @@ export default function GlobeRenderer({
   places,
   globeStyle,
   selectedId,
+  focusRequest,
   onSelect,
   rotating,
   reset,
@@ -58,6 +59,7 @@ export default function GlobeRenderer({
   places: PlaceDto[];
   globeStyle: GlobeStyle;
   selectedId?: string;
+  focusRequest?: { placeId: string };
   onSelect: (id: string) => void;
   rotating: boolean;
   reset: number;
@@ -107,28 +109,31 @@ export default function GlobeRenderer({
   // Perspective projection fits height; compensate for narrow portrait viewports.
   const cameraScale = Math.max(1, height / width);
   const featured = places.find((place) => place.coverUrl) ?? places[0];
-  const selected = places.find((place) => place.id === selectedId);
-  const focusPlace = useEffectEvent((animate: boolean) => {
-    const current = globe.current;
-    if (!current) return;
-    const place = selected ?? featured;
-    const controls = current.controls();
-    // Flush momentum from the previous drag before changing the view.
-    const damping = controls.enableDamping;
-    controls.enableDamping = false;
-    controls.update();
-    controls.enableDamping = damping;
-    current.pointOfView(
-      {
-        lat: place?.latitude ?? 30,
-        lng: place?.longitude ?? 16,
-        altitude: (selected ? 2.7 : 3.15) * cameraScale - 1,
-      },
-      animate && !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-        ? 650
-        : 0,
-    );
-  });
+  const focusPlace = useEffectEvent(
+    (animate: boolean, placeId = selectedId) => {
+      const current = globe.current;
+      if (!current) return;
+      const selected = places.find((place) => place.id === placeId);
+      const place = selected ?? featured;
+      const controls = current.controls();
+      // Flush momentum from the previous drag before changing the view.
+      const damping = controls.enableDamping;
+      controls.enableDamping = false;
+      controls.update();
+      controls.enableDamping = damping;
+      current.pointOfView(
+        {
+          lat: place?.latitude ?? 30,
+          lng: place?.longitude ?? 16,
+          altitude: (selected ? 2.7 : 3.15) * cameraScale - 1,
+        },
+        animate &&
+          !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? 650
+          : 0,
+      );
+    },
+  );
   const stage = useRef<HTMLDivElement>(null);
   const globe = useRef<GlobeMethods | undefined>(undefined),
     [dots, setDots] = useState<{ lat: number; lng: number }[]>([]),
@@ -171,16 +176,17 @@ export default function GlobeRenderer({
   }, [ready, rotating, cameraScale]);
   useEffect(() => {
     if (ready) focusPlace(reset > 0);
-  }, [ready, reset, cameraScale, featured?.latitude, featured?.longitude]);
+  }, [ready, reset, featured?.latitude, featured?.longitude]);
   useEffect(() => {
-    if (ready && selected) focusPlace(true);
-  }, [ready, selected?.latitude, selected?.longitude]);
+    if (ready && focusRequest) focusPlace(true, focusRequest.placeId);
+  }, [ready, focusRequest]);
   const markers = useMemo(() => {
     const elements = new Map<string, HTMLButtonElement>();
     const labelElements = new Map<Country, HTMLSpanElement>();
     const labelWidths = new WeakMap<HTMLSpanElement, number>();
     let frame = 0;
     let lastScale = 0;
+    let selection: string | undefined;
     function layout() {
       const current = globe.current;
       if (!current) return;
@@ -226,7 +232,7 @@ export default function GlobeRenderer({
         .map((place) => ({
           id: place.id,
           coverUrl: place.coverUrl,
-          selected: place.id === selectedId,
+          selected: place.id === selection,
           ...current.getScreenCoords(
             place.latitude,
             place.longitude,
@@ -245,6 +251,7 @@ export default function GlobeRenderer({
         const postcard = shown.has(place.id);
         button.classList.toggle("photo-marker", postcard);
         button.classList.toggle("dot-marker", !postcard);
+        button.classList.toggle("marker-selected", place.id === selection);
         const image = button.querySelector("img");
         if (postcard && image && !image.getAttribute("src") && place.coverUrl)
           image.src = place.coverUrl;
@@ -326,7 +333,7 @@ export default function GlobeRenderer({
       button.tabIndex = -1;
       button.style.opacity = "0";
       button.style.pointerEvents = "none";
-      button.className = `globe-marker dot-marker ${selectedId === place.id ? "marker-selected" : ""}`;
+      button.className = "globe-marker dot-marker";
       button.setAttribute("aria-label", `Open ${place.name} gallery`);
       if (place.coverUrl) {
         // Keep the geographic hit target steady while its postcard enlarges.
@@ -362,21 +369,19 @@ export default function GlobeRenderer({
     return {
       element,
       scheduleLayout,
+      select(id: string | undefined) {
+        selection = id;
+        scheduleLayout();
+      },
       dispose() {
         if (frame) cancelAnimationFrame(frame);
         frame = 0;
       },
     };
-  }, [
-    cameraScale,
-    height,
-    labels,
-    onSelect,
-    places,
-    selectedId,
-    visited,
-    width,
-  ]);
+  }, [cameraScale, height, labels, onSelect, places, visited, width]);
+  useEffect(() => {
+    markers.select(selectedId);
+  }, [markers, selectedId]);
   useEffect(() => {
     markers.scheduleLayout();
     return () => markers.dispose();

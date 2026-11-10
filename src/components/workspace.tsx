@@ -81,6 +81,7 @@ export function Workspace({
     });
   }
   const listButton = useRef<HTMLButtonElement>(null);
+  const [focusRequest, setFocusRequest] = useState<{ placeId: string }>();
   const openPlaces = useCallback(() => setPlacesOpen(true), []);
   function closePlaces() {
     setPlacesOpen(false);
@@ -95,20 +96,17 @@ export function Workspace({
     : viewer
       ? "My globe"
       : "Create your globe";
-  const choose = useCallback(
-    (id: string) => {
-      setPlacesOpen(false);
-      const next = new URL(window.location.href);
-      next.searchParams.set("place", id);
-      router.push(`${next.pathname}${next.search}`, { scroll: false });
-    },
-    [router],
-  );
+  const choose = useCallback((id: string) => {
+    setPlacesOpen(false);
+    const next = new URL(window.location.href);
+    next.searchParams.set("place", id);
+    window.history.pushState(null, "", next);
+  }, []);
   const changed = useCallback(() => router.refresh(), [router]);
   function close() {
     const next = new URL(window.location.href);
     next.searchParams.delete("place");
-    router.replace(`${next.pathname}${next.search}`, { scroll: false });
+    window.history.replaceState(null, "", next);
   }
   useEffect(() => {
     if (!placesOpen || active || adding || sharing) return;
@@ -203,6 +201,8 @@ export function Workspace({
             places={globe.places}
             globeStyle={globeStyle}
             selectedId={selected}
+            focusRequest={focusRequest}
+            pauseRotation={Boolean(active)}
             onSelect={choose}
             onUnavailable={openPlaces}
           />
@@ -296,7 +296,10 @@ export function Workspace({
                 <button
                   key={place.id}
                   className={`place-row ${selected === place.id ? "is-selected" : ""}`}
-                  onClick={() => choose(place.id)}
+                  onClick={() => {
+                    setFocusRequest({ placeId: place.id });
+                    choose(place.id);
+                  }}
                 >
                   <span className="place-thumbnail">
                     {place.coverUrl ? (

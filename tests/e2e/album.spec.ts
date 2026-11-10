@@ -1630,6 +1630,60 @@ test("scales postcards with zoom while keeping the place pin visible", async ({
   });
 });
 
+test("keeps the zoom and postcards when opening and closing a globe photo", async ({
+  page,
+}, testInfo) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/demo");
+  const globe = page.locator("[data-globe-style]");
+  const marker = globe.locator('[aria-label="Open Paris gallery"]');
+  const photo = marker.locator(".marker-paper");
+  const scale = () =>
+    globe.evaluate((element) =>
+      Number(element.style.getPropertyValue("--postcard-scale")),
+    );
+  await expect(photo).toBeVisible();
+  await expect.poll(scale).toBeGreaterThan(0);
+  const initialScale = await scale();
+  const canvas = (await globe.locator("canvas").first().boundingBox())!;
+  await page.mouse.move(
+    canvas.x + canvas.width / 2 - 30,
+    canvas.y + canvas.height / 2,
+  );
+  await page.mouse.wheel(0, -12000);
+  await expect.poll(scale).toBeGreaterThan(initialScale * 1.3);
+  const pin = marker.locator(".marker-core");
+  const pinPosition = () =>
+    pin.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      const canvas = element
+        .closest("[data-globe-style]")!
+        .querySelector("canvas")!
+        .getBoundingClientRect();
+      return { x: bounds.x - canvas.x, y: bounds.y - canvas.y };
+    });
+  await photo.scrollIntoViewIfNeeded();
+  const zoomedScale = await scale();
+  const image = await photo.locator("img").elementHandle();
+  const position = await pinPosition();
+
+  if (testInfo.project.name === "mobile") await photo.tap();
+  else await photo.click();
+  const gallery = page.getByRole("dialog", { name: "Paris" });
+  await expect(gallery).toBeVisible();
+  await expect(page).toHaveURL(/\/demo\?place=paris$/);
+  expect.soft(await scale()).toBeCloseTo(zoomedScale, 2);
+  await page.keyboard.press("Escape");
+  await expect(gallery).toBeHidden();
+  await expect(page).toHaveURL(/\/demo$/);
+  await expect(photo).toBeVisible();
+  expect.soft(await scale()).toBeCloseTo(zoomedScale, 2);
+  expect(await image!.evaluate((element) => element.isConnected)).toBe(true);
+  const after = await pinPosition();
+  expect(after.x).toBeCloseTo(position.x, 0);
+  expect(after.y).toBeCloseTo(position.y, 0);
+});
+
 test("keeps the landing theme on sign-in and sign-up surfaces", async ({
   page,
 }, testInfo) => {

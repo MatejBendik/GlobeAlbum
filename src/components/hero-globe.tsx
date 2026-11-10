@@ -34,6 +34,7 @@ export function HeroGlobe() {
         places={demoGlobe.places}
         globeStyle={globeStyle}
         selectedId={selected}
+        pauseRotation={preview}
         onSelect={select}
         onUnavailable={markUnavailable}
       />
