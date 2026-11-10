@@ -21,6 +21,14 @@ Add a photo securely, including HEIC, as a complete end-to-end user behavior.
 
 ## Validation evidence
 
+On 2026-11-10 the user set the Worker upload origin to
+`https://globealbum.com` in Cloudflare. The Wrangler configuration now matches.
+The deployed `/upload` endpoint returned `204` with
+`Access-Control-Allow-Origin: https://globealbum.com` for a browser preflight.
+The check covered CORS. A signed-in upload on the new domain remains to be
+verified. [Wrangler configuration guidance](https://developers.cloudflare.com/workers/wrangler/configuration/#source-of-truth)
+was checked on 2026-11-10.
+
 On 2026-11-07 the production browser journey uploaded PNG, JPEG, WebP and two
 HEIC samples to actual R2. Vercel/Linux produced ten private WebP variants with
 no EXIF/XMP chunks. The anonymous gallery became unavailable after hiding the
