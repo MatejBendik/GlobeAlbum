@@ -13,7 +13,7 @@ export default function PrivacyPage() {
     <article className="legal-document">
       <h1>Privacy Policy</h1>
       <p className="legal-date">
-        Updated <time dateTime="2026-11-08">8 November 2026</time>
+        Updated <time dateTime="2026-11-10">10 November 2026</time>
       </p>
       <p>
         {operatorName}, an individual based in Slovakia, operates GlobeAlbum and
@@ -50,6 +50,14 @@ export default function PrivacyPage() {
           contact details and information you send to respond and resolve the
           request.
         </li>
+        <li>
+          <strong>Site analytics.</strong> We use Vercel Web Analytics to
+          understand how often people visit the site and which pages they use.
+          Vercel uses page views, referral information, approximate location and
+          browser or device details to produce aggregate statistics. We remove
+          query parameters, fragments and profile usernames from the page URLs
+          sent in analytics events.
+        </li>
       </ul>
       <p>
         We use data needed to open, operate and share your account to provide
@@ -81,7 +89,7 @@ export default function PrivacyPage() {
 
       <h2>Who receives data</h2>
       <ul>
-        <li>Vercel hosts the site and runs the application.</li>
+        <li>Vercel hosts the site and provides Web Analytics.</li>
         <li>Neon provides the database and account authentication.</li>
         <li>
           Cloudflare Workers and R2 handle private photo storage and delivery.
@@ -111,10 +119,10 @@ export default function PrivacyPage() {
       <p>
         We use cookies to keep you signed in, verify sign-in requests and secure
         your session. Your light or dark theme selection is stored in your
-        browser so it can be remembered. GlobeAlbum does not install advertising
-        or analytics trackers. The portfolio link contains a source tag so the
-        destination can recognize traffic from GlobeAlbum. You can clear your
-        browser storage to remove saved preferences and sign-in cookies.
+        browser so it can be remembered. Vercel Web Analytics does not use
+        cookies. The portfolio link contains a source tag so the destination can
+        recognize traffic from GlobeAlbum. You can clear your browser storage to
+        remove saved preferences and sign-in cookies.
       </p>
 
       <h2 id="account-deletion">Retention and account deletion</h2>

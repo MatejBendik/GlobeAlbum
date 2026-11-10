@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteFooter } from "@/components/site-footer";
+import { SiteAnalytics } from "@/components/site-analytics";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default function RootLayout({
           <div id="main-content">{children}</div>
           <SiteFooter />
         </ThemeProvider>
+        <SiteAnalytics />
       </body>
     </html>
   );

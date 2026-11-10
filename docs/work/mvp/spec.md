@@ -212,7 +212,11 @@ The primary seam is the complete user journey: sign-in -> onboarding -> private 
 
 Cover optional dates, repeat visits, no-photo places, effective country counts, manual entry, malformed/oversized/animated images, real HEIC, EXIF removal, cross-owner IDs, stale public links, cancelled/retried uploads and late callbacks. Verify keyboard, touch, reduced motion, dense markers and no-WebGL fallback. Verify real HEIC decoding and its complete R2 upload/delivery flow; physical-device and hosted-runtime evidence remain separate release checks.
 
-Beta success: at least 5 of the first 10 testers independently add 3 places and 5 photos and share with another person. Collect direct feedback; no analytics service.
+Beta success: at least 5 of the first 10 testers independently add 3 places and 5 photos and share with another person. Collect direct feedback.
+
+On 2026-11-10 the user enabled Vercel Web Analytics and requested the application
+integration. It measures visits and page views. The client removes query strings,
+fragments and profile usernames from the page URLs in analytics events.
 
 ## Out of Scope
 

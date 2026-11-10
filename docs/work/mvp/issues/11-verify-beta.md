@@ -41,3 +41,16 @@ See [verification and release gates](../../../validation.md). Unchecked criteria
 ## Comments
 
 Approved in discovery; implementation explicitly authorized.
+
+On 2026-11-10 the user enabled Vercel Web Analytics and requested the App Router
+integration. The privacy notice describes page view analytics. The production
+build, type check and 55 integration tests passed. A local Chromium smoke test
+verified SDK initialization, initial and client navigation page views, and
+removal of query strings, fragments and profile usernames from event URLs.
+The smoke test stubbed the hosted script. Hosted receipt of page views remains
+a separate verification step.
+
+Vercel documentation verified on 2026-11-10:
+[setup](https://vercel.com/docs/analytics/quickstart),
+[redaction](https://vercel.com/docs/analytics/redacting-sensitive-data), and
+[data collection](https://vercel.com/docs/analytics/privacy-policy).
