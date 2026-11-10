@@ -3,15 +3,27 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteAnalytics } from "@/components/site-analytics";
+import { shareMetadata } from "@/lib/share-metadata";
 
 export const dynamic = "force-dynamic";
+const title = "GlobeAlbum — A world of little moments";
+const description =
+  "Your travels, photos and favorite places. One personal globe, ready to share.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_ORIGIN ?? "https://globealbum.com"),
   title: {
-    default: "GlobeAlbum — A world of little moments",
+    default: title,
     template: "%s · GlobeAlbum",
   },
-  description:
-    "Your travels, photos and favorite places. One personal globe, ready to share.",
+  description,
+  ...shareMetadata({
+    title,
+    description,
+    path: "/",
+    imageUrl: "/share-image.png",
+    imageAlt: "GlobeAlbum's example travel globe and photo postcards",
+  }),
   robots: { index: false, follow: false },
 };
 

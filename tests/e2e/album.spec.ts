@@ -9,6 +9,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../src/generated/prisma/client";
+import sharp from "sharp";
 import { TEST_ORIGIN } from "./constants";
 
 const db = new PrismaClient({
@@ -403,6 +404,137 @@ test("creates a private collection, adds a visit, publishes and hides it", async
     (await publicPage.request.get(`/api/places/${place.id}/gallery`)).status(),
   ).toBe(404);
   await visitor.close();
+});
+
+test("shares current public globe previews and revokes them when hidden", async ({
+  page,
+  context,
+  request,
+}) => {
+  test.setTimeout(75_000);
+  const owner = await account(context, true);
+  const globe = await db.globe.findUniqueOrThrow({
+    where: { userId: owner.id },
+  });
+  const place = await db.place.create({
+    data: {
+      globeId: globe.id,
+      name: "Paris",
+      sourceCountry: "FR",
+      latitude: 48.85,
+      longitude: 2.35,
+      visits: { create: {} },
+    },
+  });
+  const publicPath = `/u/${owner.username}`;
+  const crawler = { "User-Agent": "facebookexternalhit/1.1" };
+
+  async function readImageUrl(path: string) {
+    const document = await request.get(path, { headers: crawler });
+    const head = (await document.text()).split("</head>")[0];
+    const image = head.match(/property="og:image" content="([^"]+)"/)?.[1];
+    if (image) {
+      expect(head).toContain(`name="twitter:image" content="${image}"`);
+      expect(head).toContain('name="robots" content="noindex, nofollow"');
+    }
+    return image;
+  }
+
+  async function downloadImage(url: string) {
+    const response = await request.get(url, { maxRedirects: 0 });
+    expect(response.status()).toBe(200);
+    expect(response.headers()["content-type"]).toBe("image/png");
+    const bytes = await response.body();
+    expect(await sharp(bytes).metadata()).toMatchObject({
+      width: 1200,
+      height: 630,
+    });
+    return { bytes, headers: response.headers() };
+  }
+
+  const defaultImage = await readImageUrl("/");
+  expect(defaultImage).toBe(`${TEST_ORIGIN}/share-image.png`);
+  await downloadImage(defaultImage!);
+  expect(await readImageUrl(publicPath)).toBeUndefined();
+
+  await page.goto("/studio");
+  await page.getByRole("button", { name: "Share globe", exact: true }).click();
+  await page.getByRole("button", { name: "Publish my globe" }).click();
+  await expect(
+    page.getByRole("button", { name: "Make globe private" }),
+  ).toBeVisible();
+  const dottedUrl = (await readImageUrl(publicPath))!;
+  const dotted = await downloadImage(dottedUrl);
+  expect(dotted.headers["cache-control"]).toContain("no-store");
+  await page.keyboard.press("Escape");
+
+  await page.getByText("Globe style", { exact: true }).click();
+  await page.getByRole("button", { name: /^Classic/ }).click();
+  await expect
+    .poll(async () => (await readImageUrl(publicPath)) !== dottedUrl)
+    .toBe(true);
+  const classicUrl = (await readImageUrl(publicPath))!;
+  const classic = await downloadImage(classicUrl);
+  expect(classic.bytes.equals(dotted.bytes)).toBe(false);
+  const previous = await request.get(dottedUrl, { maxRedirects: 0 });
+  expect(previous.status()).toBe(307);
+  expect(new URL(previous.headers().location, TEST_ORIGIN).href).toBe(
+    classicUrl,
+  );
+
+  await page.goto(`/studio?place=${place.id}`);
+  await page.getByRole("button", { name: "Add photos", exact: true }).click();
+  await page.getByLabel("Choose photos").setInputFiles({
+    name: "preview.png",
+    mimeType: "image/png",
+    buffer: await sharp({
+      create: { width: 80, height: 80, channels: 3, background: "#e500b0" },
+    })
+      .png()
+      .toBuffer(),
+  });
+  await page.getByRole("button", { name: "Upload photo", exact: true }).click();
+  await expect(
+    page.getByText("Added to your globe", { exact: true }),
+  ).toBeVisible();
+  const photoUrl = (await readImageUrl(publicPath))!;
+  expect(photoUrl).not.toBe(classicUrl);
+  const withPhoto = await downloadImage(photoUrl);
+  await test.info().attach("public-globe-share-image", {
+    body: withPhoto.bytes,
+    contentType: "image/png",
+  });
+  const { data, info } = await sharp(withPhoto.bytes)
+    .resize(120, 63)
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  expect(
+    data.some(
+      (red, offset) =>
+        offset % info.channels === 0 &&
+        red > 180 &&
+        data[offset + 1] < 50 &&
+        data[offset + 2] > 120,
+    ),
+  ).toBe(true);
+
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Delete photo", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Delete permanently", exact: true })
+    .click();
+  await expect.poll(() => readImageUrl(publicPath)).toBe(classicUrl);
+
+  await page.goto("/studio");
+  await page.getByRole("button", { name: "Share globe", exact: true }).click();
+  await page.getByRole("button", { name: "Make globe private" }).click();
+  await expect(
+    page.getByRole("button", { name: "Publish my globe" }),
+  ).toBeVisible();
+  expect(await readImageUrl(publicPath)).toBeUndefined();
+  for (const url of [dottedUrl, classicUrl, photoUrl]) {
+    expect((await request.get(url, { maxRedirects: 0 })).status()).toBe(404);
+  }
 });
 
 test("validates file size through the form before creating an upload", async ({

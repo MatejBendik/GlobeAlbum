@@ -70,6 +70,12 @@ Onboarding derives an immutable slug from the display name and shows a read-only
 
 Public access uses an immutable profile slug. Publish/hide applies to the entire globe. Hiding does not rotate its address. Exclude profiles from indexing. There is no invitation gate or admin invitation UI.
 
+On 2026-11-10 the user requested link previews for the site and shared globes.
+The site card uses the landing example. A published profile card uses its saved
+style, places and up to three processed photo thumbnails. GlobeAlbum serves the
+current image revision while the profile is public. Services that have already
+fetched a preview can retain their own copy.
+
 ### Place entry and photo selection
 
 The user confirmed these refinements on 2026-11-06: no coordinate inputs, one

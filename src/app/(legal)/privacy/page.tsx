@@ -87,6 +87,14 @@ export default function PrivacyPage() {
         copies.
       </p>
 
+      <p>
+        When a link to your published globe is shared, a messaging app or social
+        network can fetch a preview that includes your display name, saved
+        places and up to three photo thumbnails. Making the globe private stops
+        GlobeAlbum from serving that preview. Other services can retain copies
+        they already fetched.
+      </p>
+
       <h2>Who receives data</h2>
       <ul>
         <li>Vercel hosts the site and provides Web Analytics.</li>

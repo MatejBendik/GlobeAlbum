@@ -39,3 +39,22 @@ Desktop and mobile Playwright tests with local Google and storage fixtures
 verified that an anonymous visitor sees the same avatar as Studio after the
 owner opts in, and that removal revokes the public URL. The original Google
 photo URL remains private.
+
+On 2026-11-10 the user approved social previews for the site and published
+globes. The default PNG uses the landing globe and its demo postcards. Published
+profiles provide Open Graph and large X card metadata for their own 1200 × 630
+PNG. The image includes the saved globe style, public place markers and up to
+three ready photo thumbnails. Content revisions change the image URL. An older
+image URL redirects to the current revision while the globe is public. All
+profile image URLs return 404 after it is hidden.
+
+The local desktop and mobile browser runs checked crawler-visible metadata,
+PNG dimensions, style revisions, inclusion of a processed upload, photo
+removal and revocation of every tested image URL after hiding. The storage
+transport used the isolated local R2 fixture.
+
+Sources verified 2026-11-10:
+[Open Graph metadata](https://ogp.me/),
+[Next.js ImageResponse](https://nextjs.org/docs/app/api-reference/functions/image-response),
+[D3 geographic projection](https://d3js.org/d3-geo/projection), and
+[LinkedIn preview cache behavior](https://www.linkedin.com/help/linkedin/answer/a6233775).
