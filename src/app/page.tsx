@@ -5,6 +5,9 @@ import { navigationViewer } from "@/lib/navigation-viewer";
 import { PageHeader } from "@/components/page-header";
 import { HeroGlobe } from "@/components/hero-globe";
 
+const createGlobeLabel = "Create your globe";
+const exploreExampleLabel = "Explore an example";
+
 export default async function HomePage() {
   const viewer = await navigationViewer();
   return (
@@ -15,12 +18,12 @@ export default async function HomePage() {
             <>
               <Button asChild variant="ghost" className="home-nav-link">
                 <Link href="/demo">
-                  Explore an example <ArrowUpRight />
+                  {exploreExampleLabel} <ArrowUpRight />
                 </Link>
               </Button>
-              <Button asChild variant="secondary">
-                <Link href="/sign-in">
-                  Make it yours <ArrowRight />
+              <Button asChild variant="secondary" className="home-nav-create">
+                <Link href="/sign-in" aria-describedby="create-globe-price">
+                  {createGlobeLabel} <ArrowRight />
                 </Link>
               </Button>
             </>
@@ -45,14 +48,24 @@ export default async function HomePage() {
               entirely yours.
             </p>
             <div className="hero-actions">
-              <Button asChild size="lg" className="hero-primary">
-                <Link href={viewer ? "/studio" : "/sign-in"}>
-                  {viewer ? "Open your globe" : "Create your globe"}{" "}
-                  <ArrowUpRight />
-                </Link>
-              </Button>
+              <div className="hero-create-action">
+                <Button asChild size="lg" className="hero-primary">
+                  <Link
+                    href={viewer ? "/studio" : "/sign-in"}
+                    aria-describedby={viewer ? undefined : "create-globe-price"}
+                  >
+                    {viewer ? "Open your globe" : createGlobeLabel}{" "}
+                    <ArrowUpRight />
+                  </Link>
+                </Button>
+                {!viewer && (
+                  <span id="create-globe-price" className="hero-create-price">
+                    Free to use
+                  </span>
+                )}
+              </div>
               <Link href="/demo" className="hero-secondary">
-                Take a look around <ArrowRight size={16} />
+                {exploreExampleLabel} <ArrowRight size={16} />
               </Link>
             </div>
             <div className="hero-footnote">

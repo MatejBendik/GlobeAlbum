@@ -1409,9 +1409,18 @@ select:focus-visible {
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: 25px;
   margin-top: 32px;
+}
+.hero-create-action {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+}
+.hero-create-price {
+  color: var(--text-soft);
+  font-size: 13px;
 }
 .hero-primary {
   font-size: 14px;
@@ -1420,6 +1429,7 @@ select:focus-visible {
 }
 
 .hero-secondary {
+  min-height: 44px;
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -2043,6 +2053,15 @@ select:focus-visible {
   }
   .onboarding-content h1 {
     font-size: 34px;
+  }
+}
+@media (max-width: 380px) {
+  .site-nav > .home-nav-create {
+    padding-inline: 8px;
+    font-size: 12px;
+  }
+  .home-nav-create > svg {
+    display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {

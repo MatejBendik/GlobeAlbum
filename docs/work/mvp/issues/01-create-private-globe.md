@@ -64,3 +64,9 @@ Automatic cleanup removed that confirmed-deleted identity through the supported
 branch API. A real Google-only registration created a different identity, reached
 onboarding and survived reload; SQL confirmed zero globes for the new ID. No old
 content was restored. This supersedes the earlier fresh-registration caveat.
+
+2026-11-10 landing copy refinement: signed-out visitors see consistent
+`Create your globe` and `Explore an example` action labels in the header and
+hero. The hero places `Free to use` beside the creation action. Desktop and
+mobile browser checks verified the links and signed-in navigation. A 320 px
+viewport check confirmed that the creation link and theme toggle both fit.

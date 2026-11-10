@@ -1168,12 +1168,15 @@ test("shows account navigation when signed in and signs out from the dropdown", 
 }) => {
   await account(context, true);
   await page.goto("/");
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
+  const heroActions = page.locator(".hero-actions");
   await expect(
-    page.getByRole("link", { name: "Make it yours" }),
-  ).not.toBeVisible();
+    nav.getByRole("link", { name: "Create your globe", exact: true }),
+  ).toHaveCount(0);
+  await expect(nav.locator('a[href="/demo"]')).toHaveCount(0);
   await expect(
-    page.getByRole("link", { name: "Explore an example" }),
-  ).not.toBeVisible();
+    heroActions.getByRole("link", { name: "Open your globe", exact: true }),
+  ).toHaveAttribute("href", "/studio");
   await page.getByRole("button", { name: "Account menu" }).click();
   await expect(page.getByRole("menuitem", { name: "My globe" })).toBeVisible();
   await page.getByRole("menuitem", { name: "Profile settings" }).click();
@@ -1187,7 +1190,22 @@ test("shows account navigation when signed in and signs out from the dropdown", 
   await expect(
     page.getByRole("button", { name: "Account menu" }),
   ).not.toBeVisible();
-  await expect(page.getByRole("link", { name: "Make it yours" })).toBeVisible();
+  const createGlobe = heroActions.getByRole("link", {
+    name: "Create your globe",
+    exact: true,
+  });
+  await expect(createGlobe).toHaveAttribute("href", "/sign-in");
+  await expect(createGlobe).toHaveAccessibleDescription("Free to use");
+  await expect(
+    heroActions.getByText("Free to use", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    nav.getByRole("link", { name: "Create your globe", exact: true }),
+  ).toHaveAttribute("href", "/sign-in");
+  await expect(
+    heroActions.getByRole("link", { name: "Explore an example", exact: true }),
+  ).toHaveAttribute("href", "/demo");
+  await expect(nav.locator('a[href="/demo"]')).toHaveText("Explore an example");
 });
 
 test("edits a profile on its own settings page without changing its address", async ({
@@ -1617,7 +1635,10 @@ test("keeps the landing theme on sign-in and sign-up surfaces", async ({
 }, testInfo) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Switch to dark mode" }).click();
-  await page.getByRole("link", { name: "Make it yours", exact: true }).click();
+  await page
+    .getByRole("navigation", { name: "Main navigation" })
+    .getByRole("link", { name: "Create your globe", exact: true })
+    .click();
   for (const path of ["/sign-in", "/sign-up"]) {
     if (path === "/sign-up")
       await page
