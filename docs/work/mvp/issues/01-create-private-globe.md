@@ -70,3 +70,22 @@ content was restored. This supersedes the earlier fresh-registration caveat.
 hero. The hero places `Free to use` beside the creation action. Desktop and
 mobile browser checks verified the links and signed-in navigation. A 320 px
 viewport check confirmed that the creation link and theme toggle both fit.
+
+2026-11-11 beta feedback refinement: the H1 now explains trips and photos on
+an owner's globe, with `A world of little moments.` as supporting copy. Both
+signed-out creation links say `Create your free globe`; signed-in visitors retain
+`Open your globe`. The mobile globe sits between the introduction and actions.
+The existing Mark / Keep / Share steps immediately follow the hero in a centered
+80rem container. This supersedes the previous separate `Free to use` caption.
+
+Validation: 55 unit tests, TypeScript and the production build passed. Eight
+focused desktop/mobile browser cases passed for preview styles, postcard galleries,
+account navigation and theme continuity. Responsive browser inspection covered
+320, 390, 768, 1440 and 2560px widths, light/dark appearances at 390 and 1440px,
+no horizontal overflow or page errors, and fully visible header creation/theme
+controls at 320px. The 2560px check measured a centered 1280px hero; the mobile
+checks placed the canvas above the fold and before the primary action. These
+are local Chromium checks; browser cases use isolated Auth/storage fakes and
+responsive screenshots also cover the local production build. They are not
+physical-device validation or new cloud-integration evidence. Screenshots stay ignored under
+`.local/verification/`.

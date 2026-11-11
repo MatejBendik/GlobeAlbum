@@ -152,6 +152,13 @@ On mobile, three equal-width buttons fill the preview controls in a single row.
 The selection is temporary and local to the preview. Landing captions,
 supporting copy and footer links use larger type.
 
+User-requested beta feedback refinement (2026-11-11): the landing headline
+explains trips and photos on a personal globe; the poetic line supports it.
+Signed-out creation actions say `Create your free globe`. The smaller mobile
+preview follows the headline before the main actions, and the Mark / Keep /
+Share explanation sits directly beneath the hero. Center the hero content and
+steps in a container capped at 80rem (1280px at the default root font size).
+
 User-confirmed refinement (2026-11-06): Profile settings open on the standalone,
 authenticated `/settings` page instead of a workspace dialog. Owners can edit
 their display name, read their immutable globe URL and private sign-in email,

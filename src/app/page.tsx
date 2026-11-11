@@ -5,7 +5,7 @@ import { navigationViewer } from "@/lib/navigation-viewer";
 import { PageHeader } from "@/components/page-header";
 import { HeroGlobe } from "@/components/hero-globe";
 
-const createGlobeLabel = "Create your globe";
+const createGlobeLabel = "Create your free globe";
 const exploreExampleLabel = "Explore an example";
 
 export default async function HomePage() {
@@ -22,7 +22,7 @@ export default async function HomePage() {
                 </Link>
               </Button>
               <Button asChild variant="secondary" className="home-nav-create">
-                <Link href="/sign-in" aria-describedby="create-globe-price">
+                <Link href="/sign-in">
                   {createGlobeLabel} <ArrowRight />
                 </Link>
               </Button>
@@ -35,67 +35,29 @@ export default async function HomePage() {
               <span /> FOR THE PLACES THAT STAY WITH YOU
             </span>
             <h1>
-              GlobeAlbum<span>.</span>
-            </h1>
-            <h2>
-              A world of
+              Your trips and photos,
               <br />
-              little moments.
-            </h2>
-            <p>
-              The places you have been. The photos you love.
-              <br className="desktop-break" /> Together on a globe that is
-              entirely yours.
-            </p>
-            <div className="hero-actions">
-              <div className="hero-create-action">
-                <Button asChild size="lg" className="hero-primary">
-                  <Link
-                    href={viewer ? "/studio" : "/sign-in"}
-                    aria-describedby={viewer ? undefined : "create-globe-price"}
-                  >
-                    {viewer ? "Open your globe" : createGlobeLabel}{" "}
-                    <ArrowUpRight />
-                  </Link>
-                </Button>
-                {!viewer && (
-                  <span id="create-globe-price" className="hero-create-price">
-                    Free to use
-                  </span>
-                )}
-              </div>
-              <Link href="/demo" className="hero-secondary">
-                {exploreExampleLabel} <ArrowRight size={16} />
-              </Link>
-            </div>
-            <div className="hero-footnote">
-              <span className="tiny-globe">◎</span> A personal travel journal. A
-              different perspective.
-            </div>
+              on your own globe.
+            </h1>
+            <p>A world of little moments.</p>
           </div>
           <HeroGlobe />
+          <div className="hero-actions">
+            <Button asChild size="lg" className="hero-primary">
+              <Link href={viewer ? "/studio" : "/sign-in"}>
+                {viewer ? "Open your globe" : createGlobeLabel} <ArrowUpRight />
+              </Link>
+            </Button>
+            <Link href="/demo" className="hero-secondary">
+              {exploreExampleLabel} <ArrowRight size={16} />
+            </Link>
+          </div>
         </div>
-        <div className="hero-bottom">
-          <span>SMALL MOMENTS. BIG WORLD.</span>
-          <span>
-            DRAG THE GLOBE TO EXPLORE <ArrowRight size={13} />
-          </span>
-        </div>
-      </section>
-      <section className="home-story">
-        <div>
-          <span className="eyebrow">YOUR OWN LITTLE ATLAS</span>
-          <h2>
-            Some places
-            <br />
-            become part of you.
-          </h2>
-        </div>
-        <div className="story-steps">
+        <section className="story-steps" aria-label="How GlobeAlbum works">
           <article>
             <MapPin strokeWidth={1.2} />
             <div>
-              <h3>Mark a place.</h3>
+              <h2>Mark a place.</h2>
               <p>
                 A favorite city, a small town, somewhere you keep coming back
                 to.
@@ -105,7 +67,7 @@ export default async function HomePage() {
           <article>
             <Camera strokeWidth={1.2} />
             <div>
-              <h3>Keep the moments.</h3>
+              <h2>Keep the moments.</h2>
               <p>
                 Add a few photos and the little details you want to remember.
               </p>
@@ -114,11 +76,11 @@ export default async function HomePage() {
           <article>
             <Send strokeWidth={1.2} />
             <div>
-              <h3>Let someone in.</h3>
+              <h2>Share your globe.</h2>
               <p>Share your globe with a link, whenever you are ready.</p>
             </div>
           </article>
-        </div>
+        </section>
       </section>
     </main>
   );

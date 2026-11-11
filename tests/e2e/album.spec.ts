@@ -856,11 +856,15 @@ test("renders the landing page and example without horizontal overflow", async (
   page,
 }, testInfo) => {
   const mobile = testInfo.project.name === "mobile";
-  if (mobile) await page.setViewportSize({ width: 320, height: 800 });
+  await page.setViewportSize(
+    mobile ? { width: 320, height: 800 } : { width: 2560, height: 1440 },
+  );
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "GlobeAlbum." }),
+    page.getByRole("heading", {
+      name: "Your trips and photos, on your own globe.",
+    }),
   ).toBeVisible();
   const preview = page.locator(".hero-globe-composition");
   const globe = preview.locator("[data-globe-style]");
@@ -870,7 +874,25 @@ test("renders the landing page and example without horizontal overflow", async (
   const classic = styles.getByRole("button", { name: "Classic" });
   await expect(globe).toHaveAttribute("data-globe-style", "dotted");
   await expect(dotted).toHaveAttribute("aria-pressed", "true");
+  const content = await page.locator(".hero-content").boundingBox();
+  const stage = await preview.locator("canvas").boundingBox();
+  const actions = await page.locator(".hero-actions").boundingBox();
+  expect(content!.width).toBeLessThanOrEqual(1280);
+  expect(content!.x).toBeCloseTo(
+    (page.viewportSize()!.width - content!.width) / 2,
+  );
   if (mobile) {
+    expect(stage!.y + stage!.height).toBeLessThan(page.viewportSize()!.height);
+    expect(stage!.y + stage!.height).toBeLessThan(actions!.y);
+    for (const control of [
+      page.locator(".home-nav-create"),
+      page.locator(".theme-toggle"),
+    ]) {
+      const bounds = await control.boundingBox();
+      expect(bounds!.x).toBeGreaterThanOrEqual(0);
+      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(320);
+    }
+
     const [first, middle, last] = await Promise.all([
       dotted.boundingBox(),
       minimal.boundingBox(),
@@ -905,6 +927,7 @@ test("renders the landing page and example without horizontal overflow", async (
   });
   await dotted.click();
   await expect(globe).toHaveAttribute("data-globe-style", "dotted");
+  if (!mobile) await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/demo");
   await expect(
     page.getByRole("heading", { name: "The long way home" }),
@@ -1171,7 +1194,7 @@ test("shows account navigation when signed in and signs out from the dropdown", 
   const nav = page.getByRole("navigation", { name: "Main navigation" });
   const heroActions = page.locator(".hero-actions");
   await expect(
-    nav.getByRole("link", { name: "Create your globe", exact: true }),
+    nav.getByRole("link", { name: "Create your free globe", exact: true }),
   ).toHaveCount(0);
   await expect(nav.locator('a[href="/demo"]')).toHaveCount(0);
   await expect(
@@ -1191,16 +1214,12 @@ test("shows account navigation when signed in and signs out from the dropdown", 
     page.getByRole("button", { name: "Account menu" }),
   ).not.toBeVisible();
   const createGlobe = heroActions.getByRole("link", {
-    name: "Create your globe",
+    name: "Create your free globe",
     exact: true,
   });
   await expect(createGlobe).toHaveAttribute("href", "/sign-in");
-  await expect(createGlobe).toHaveAccessibleDescription("Free to use");
   await expect(
-    heroActions.getByText("Free to use", { exact: true }),
-  ).toBeVisible();
-  await expect(
-    nav.getByRole("link", { name: "Create your globe", exact: true }),
+    nav.getByRole("link", { name: "Create your free globe", exact: true }),
   ).toHaveAttribute("href", "/sign-in");
   await expect(
     heroActions.getByRole("link", { name: "Explore an example", exact: true }),
@@ -1691,7 +1710,7 @@ test("keeps the landing theme on sign-in and sign-up surfaces", async ({
   await page.getByRole("button", { name: "Switch to dark mode" }).click();
   await page
     .getByRole("navigation", { name: "Main navigation" })
-    .getByRole("link", { name: "Create your globe", exact: true })
+    .getByRole("link", { name: "Create your free globe", exact: true })
     .click();
   for (const path of ["/sign-in", "/sign-up"]) {
     if (path === "/sign-up")

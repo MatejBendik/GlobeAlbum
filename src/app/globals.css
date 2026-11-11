@@ -1344,28 +1344,37 @@ select:focus-visible {
   display: none;
 }
 
-/* Full-bleed landing composition. */
+/* Centered landing content; the canvas remains edge-to-edge. */
 .home-hero {
   background: var(--canvas);
   color: var(--text);
   position: relative;
   overflow: hidden;
 }
+.hero-content,
+.story-steps {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 28px;
+}
 .hero-content {
   position: relative;
-  min-height: min(760px, calc(100svh - 140px));
+  min-height: 570px;
   display: grid;
-  grid-template-columns: 45% 55%;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  grid-template-areas:
+    "copy globe"
+    "actions globe";
+  align-content: center;
+  column-gap: 24px;
+  padding-block: 40px;
 }
 .hero-copy {
-  padding: 70px 0 80px 11%;
+  grid-area: copy;
+  align-self: end;
   z-index: 2;
   position: relative;
-  pointer-events: none;
-}
-.hero-copy a {
-  pointer-events: auto;
 }
 .hero-eyebrow {
   display: flex;
@@ -1383,51 +1392,35 @@ select:focus-visible {
   box-shadow: 0 0 9px #d8d0b530;
 }
 .hero-copy h1 {
-  margin: 27px 0 22px;
-  font-size: clamp(54px, 5.9vw, 89px);
+  margin-top: 24px;
+  font-size: clamp(40px, 4.3vw, 58px);
   font-weight: 500;
-  letter-spacing: -0.075em;
-  line-height: 1.02;
-}
-.hero-copy h1 > span {
-  color: var(--text-soft);
-}
-.hero-copy h2 {
-  color: var(--muted);
-  font-size: clamp(35px, 3.5vw, 52px);
-  font-weight: 300;
-  letter-spacing: -0.05em;
-  line-height: 1.14;
+  letter-spacing: -0.06em;
+  line-height: 1.08;
+  text-wrap: balance;
 }
 .hero-copy > p {
   color: var(--text-soft);
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.7;
-  margin-top: 25px;
+  margin-top: 24px;
   max-width: 390px;
 }
 .hero-actions {
+  grid-area: actions;
+  align-self: start;
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
-  gap: 25px;
-  margin-top: 32px;
-}
-.hero-create-action {
-  display: grid;
-  justify-items: start;
-  gap: 6px;
-}
-.hero-create-price {
-  color: var(--text-soft);
-  font-size: 13px;
+  align-items: center;
+  gap: 24px;
+  margin-top: 28px;
+  z-index: 2;
 }
 .hero-primary {
   font-size: 14px;
   height: 44px;
   padding: 0 17px;
 }
-
 .hero-secondary {
   min-height: 44px;
   font-size: 14px;
@@ -1436,31 +1429,18 @@ select:focus-visible {
   gap: 8px;
   color: var(--muted);
 }
-.hero-footnote {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--text-soft);
-  margin-top: 45px;
-}
-.tiny-globe {
-  font-size: 20px;
-}
 .hero-globe-composition {
-  position: absolute;
+  grid-area: globe;
+  position: relative;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  top: 0;
-  bottom: 0;
-  left: 39%;
-  right: -6%;
+  grid-template-rows: 410px auto;
+  min-width: 0;
 }
 .hero-preview-controls {
   position: relative;
   z-index: 1;
-  justify-self: start;
-  margin: 0 0 clamp(18px, 3vw, 36px) 20%;
+  justify-self: center;
+  margin-top: 8px;
 }
 .hero-place-note {
   display: inline-flex;
@@ -1513,56 +1493,17 @@ select:focus-visible {
   writing-mode: vertical-rl;
   letter-spacing: 0.2em;
 }
-.hero-bottom {
-  position: relative;
-  z-index: 3;
-  height: 50px;
-  padding: 0 5%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-top: 1px solid var(--line);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  color: var(--text-soft);
-}
-.hero-bottom > span:last-child {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.home-story {
-  padding: 100px 9%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 90px;
-  background: var(--surface);
-}
-.home-story .eyebrow {
-  font-size: 12px;
-}
-.home-story h2 {
-  font-size: clamp(30px, 3.2vw, 44px);
-  font-weight: 400;
-  letter-spacing: -0.055em;
-  line-height: 1.17;
-  margin-top: 22px;
-}
 .story-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 40px;
+  padding-block: 32px 40px;
+  border-top: 1px solid var(--line);
 }
 .story-steps article {
   display: flex;
-  gap: 18px;
+  gap: 16px;
   align-items: flex-start;
-  padding-bottom: 27px;
-  border-bottom: 1px solid var(--line);
-}
-.story-steps article:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
 }
 .story-steps article > svg {
   color: var(--text-soft);
@@ -1570,7 +1511,7 @@ select:focus-visible {
   width: 20px;
   margin-top: 2px;
 }
-.story-steps h3 {
+.story-steps h2 {
   font-weight: 500;
   font-size: 17px;
   letter-spacing: -0.3px;
@@ -1834,22 +1775,11 @@ select:focus-visible {
   .site-header {
     padding: 0 20px;
   }
-  .hero-copy {
-    padding-left: 10%;
-  }
   .hero-actions {
-    gap: 15px;
-  }
-  .hero-globe-composition {
-    left: 37%;
-    right: -15%;
+    gap: 12px;
   }
   .hero-orbit-label {
-    right: 22%;
-  }
-  .hero-footnote {
-    max-width: 250px;
-    line-height: 1.7;
+    right: 0;
   }
 }
 @media (max-width: 760px) {
@@ -1879,6 +1809,9 @@ select:focus-visible {
   .site-nav > .inline-flex {
     height: 36px;
     padding-inline: 10px;
+  }
+  .site-nav > .home-nav-create {
+    font-size: 13px;
   }
   .site-nav > .compact-nav-action {
     width: 36px;
@@ -1959,49 +1892,58 @@ select:focus-visible {
   .gallery-dialog {
     padding: 0;
   }
-  .hero-content {
-    display: block;
-    min-height: 0;
+  .hero-content,
+  .story-steps {
+    padding-inline: 24px;
   }
-  .hero-copy {
-    padding: 45px 7% 0;
+  .hero-content {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "copy"
+      "globe"
+      "actions";
+    min-height: 0;
+    padding-block: 28px;
+  }
+  .hero-eyebrow {
+    font-size: 10px;
   }
   .hero-copy h1 {
-    font-size: clamp(50px, 12vw, 78px);
-    margin: 24px 0 15px;
-  }
-  .hero-copy h2 {
-    font-size: 35px;
-    line-height: 1.08;
+    font-size: clamp(32px, 8.6vw, 48px);
+    margin-top: 16px;
   }
   .hero-copy > p {
-    margin-top: 19px;
+    font-size: 15px;
+    margin-top: 14px;
   }
   .hero-actions {
-    margin-top: 23px;
-    gap: 14px;
+    margin-top: 20px;
+    gap: 8px 16px;
   }
   .hero-primary {
     padding: 0 15px;
   }
-  .hero-footnote {
-    margin-top: 22px;
-    max-width: none;
-  }
   .hero-globe-composition {
-    position: relative;
-    inset: auto;
-    grid-template-rows: auto clamp(300px, 100vw, 490px) auto;
+    grid-template-rows: clamp(250px, 70vw, 330px) auto;
+    margin-top: 12px;
+  }
+  .home-hero .hero-stage .marker-card {
+    width: 100px;
+  }
+  .home-hero .hero-stage .photo-marker img {
+    width: 100%;
+    height: 84px;
+  }
+  .home-hero .hero-stage .marker-paper > .marker-label {
+    font-size: 12px;
+    padding-block: 7px 8px;
   }
   .hero-preview-controls {
     justify-self: stretch;
-    margin: 0 7% 26px;
+    margin-top: 0;
   }
   .hero-orbit-label {
-    position: static;
-    justify-self: end;
-    margin: 14px 7% 0;
-    writing-mode: horizontal-tb;
+    display: none;
   }
   .hero-style-options {
     display: grid;
@@ -2011,27 +1953,10 @@ select:focus-visible {
     gap: 6px;
     padding-inline: 5px;
   }
-  .hero-bottom {
-    height: 43px;
-    padding: 0 6%;
-  }
-  .hero-bottom > span:last-child {
-    display: none;
-  }
-  .home-story {
-    padding: 58px 8%;
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-  .home-story h2 {
-    font-size: 34px;
-    margin-top: 18px;
-  }
   .story-steps {
-    gap: 23px;
-  }
-  .story-steps article {
-    padding-bottom: 22px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding-block: 28px 36px;
   }
   .site-footer {
     grid-template-columns: 1fr;
@@ -2056,9 +1981,19 @@ select:focus-visible {
   }
 }
 @media (max-width: 380px) {
+  .home-hero .site-header {
+    gap: 6px;
+  }
+  .home-hero .site-header .brand {
+    font-size: 14px;
+    gap: 6px;
+  }
+  .home-hero .site-nav {
+    gap: 4px;
+  }
   .site-nav > .home-nav-create {
-    padding-inline: 8px;
-    font-size: 12px;
+    padding-inline: 6px;
+    font-size: 11px;
   }
   .home-nav-create > svg {
     display: none;
@@ -2177,17 +2112,13 @@ body,
 .home-hero .globe-glow {
   display: none;
 }
-.hero-copy h1,
-.hero-copy h2 {
+.hero-copy h1 {
   color: var(--text);
 }
 .hero-copy > p,
 .hero-secondary,
 .hero-place-note {
   color: var(--text-soft);
-}
-.hero-bottom {
-  border-color: var(--line);
 }
 .globe-stage {
   background: radial-gradient(
