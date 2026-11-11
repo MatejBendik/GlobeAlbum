@@ -89,3 +89,29 @@ are local Chromium checks; browser cases use isolated Auth/storage fakes and
 responsive screenshots also cover the local production build. They are not
 physical-device validation or new cloud-integration evidence. Screenshots stay ignored under
 `.local/verification/`.
+
+2026-11-11 follow-up feedback supersedes the earlier landing composition:
+the separate `Some places become part of you` section and its original vertical
+steps are restored. The desktop globe has a larger stage again, while mobile
+keeps the compact preview above the main action. Landing-only footer styling
+reduces its height and keeps it at the end of the document with no blank region
+below it; shared footer content and other routes retain their existing layout.
+
+The H1 now states `One personal globe for your travels, ready to share.`
+Supporting copy explains keeping photos together and sharing a link. The primary
+action is `Create your globe`, with an explicit sign-in hint. The secondary
+example action lives beside the preview, names the existing `The long way home`
+example, and states that no sign-up is needed. No customer quotes, plan limits,
+or allowance numbers were invented. Source TODOs retain the need for approved
+free-plan details and permissioned customer proof before those claims are added.
+
+Validation: eight focused desktop/mobile Chromium cases passed for preview
+styles, postcard galleries, signed-in/out actions and theme continuity. Responsive
+inspection covered 320, 390, 768, 1440 and 2560px, including light/dark appearances;
+the globe is visible before scrolling on mobile, content stays within 1280px,
+and no horizontal overflow or page errors were observed. Existing layout coverage
+also checks the larger desktop stage, compact footer and document-bottom alignment.
+TypeScript, production build and Prettier passed. Evidence is local browser
+verification with isolated Auth/storage fakes, not physical-device or cloud
+integration validation. The linked roast could not be retrieved by the web tool;
+implementation follows the review text supplied in the user's request.

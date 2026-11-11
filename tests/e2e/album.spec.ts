@@ -863,7 +863,7 @@ test("renders the landing page and example without horizontal overflow", async (
   await page.goto("/");
   await expect(
     page.getByRole("heading", {
-      name: "Your trips and photos, on your own globe.",
+      name: "One personal globe for your travels, ready to share.",
     }),
   ).toBeVisible();
   const preview = page.locator(".hero-globe-composition");
@@ -877,6 +877,13 @@ test("renders the landing page and example without horizontal overflow", async (
   const content = await page.locator(".hero-content").boundingBox();
   const stage = await preview.locator("canvas").boundingBox();
   const actions = await page.locator(".hero-actions").boundingBox();
+  const footer = await page.getByRole("contentinfo").boundingBox();
+  const pageHeight = await page.evaluate(
+    () => document.documentElement.scrollHeight,
+  );
+  expect(footer!.y + footer!.height).toBeCloseTo(pageHeight, 0);
+  expect(footer!.height).toBeLessThan(mobile ? 130 : 80);
+  if (!mobile) expect(stage!.height).toBeGreaterThanOrEqual(500);
   expect(content!.width).toBeLessThanOrEqual(1280);
   expect(content!.x).toBeCloseTo(
     (page.viewportSize()!.width - content!.width) / 2,
@@ -1194,7 +1201,7 @@ test("shows account navigation when signed in and signs out from the dropdown", 
   const nav = page.getByRole("navigation", { name: "Main navigation" });
   const heroActions = page.locator(".hero-actions");
   await expect(
-    nav.getByRole("link", { name: "Create your free globe", exact: true }),
+    nav.getByRole("link", { name: "Create your globe", exact: true }),
   ).toHaveCount(0);
   await expect(nav.locator('a[href="/demo"]')).toHaveCount(0);
   await expect(
@@ -1214,16 +1221,24 @@ test("shows account navigation when signed in and signs out from the dropdown", 
     page.getByRole("button", { name: "Account menu" }),
   ).not.toBeVisible();
   const createGlobe = heroActions.getByRole("link", {
-    name: "Create your free globe",
+    name: "Create your globe",
     exact: true,
   });
   await expect(createGlobe).toHaveAttribute("href", "/sign-in");
   await expect(
-    nav.getByRole("link", { name: "Create your free globe", exact: true }),
+    nav.getByRole("link", { name: "Create your globe", exact: true }),
   ).toHaveAttribute("href", "/sign-in");
-  await expect(
-    heroActions.getByRole("link", { name: "Explore an example", exact: true }),
-  ).toHaveAttribute("href", "/demo");
+  await expect(page.locator(".hero-place-note")).toHaveAttribute(
+    "href",
+    "/demo?place=paris",
+  );
+  await expect(heroActions.getByRole("link")).toHaveCount(1);
+  await expect(page.locator(".hero-example-title")).toHaveText(
+    "The long way home · Example globe",
+  );
+  await expect(page.locator(".hero-place-note")).toContainText(
+    "No sign-up needed",
+  );
   await expect(nav.locator('a[href="/demo"]')).toHaveText("Explore an example");
 });
 
@@ -1710,7 +1725,7 @@ test("keeps the landing theme on sign-in and sign-up surfaces", async ({
   await page.getByRole("button", { name: "Switch to dark mode" }).click();
   await page
     .getByRole("navigation", { name: "Main navigation" })
-    .getByRole("link", { name: "Create your free globe", exact: true })
+    .getByRole("link", { name: "Create your globe", exact: true })
     .click();
   for (const path of ["/sign-in", "/sign-up"]) {
     if (path === "/sign-up")

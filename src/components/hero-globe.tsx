@@ -39,11 +39,15 @@ export function HeroGlobe() {
         onUnavailable={markUnavailable}
       />
       <div className="hero-preview-controls">
+        {/* TODO: Add a customer globe or testimonial only with verified content and permission. */}
+        <p className="hero-example-title">
+          {demoGlobe.displayName} · Example globe
+        </p>
         <Link href={`/demo?place=${selected}`} className="hero-place-note">
           <MapPin size={16} />
           <span>
             {place.name}, {countryName(place.country)}
-            <small>A glimpse of the example collection</small>
+            <small>Explore the full example · No sign-up needed</small>
           </span>
           <ArrowUpRight size={16} />
         </Link>

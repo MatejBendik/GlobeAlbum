@@ -152,12 +152,21 @@ On mobile, three equal-width buttons fill the preview controls in a single row.
 The selection is temporary and local to the preview. Landing captions,
 supporting copy and footer links use larger type.
 
-User-requested beta feedback refinement (2026-11-11): the landing headline
-explains trips and photos on a personal globe; the poetic line supports it.
-Signed-out creation actions say `Create your free globe`. The smaller mobile
-preview follows the headline before the main actions, and the Mark / Keep /
-Share explanation sits directly beneath the hero. Center the hero content and
-steps in a container capped at 80rem (1280px at the default root font size).
+User-requested beta feedback refinements (2026-11-11): the landing headline
+leads with the outcome: `One personal globe for your travels, ready to share.`
+The desktop preview is large again; the compact mobile preview remains directly
+after the introduction. Keep the hero and supporting content centered within
+80rem (1280px at the default root font size). Later feedback supersedes the
+three-column step strip: restore the original separate story section with its
+steps in a vertical list. Keep the landing footer compact and at the bottom of
+short pages, without empty space below it.
+
+The primary creation action says `Create your globe`, with a sign-in hint for
+signed-out visitors. The named existing example (`The long way home`) is the
+concrete preview and secondary exploration action, explicitly available without
+sign-up. Do not invent free-plan allowances or customer endorsements. Leave
+implementation TODOs for approved offer details and permissioned customer proof;
+until then, omit the unqualified `free` promise from the creation action.
 
 User-confirmed refinement (2026-11-06): Profile settings open on the standalone,
 authenticated `/settings` page instead of a workspace dialog. Owners can edit
