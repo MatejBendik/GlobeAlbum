@@ -115,3 +115,9 @@ TypeScript, production build and Prettier passed. Evidence is local browser
 verification with isolated Auth/storage fakes, not physical-device or cloud
 integration validation. The linked roast could not be retrieved by the web tool;
 implementation follows the review text supplied in the user's request.
+
+2026-11-12 user-requested copy refinement: the signed-out creation action now
+shows `Private until you publish. Sign in to create your globe.` immediately
+below the primary button. This surfaces the existing private-by-default behavior
+without making a privacy claim about a returning owner's already-published globe.
+Validation: Prettier and TypeScript checks passed; no publication behavior changed.

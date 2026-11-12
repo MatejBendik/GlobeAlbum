@@ -47,7 +47,11 @@ export default async function HomePage() {
                 {viewer ? "Open your globe" : createGlobeLabel} <ArrowUpRight />
               </Link>
             </Button>
-            {!viewer && <small>Sign in to create your globe.</small>}
+            {!viewer && (
+              <small>
+                Private until you publish. Sign in to create your globe.
+              </small>
+            )}
           </div>
         </div>
       </section>
