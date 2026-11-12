@@ -134,3 +134,15 @@ All recommendations in this round are pending. The next frontier must be recompu
 ## Completion gate
 
 Before requesting confirmation of shared understanding, prepare a product brief, explicit MVP/deferred scope, primary user scenarios, justified stack, architecture and data model, photo lifecycle, privacy/authorization rules, acceptance criteria and validation plan, cost assumptions, risks, and a list of outstanding user decisions. Do not treat a recommendation or an unanswered question as approved.
+
+## Interactive embeds — confirmed 2026-11-12
+
+The user approved [the embed specification](work/globe-embed/spec.md) and explicitly
+requested implementation. The final interview supersedes its early opt-in idea:
+every published globe may be embedded, with no extra permission or verification.
+Private globes require explicit publication before preview or HTML copying.
+Republishing restores old embeds. Configuration is shape (Rectangle/Square) and
+fixed Light/Dark theme, never numeric dimensions. Share link/Embed live in one
+modal with real desktop/mobile portfolio preview. Interaction starts immediately;
+gallery stays in the frame, and GlobeAlbum attribution opens the public profile.
+The feature request does not authorize deployment, purchases or paid upgrades.

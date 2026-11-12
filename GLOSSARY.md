@@ -35,3 +35,8 @@ A globe the owner has explicitly made accessible to visitors through its profile
 ## Visitor
 
 A person viewing a published globe without needing an account.
+
+## Embed
+
+An interactive view of a published globe placed within another website. It shows
+the same collection rather than a separate copy.

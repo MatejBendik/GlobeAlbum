@@ -470,13 +470,32 @@ export async function readGallery(
   placeId: string,
   userId?: string,
 ): Promise<GalleryDto> {
+  return readGalleryForAccess(placeId, { userId });
+}
+
+export async function readEmbeddedGallery(
+  username: string,
+  placeId: string,
+): Promise<GalleryDto> {
+  return readGalleryForAccess(placeId, { username });
+}
+
+async function readGalleryForAccess(
+  placeId: string,
+  access: { userId?: string } | { username: string },
+): Promise<GalleryDto> {
+  const userId = "userId" in access ? access.userId : undefined;
   const place = await getDb().place.findFirst({
     where: {
       id: placeId,
-      OR: [
-        { globe: { published: true } },
-        ...(userId ? [{ globe: { userId } }] : []),
-      ],
+      ...("username" in access
+        ? { globe: { username: access.username, published: true } }
+        : {
+            OR: [
+              { globe: { published: true } },
+              ...(userId ? [{ globe: { userId } }] : []),
+            ],
+          }),
     },
     include: {
       globe: { select: { userId: true } },

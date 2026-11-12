@@ -1,0 +1,223 @@
+/* All frame dimensions follow the host iframe, including short landscape frames. */
+body:has(.embed-root) {
+  overflow: hidden;
+}
+.embed-root,
+.embed-viewer {
+  width: 100%;
+  height: 100svh;
+  overflow: hidden;
+}
+.embed-viewer {
+  position: relative;
+}
+.embed-viewer .globe-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+.embed-viewer .globe-controls {
+  bottom: 12px;
+}
+.embed-places-button {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+.embed-attribution {
+  position: absolute;
+  right: 14px;
+  bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--text-soft);
+}
+.embed-places {
+  position: absolute;
+  inset: 8px 8px 8px auto;
+  width: min(300px, calc(100% - 16px));
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px #0002;
+}
+.embed-places-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.embed-places-heading h2 {
+  font-size: 15px;
+}
+.embed-place {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  width: 100%;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.embed-place strong,
+.embed-place small {
+  display: block;
+}
+.embed-place strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.embed-place small,
+.embed-places > p {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.embed-message {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+  background: var(--canvas);
+}
+.embed-message h1 {
+  font-size: 20px;
+}
+.embed-message p,
+.embed-message button {
+  font-size: 13px;
+  color: var(--text-soft);
+}
+body:has(.embed-root) .gallery-dialog {
+  width: calc(100vw - 16px);
+  height: calc(100svh - 16px);
+  max-height: none;
+  grid-template-columns: minmax(0, 1fr) min(34vw, 250px);
+  grid-template-rows: minmax(0, 1fr);
+  padding: 0;
+  overflow: hidden;
+}
+body:has(.embed-root) .gallery-image {
+  min-height: 0;
+  overflow: hidden;
+}
+body:has(.embed-root) .gallery-main-image {
+  max-height: 100%;
+}
+body:has(.embed-root) .gallery-details {
+  padding: 24px 16px 16px;
+  overflow-y: auto;
+}
+body:has(.embed-root) .gallery-title {
+  font-size: 23px;
+}
+body:has(.embed-root) .photo-caption {
+  margin: 12px 0;
+}
+body:has(.embed-root) .gallery-footer {
+  display: none;
+}
+@media (max-width: 520px) {
+  body:has(.embed-root) .gallery-dialog {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(64px, 30%);
+  }
+  body:has(.embed-root) .gallery-details {
+    padding: 10px 16px;
+  }
+  body:has(.embed-root) .gallery-title {
+    font-size: 18px;
+    margin: 3px 0;
+  }
+  body:has(.embed-root) .gallery-thumbnails {
+    display: none;
+  }
+  body:has(.embed-root) .gallery-empty {
+    gap: 6px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 520px) and (max-height: 360px) {
+  body:has(.embed-root) .gallery-dialog {
+    grid-template-rows: minmax(0, 1fr) minmax(74px, 36%);
+  }
+  body:has(.embed-root) .gallery-details {
+    padding: 8px 12px;
+  }
+  body:has(.embed-root) .gallery-details > .eyebrow,
+  body:has(.embed-root) .gallery-details > .muted {
+    display: none;
+  }
+  body:has(.embed-root) .gallery-title {
+    font-size: 16px;
+    margin: 0;
+  }
+  body:has(.embed-root) .photo-caption {
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 4px 0;
+  }
+}
+.embed-places-button,
+.embed-attribution {
+  z-index: 2;
+}
+.embed-places {
+  z-index: 3;
+}
+.embed-viewer .globe-loading,
+.embed-viewer .globe-unavailable {
+  padding: 44px 12px 60px;
+  gap: 8px;
+  text-align: center;
+}
+.embed-viewer .globe-loading-sphere {
+  width: min(50vw, 40svh, 260px);
+  flex-shrink: 0;
+}
+.embed-viewer .globe-unavailable > svg:first-child {
+  width: 32px;
+  height: 32px;
+}
+.embed-viewer .globe-unavailable > svg:last-child {
+  display: none;
+}
+@media (max-width: 380px) {
+  .embed-attribution {
+    top: 22px;
+    right: 12px;
+    bottom: auto;
+  }
+}
+/* Keep the initial postcard inside shallow responsive frames. */
+@media (max-height: 360px) {
+  .embed-viewer .marker-card {
+    width: min(110px, 28svh);
+  }
+  .embed-viewer .marker-paper {
+    padding: 4px 4px 0;
+  }
+  .embed-viewer .photo-marker img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+  .embed-viewer .marker-paper > .marker-label {
+    font-size: 10px;
+    padding: 5px 2px 6px;
+  }
+}

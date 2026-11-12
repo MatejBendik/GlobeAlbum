@@ -19,3 +19,6 @@ Resume interrupted work from the [implementation checkpoint](work/mvp/progress.m
 
 Agent conventions: [local tracker](agents/issue-tracker.md), [domain documentation](agents/domain.md),
 [triage vocabulary](agents/triage-labels.md), [evidence rules](research/README.md).
+
+- [Interactive embeds](work/globe-embed/spec.md): approved feature and delivery tickets.
+- [Embed research](research/embedding.md): iframe, framing, privacy and performance evidence.

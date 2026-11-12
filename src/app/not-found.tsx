@@ -1,9 +1,10 @@
 import Link from "next/link";
+import SiteLayout from "./(site)/layout";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { navigationViewer } from "@/lib/navigation-viewer";
 
-export default async function NotFound() {
+export async function NotFoundContent() {
   const viewer = await navigationViewer().catch(() => null);
   return (
     <main className="auth-page">
@@ -21,5 +22,13 @@ export default async function NotFound() {
         </Button>
       </section>
     </main>
+  );
+}
+
+export default function NotFound() {
+  return (
+    <SiteLayout>
+      <NotFoundContent />
+    </SiteLayout>
   );
 }

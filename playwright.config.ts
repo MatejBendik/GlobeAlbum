@@ -36,6 +36,12 @@ export default defineConfig({
   ],
   webServer: [
     {
+      command: "node --import tsx tests/e2e/embed-host.ts",
+      url: "http://127.0.0.1:8790",
+      reuseExistingServer: false,
+      env: { GLOBEALBUM_EMBED_TEST_HOST: "1" },
+    },
+    {
       command: "node --import tsx tests/e2e/auth-stub.ts",
       url: "http://127.0.0.1:8788/health",
       reuseExistingServer: false,

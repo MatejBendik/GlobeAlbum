@@ -12,8 +12,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowUpRight,
-  Check,
-  Copy,
   Globe2,
   LockKeyhole,
   MapPin,
@@ -29,16 +27,11 @@ import { PageHeader } from "./page-header";
 import { ProfileAvatar } from "./profile-avatar";
 import type { GlobeDto } from "@/lib/types";
 import { countryName } from "@/lib/countries";
-import { globeStyleAction, publicationAction } from "@/app/actions";
+import { globeStyleAction } from "@/app/actions";
 import type { GlobeStyle } from "@/lib/globe-style";
 import { LIMITS } from "@/lib/limits";
 import { Button } from "./ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from "./ui/dialog";
+import { ShareGlobeDialog } from "./share-globe-dialog";
 import { GlobeStage } from "./globe-stage";
 import { GlobeStylePicker } from "./globe-style-picker";
 import { PlaceGallery } from "./place-gallery";
@@ -60,10 +53,7 @@ export function Workspace({
   const [query, setQuery] = useState(""),
     [adding, setAdding] = useState(false),
     [placesOpen, setPlacesOpen] = useState(false),
-    [sharing, setSharing] = useState(false),
-    [copied, setCopied] = useState(false),
-    [error, setError] = useState(""),
-    [pending, setPending] = useState(false);
+    [sharing, setSharing] = useState(false);
   const [globeStyle, previewStyle] = useOptimistic(globe.style);
   const [stylePending, startStyleSave] = useTransition();
   const [styleError, setStyleError] = useState("");
@@ -124,27 +114,6 @@ export function Workspace({
       .toLowerCase()
       .includes(query.toLowerCase()),
   );
-  async function publish() {
-    setPending(true);
-    const result = await publicationAction(!globe.published);
-    setPending(false);
-    if (result.error) setError(result.error);
-    else {
-      setError("");
-      router.refresh();
-    }
-  }
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(
-        `${window.location.origin}${demo ? "/demo" : `/u/${globe.username}`}`,
-      );
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setError("Copy the profile address from your browser instead.");
-    }
-  }
   return (
     <main className="workspace">
       <PageHeader viewer={viewer}>
@@ -203,6 +172,7 @@ export function Workspace({
             selectedId={selected}
             focusRequest={focusRequest}
             pauseRotation={Boolean(active)}
+            renderPaused={sharing}
             onSelect={choose}
             onUnavailable={openPlaces}
           />
@@ -386,53 +356,9 @@ export function Workspace({
         )}
         onChanged={changed}
       />
-      <Dialog open={sharing} onOpenChange={setSharing}>
-        <DialogContent>
-          <span className="dialog-icon">
-            <Share2 />
-          </span>
-          <DialogTitle className="dialog-title">
-            Your world, shared.
-          </DialogTitle>
-          <DialogDescription className="dialog-description">
-            {globe.published
-              ? "Anyone with your address can explore your globe. Saved changes are visible on their next visit."
-              : "Your globe is private. Publish it when you are ready to let someone in."}
-          </DialogDescription>
-          <div className="share-address">
-            <span>/u/{globe.username}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled={!globe.published}
-              aria-label="Copy globe link"
-              onClick={copy}
-            >
-              {copied ? <Check /> : <Copy />}
-            </Button>
-          </div>
-          <div className="privacy-note">
-            <LockKeyhole size={16} />
-            <p>
-              Your email and visit dates stay private. Photos may remain
-              accessible through existing links for up to 60 seconds after
-              hiding.
-            </p>
-          </div>
-          {error && (
-            <p role="alert" className="form-error">
-              {error}
-            </p>
-          )}
-          <Button disabled={pending} onClick={publish}>
-            {pending
-              ? "Saving…"
-              : globe.published
-                ? "Make globe private"
-                : "Publish my globe"}
-          </Button>
-        </DialogContent>
-      </Dialog>
+      {sharing && (
+        <ShareGlobeDialog globe={globe} onClose={() => setSharing(false)} />
+      )}
     </main>
   );
 }

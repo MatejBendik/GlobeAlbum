@@ -180,3 +180,48 @@ monthly transformation reservations. It allows 100 places and 300 visits/account
 Processing reservations are conservative and are not refunded on failure.
 Provider billing and counters still require monitoring; retries can cross months.
 There are no automatic upgrades or payment flows.
+
+## Embedded globes
+
+User-approved feature, 2026-11-12: [specification](work/globe-embed/spec.md).
+An embed is another view of the same published globe, not a copied collection.
+There is no additional embed permission, token or domain allowlist. Publication
+continues to authorize both profile and embedded reads; hiding denies subsequent
+requests and republishing restores existing iframe URLs. No schema change.
+
+The minimal root layout owns HTML, global styles and metadata. The `(site)` group
+preserves navigation-related theme, skip link, content wrapper, footer and
+analytics at unchanged public URLs. The `(embed)` group has viewport-sized layout,
+no analytics and compact loading/error/unavailable states. `/embed/[username]`
+reads only the published projection. Its explicit light/dark query forces the
+frame's palette without changing the application's stored theme. Rendering and
+public galleries do not require session cookies or accessible browser storage.
+
+The public `/api/embed/[username]/places/[id]/gallery` endpoint verifies both
+publication and the parent globe's username. Its domain access mode cannot
+upgrade to owner data through a cookie. The existing owner/public gallery read
+and embedded read share photo projection code. No visit dates, visit identifiers,
+email or pending uploads enter an embed response. Embedded APIs and documents
+bypass session middleware; each domain read independently enforces publication.
+No persistent publication-sensitive cache is introduced. Media URLs retain the
+existing maximum 60-second access window. Already loaded/downloaded content
+cannot be recalled, and open viewers have no live synchronization.
+
+Only the exact embed viewer route permits framing with CSP `frame-ancestors *`;
+all other routes retain X-Frame-Options DENY and CSP `frame-ancestors 'none'`.
+The generated HTML reserves Rectangle 16:10 or Square 1:1 space at 100% width.
+A titled lazy iframe is the entire integration: no host script, messaging
+protocol or CORS expansion. Sandbox permissions cover scripts, own origin and
+the approved new-tab profile link. Same-origin preview uses trusted app code;
+the sandbox is not treated as a security boundary against our own origin.
+
+Share globe uses one modal with accessible Share link/Embed tabs. Private globes
+offer explicit publication before preview/copy. A real iframe is displayed inside
+a labeled example portfolio; selected shape/theme feed preview and copied HTML.
+Clipboard failure selects the visible code for manual copying. Desktop/mobile
+modes adjust the example site's width. The iframe is released when leaving the
+Embed tab or closing the modal. Intersection/document visibility pause animation;
+the owner globe also pauses under Share. The shared gallery keeps camera/zoom,
+arrows, keyboard and swipe and gains frame-specific small-height styling.
+Short frames also scale postcard dimensions so the initial cover stays inside
+the viewport; collision spacing remains conservative.

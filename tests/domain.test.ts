@@ -240,6 +240,36 @@ describe("owned travel collections", () => {
     );
   });
 
+  it("embeds only the requested published globe and revokes new gallery reads on hiding", async () => {
+    const place = await domain.addPlace("alice", {
+      ...paris,
+      startDate: "2024-06-01",
+    });
+    await expect(
+      domain.readEmbeddedGallery("alice-travels", place.placeId),
+    ).rejects.toMatchObject({ status: 404 });
+    await domain.setPublication("alice", true);
+    expect(
+      await domain.readEmbeddedGallery("alice-travels", place.placeId),
+    ).toEqual({ photos: [] });
+    await domain.setPublication("bob", true);
+    await expect(
+      domain.readEmbeddedGallery("bob-travels", place.placeId),
+    ).rejects.toMatchObject({ status: 404 });
+    await domain.setPublication("alice", false);
+    await expect(
+      domain.readEmbeddedGallery("alice-travels", place.placeId),
+    ).rejects.toMatchObject({ status: 404 });
+    await domain.setPublication("alice", true);
+    expect(
+      await domain.readEmbeddedGallery("alice-travels", place.placeId),
+    ).toEqual({ photos: [] });
+    await domain.deleteVisit("alice", place.visitId);
+    await expect(
+      domain.readEmbeddedGallery("alice-travels", place.placeId),
+    ).rejects.toMatchObject({ status: 404 });
+  });
+
   it("removes a place when its last visit is deleted", async () => {
     const place = await domain.addPlace("alice", paris);
     await domain.deleteVisit("alice", place.visitId);

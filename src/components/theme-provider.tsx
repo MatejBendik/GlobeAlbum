@@ -3,9 +3,16 @@ import { ThemeProvider as Provider, useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "./ui/button";
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({
+  children,
+  forcedTheme,
+}: {
+  children: React.ReactNode;
+  forcedTheme?: "light" | "dark";
+}) {
   return (
     <Provider
+      forcedTheme={forcedTheme}
       attribute="data-theme"
       storageKey="globealbum-theme"
       defaultTheme="light"

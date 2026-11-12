@@ -248,6 +248,11 @@ fragments and profile usernames from the page URLs in analytics events.
 
 Payments, paid plans, multiple globes, trips as entities, embedding, original backup, EXIF GPS suggestions, photo editing, manual photo ordering, per-photo visibility, live updates, trash, changing profile URL, invitation management, translations.
 
+Embedding was subsequently approved as a separate feature on 2026-11-12;
+see the [interactive embed specification](../globe-embed/spec.md). Its explicit
+implementation authorization supersedes only embedding's original deferred
+status. The remaining boundaries above are unchanged.
+
 ## Further Notes
 
 Approved tickets are individual Markdown files in the sibling issues directory. Status means implementation readiness, not verified cloud readiness. Cloudflare provisioning was subsequently authorized and the user activated R2 personally. Deployment to Vercel remains separate. After repeated Images failures (HEIC 9516, then JPEG/PNG 9523), the user explicitly chose R2 storage without an Images plan. Local processing supersedes the former Images dependency; physical mobile-device and hosted-runtime verification remain mandatory before beta. See [validation](../../validation.md) and [the bounded Worker capability refinement](../../adr/0004-bound-worker-capabilities.md).

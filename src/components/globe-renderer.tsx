@@ -51,6 +51,7 @@ export default function GlobeRenderer({
   focusRequest,
   onSelect,
   rotating,
+  active = true,
   reset,
   width,
   height,
@@ -62,13 +63,14 @@ export default function GlobeRenderer({
   focusRequest?: { placeId: string };
   onSelect: (id: string) => void;
   rotating: boolean;
+  active?: boolean;
   reset: number;
   width: number;
   height: number;
   onFailure: () => void;
 }) {
-  const { resolvedTheme } = useTheme();
-  const dark = resolvedTheme === "dark";
+  const { resolvedTheme, forcedTheme } = useTheme();
+  const dark = (forcedTheme ?? resolvedTheme) === "dark";
   const palette = colors[globeStyle][dark ? "dark" : "light"];
   const showCountries = globeStyle !== "dotted";
   const classic = globeStyle === "orbit";
@@ -165,6 +167,11 @@ export default function GlobeRenderer({
     return () =>
       renderer.domElement.removeEventListener("webglcontextlost", onFailure);
   }, [onFailure]);
+  useEffect(() => {
+    if (!ready || !globe.current) return;
+    if (active) globe.current.resumeAnimation();
+    else globe.current.pauseAnimation();
+  }, [ready, active]);
   useEffect(() => {
     if (!ready || !globe.current) return;
     const controls = globe.current.controls();

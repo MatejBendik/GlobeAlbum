@@ -45,6 +45,7 @@ export function PlaceGallery({
   remaining,
   onClose,
   onChanged,
+  galleryUrl,
 }: {
   place: PlaceDto;
   owner: boolean;
@@ -52,6 +53,7 @@ export function PlaceGallery({
   remaining: number;
   onClose: () => void;
   onChanged: () => void;
+  galleryUrl?: string;
 }) {
   const [gallery, setGallery] = useState<GalleryDto | null>(null),
     [index, setIndex] = useState(0),
@@ -76,7 +78,7 @@ export function PlaceGallery({
       setGallery(demoGallery(place.id));
       return;
     }
-    fetch(`/api/places/${place.id}/gallery`, {
+    fetch(galleryUrl ?? `/api/places/${place.id}/gallery`, {
       signal: controller.signal,
       cache: "no-store",
     })
@@ -90,7 +92,7 @@ export function PlaceGallery({
         if (error.name !== "AbortError") setError(error.message);
       });
     return () => controller.abort();
-  }, [place.id, demo, revision]);
+  }, [place.id, demo, revision, galleryUrl]);
   const photos = gallery?.photos ?? [],
     photo = photos[Math.min(index, Math.max(photos.length - 1, 0))];
   const next = useCallback(

@@ -494,3 +494,20 @@ Sources verified 2026-11-05:
 - [ ] Review usage monitoring before inviting public beta testers.
 - [ ] Record the agreed usability outcome: 5 of 10 testers independently add
       three places and five photos, then share with another person.
+
+## Interactive embed verification — 2026-11-12
+
+The [embed feature](work/globe-embed/spec.md) is implemented and locally verified.
+The final unit/integration run has 56 passes; production build and typecheck pass.
+The full browser run had 70 passes, five failures and one planned mobile hover
+skip. Focused repairs/reruns provide passing evidence for all 75 applicable
+scenarios, including all embed cases; the single unreproduced mobile account
+navigation timeout remains recorded. There was no second complete suite run.
+
+A real iframe on a second local site works without session cookies or usable
+Web Storage; gallery reads are public even for the owner, photo renewal works,
+publication revocation/restoration is covered, and native WebGL drawing pauses
+outside the viewport and resumes on return. The existing auth/R2 transports
+remain local fixtures. Production headers, real portfolio/CMS hosts and physical
+Safari/iPhone/Android checks remain release verification after a separately
+authorized deployment. See the [full evidence](work/globe-embed/verification.md).

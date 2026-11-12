@@ -1,6 +1,7 @@
+import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/lib/auth-server";
 
-export default auth.middleware({
+const sessionMiddleware = auth.middleware({
   loginUrl: "/sign-in",
   // Resource-level authorization remains inside every API and Server Action.
   publicRoutes: [
@@ -16,6 +17,16 @@ export default auth.middleware({
     "/atlas-countries.geojson",
   ],
 });
+
+export default function proxy(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  // Public embeds must not depend on third-party session cookies or Auth availability.
+  if (path.startsWith("/embed/") || path.startsWith("/api/embed/")) {
+    return NextResponse.next();
+  }
+  return sessionMiddleware(request);
+}
+
 export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|webp|jpg)$).*)",

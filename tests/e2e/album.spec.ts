@@ -1150,6 +1150,7 @@ test("opens the landing photo directly and keeps places in a floating panel", as
   await expect(
     page.getByLabel("Place list", { exact: true }),
   ).not.toBeVisible();
+  await expect(page.locator(".globe-workspace")).toBeVisible();
   const stage = await page.locator(".globe-workspace").boundingBox();
   expect(stage!.width).toBeGreaterThan(
     (page.viewportSize()?.width || 0) * 0.95,
@@ -1273,7 +1274,11 @@ test("edits a profile on its own settings page without changing its address", as
   ).toBeDisabled();
   await page.getByLabel("Display name", { exact: true }).fill("Jamie Travels");
   await page.getByRole("button", { name: "Save profile" }).click();
-  await expect(page.getByRole("status")).toHaveText("Profile updated.");
+  await expect(
+    page
+      .getByRole("region", { name: "Profile", exact: true })
+      .getByRole("status"),
+  ).toHaveText("Profile updated.");
   await expect(page.locator(".settings-identity-name")).toHaveText(
     "Jamie Travels",
   );

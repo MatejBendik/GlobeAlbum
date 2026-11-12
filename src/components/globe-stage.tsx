@@ -23,6 +23,8 @@ export function GlobeStage({
   onSelect,
   hero = false,
   onUnavailable,
+  embedded = false,
+  renderPaused = false,
 }: {
   places: PlaceDto[];
   globeStyle?: GlobeStyle;
@@ -32,6 +34,8 @@ export function GlobeStage({
   onSelect: (id: string) => void;
   hero?: boolean;
   onUnavailable?: () => void;
+  embedded?: boolean;
+  renderPaused?: boolean;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -40,6 +44,22 @@ export function GlobeStage({
   const [rotationOverride, setRotationOverride] = useState<boolean>();
   const rotating = rotationOverride ?? !reducedMotion;
   const [reset, setReset] = useState(0);
+  const [inView, setInView] = useState(true);
+  const [documentVisible, setDocumentVisible] = useState(true);
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) =>
+      setInView(entry.isIntersecting),
+    );
+    if (container.current) observer.observe(container.current);
+    const visibility = () =>
+      setDocumentVisible(document.visibilityState !== "hidden");
+    visibility();
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", visibility);
+    };
+  }, []);
   const handleFailure = useCallback(() => {
     setSupported(false);
     onUnavailable?.();
@@ -87,6 +107,7 @@ export function GlobeStage({
           focusRequest={focusRequest}
           onSelect={onSelect}
           rotating={rotating && !pauseRotation}
+          active={inView && documentVisible && !renderPaused}
           onFailure={handleFailure}
         />
       ) : supported === false ? (
@@ -103,13 +124,15 @@ export function GlobeStage({
       )}
       {!hero && (
         <>
-          <div className="stage-topline">
-            <span>
-              <span className="live-dot" />
-              THE WORLD, THROUGH YOUR EYES
-            </span>
-            <span>3D VIEW</span>
-          </div>
+          {!embedded && (
+            <div className="stage-topline">
+              <span>
+                <span className="live-dot" />
+                THE WORLD, THROUGH YOUR EYES
+              </span>
+              <span>3D VIEW</span>
+            </div>
+          )}
           <div className="globe-controls">
             <Button
               variant="ghost"
@@ -134,11 +157,15 @@ export function GlobeStage({
               <LocateFixed />
             </Button>
           </div>
-          <div className="stage-caption">
-            Drag to explore <span>·</span> Scroll to zoom <span>·</span> Select
-            a place
-          </div>
-          <span className="stage-coordinate">48° 51′ N &nbsp; 2° 21′ E</span>
+          {!embedded && (
+            <div className="stage-caption">
+              Drag to explore <span>·</span> Scroll to zoom <span>·</span>{" "}
+              Select a place
+            </div>
+          )}
+          {!embedded && (
+            <span className="stage-coordinate">48° 51′ N &nbsp; 2° 21′ E</span>
+          )}
         </>
       )}
     </div>

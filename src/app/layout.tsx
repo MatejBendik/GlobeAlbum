@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteAnalytics } from "@/components/site-analytics";
 import { shareMetadata } from "@/lib/share-metadata";
 
 export const dynamic = "force-dynamic";
@@ -34,16 +31,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
-        <a className="skip-link" href="#main-content">
-          Skip to content
-        </a>
-        <ThemeProvider>
-          <div id="main-content">{children}</div>
-          <SiteFooter />
-        </ThemeProvider>
-        <SiteAnalytics />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
