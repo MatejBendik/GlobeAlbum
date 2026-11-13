@@ -2751,7 +2751,7 @@ body,
     radial-gradient(ellipse at 65% 67%, #63856b 28%, transparent 31%), #182c32;
 }
 
-/* Share configuration keeps the interactive portfolio preview dominant. */
+/* One shared modal keeps the link and interactive embed preview together. */
 .share-dialog {
   max-height: calc(100svh - 32px);
   overflow-y: auto;
@@ -2759,26 +2759,39 @@ body,
 .share-dialog-embed {
   width: min(1120px, calc(100vw - 32px));
 }
-.share-tabs {
-  display: flex;
-  gap: 24px;
-  margin: 20px 0 24px;
+.share-link-section {
+  margin: 22px 0 24px;
+  padding-bottom: 20px;
   border-bottom: 1px solid var(--line);
 }
-.share-tabs > button {
-  padding: 0 0 12px;
-  font-size: 13px;
-  color: var(--muted);
-  border-bottom: 2px solid transparent;
+.share-link-section > label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 500;
 }
-.share-tabs > button[aria-selected="true"] {
-  color: var(--text);
-  border-color: var(--text);
+.share-link-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
-.share-address > span {
-  overflow-wrap: anywhere;
+.share-link-row .share-address {
+  flex: 1;
   min-width: 0;
-  user-select: text;
+  margin: 0;
+}
+.share-address > input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 0;
+  text-overflow: ellipsis;
+}
+.share-link-section .privacy-note {
+  padding: 10px 0 0;
 }
 .embed-builder {
   display: grid;
@@ -2946,5 +2959,11 @@ body,
   }
   .share-dialog-embed {
     padding: 24px 18px;
+  }
+  .share-link-row {
+    flex-wrap: wrap;
+  }
+  .share-link-row .share-address {
+    flex-basis: 100%;
   }
 }

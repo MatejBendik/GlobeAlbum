@@ -215,12 +215,13 @@ protocol or CORS expansion. Sandbox permissions cover scripts, own origin and
 the approved new-tab profile link. Same-origin preview uses trusted app code;
 the sandbox is not treated as a security boundary against our own origin.
 
-Share globe uses one modal with accessible Share link/Embed tabs. Private globes
+Share globe uses one consistently large modal with a read-only share link and
+its copy action above the embed configuration; no tabs remain. Private globes
 offer explicit publication before preview/copy. A real iframe is displayed in a plain preview frame; selected shape/theme feed
 preview and copied HTML.
 Clipboard failure selects the visible code for manual copying. Desktop/mobile
 modes adjust the example site's width. The iframe is released when leaving the
-Embed tab or closing the modal. Intersection/document visibility pause animation;
+modal or making the globe private. Intersection/document visibility pause animation;
 the owner globe also pauses under Share. The shared gallery keeps camera/zoom,
 arrows, keyboard and swipe and gains frame-specific small-height styling.
 Short frames also scale postcard dimensions so the initial cover stays inside

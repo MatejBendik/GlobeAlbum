@@ -54,7 +54,6 @@ test("configures an embed in Share and requires publication before preview or co
   const user = await owner(context);
   await page.goto("/studio");
   await page.getByRole("button", { name: "Share globe" }).click();
-  await page.getByRole("tab", { name: "Embed", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText(
     "Make your globe public first",
   );
@@ -86,10 +85,8 @@ test("configures an embed in Share and requires publication before preview or co
     path: `.local/verification/embed-builder-${test.info().project.name}.png`,
     fullPage: true,
   });
-  await page.getByRole("tab", { name: "Share link", exact: true }).click();
-  await expect(page.locator("iframe")).toHaveCount(0);
   await page.getByRole("button", { name: "Make globe private" }).click();
-  await page.getByRole("tab", { name: "Embed", exact: true }).click();
+  await expect(page.locator("iframe")).toHaveCount(0);
   await expect(page.getByRole("alert")).toContainText(
     "Make your globe public first",
   );
@@ -186,7 +183,6 @@ test("copied HTML embeds on a second site without cookies or storage and preserv
   await placeWithPhotos(user.globe.id);
   await page.goto("/studio");
   await page.getByRole("button", { name: "Share globe" }).click();
-  await page.getByRole("tab", { name: "Embed", exact: true }).click();
   await page.getByRole("button", { name: "Dark", exact: true }).click();
   // Exercise the copy action itself, not just the code generator.
   await page.evaluate(() => {
@@ -434,18 +430,14 @@ test("offers the complete place list without WebGL, handles empty globes and inv
   }
 });
 
-test("falls back to selectable HTML and releases preview across tab changes and reopening", async ({
+test("falls back to selectable HTML and releases preview on closing and reopening", async ({
   page,
   context,
 }) => {
   await owner(context, true);
   await page.goto("/studio");
   await page.getByRole("button", { name: "Share globe" }).click();
-  await page.getByRole("tab", { name: "Share link", exact: true }).focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(
-    page.getByRole("tab", { name: "Embed", exact: true }),
-  ).toBeFocused();
+  await expect(page.getByRole("tablist")).toHaveCount(0);
   await page.evaluate(() => {
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
@@ -471,7 +463,6 @@ test("falls back to selectable HTML and releases preview across tab changes and 
   await page.getByRole("button", { name: "Close dialog", exact: true }).click();
   await expect(page.locator("iframe")).toHaveCount(0);
   await page.getByRole("button", { name: "Share globe" }).click();
-  await page.getByRole("tab", { name: "Embed", exact: true }).click();
   await expect(page.locator("iframe")).toHaveCount(1);
 });
 
@@ -550,4 +541,120 @@ test("keeps a clean embedded globe rotating without visible navigation", async (
   await page.screenshot({
     path: `.local/verification/embed-clean-${testInfo.project.name}.png`,
   });
+});
+
+test("shows the share link above embed settings in one large dialog", async ({
+  page,
+  context,
+}, testInfo) => {
+  const user = await owner(context, true);
+  await placeWithPhotos(user.globe.id);
+  await db.globe.update({
+    where: { id: user.globe.id },
+    data: { style: "orbit" },
+  });
+  await page.goto("/studio");
+  await page.getByRole("button", { name: "Share globe" }).click();
+  const dialog = page.getByRole("dialog", { name: "Your world, shared." });
+  await expect(dialog.getByRole("tablist")).toHaveCount(0);
+  const link = dialog.getByRole("textbox", { name: "Share link", exact: true });
+  await expect(link).toHaveValue(`${TEST_ORIGIN}/u/${user.username}`);
+  await expect(link).toHaveAttribute("readonly", "");
+  await expect(
+    dialog.getByRole("button", { name: "Copy globe link" }),
+  ).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Copy HTML" })).toBeVisible();
+  const shape = dialog.getByRole("group", { name: "Shape", exact: true });
+  await expect(shape).toBeVisible();
+  expect((await link.boundingBox())!.y).toBeLessThan(
+    (await shape.boundingBox())!.y,
+  );
+  const bounds = await dialog.boundingBox();
+  expect(bounds!.width).toBeGreaterThan(
+    Math.min(900, page.viewportSize()!.width - 40),
+  );
+  const preview = page.frameLocator('iframe[title="Your globe embed preview"]');
+  await expect(preview.locator('[data-globe-style="orbit"]')).toBeVisible();
+  await expect
+    .poll(() =>
+      preview.locator(".globe-country-label[data-label-visible]").count(),
+    )
+    .toBeGreaterThan(0);
+  await dialog.evaluate((element) => {
+    element.scrollTop = 0;
+  });
+  await page.screenshot({
+    path: `.local/verification/share-unified-${testInfo.project.name}.png`,
+    fullPage: true,
+  });
+});
+
+test("copies link and HTML independently and selects the right fallback field", async ({
+  page,
+  context,
+}) => {
+  const user = await owner(context, true);
+  await page.goto("/studio");
+  await page.getByRole("button", { name: "Share globe" }).click();
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async (value: string) => {
+          (window as unknown as { copiedShare: string }).copiedShare = value;
+        },
+      },
+    });
+  });
+  await page.getByRole("button", { name: "Copy globe link" }).click();
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { copiedShare: string }).copiedShare,
+    ),
+  ).toBe(`${TEST_ORIGIN}/u/${user.username}`);
+  await expect(
+    page.getByRole("button", { name: "Copy HTML", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Copy HTML", exact: true }).click();
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { copiedShare: string }).copiedShare,
+    ),
+  ).toContain(
+    `<iframe\n  src="${TEST_ORIGIN}/embed/${user.username}?theme=light"`,
+  );
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async () => {
+          throw new Error("Clipboard unavailable");
+        },
+      },
+    });
+  });
+  await page.getByRole("button", { name: "Copy globe link" }).click();
+  await expect(page.getByRole("alert")).toContainText(
+    "Select and copy your globe link above instead.",
+  );
+  const link = page.getByRole("textbox", { name: "Share link", exact: true });
+  await expect(link).toBeFocused();
+  expect(
+    await link.evaluate(
+      (element: HTMLInputElement) =>
+        element.selectionEnd! - element.selectionStart!,
+    ),
+  ).toBe((await link.inputValue()).length);
+  await page.getByRole("button", { name: "Copy HTML", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText(
+    "Select and copy the HTML code below instead.",
+  );
+  const code = page.getByRole("textbox", { name: "Embed HTML", exact: true });
+  await expect(code).toBeFocused();
+  expect(
+    await code.evaluate(
+      (element: HTMLTextAreaElement) =>
+        element.selectionEnd - element.selectionStart,
+    ),
+  ).toBe((await code.inputValue()).length);
 });

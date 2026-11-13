@@ -101,3 +101,30 @@ TypeScript check and Prettier checks passed. This verifies that the closer
 camera and hidden controls are specific to embedded globes. Local logs are
 .local/verification/embed-clean-green.log, embed-clean-regression.log and
 embed-clean-build.log.
+
+## Unified sharing refinement — 2026-11-13
+
+Authorized by the same screenshot feedback; second requested commit. The unified
+modal test first failed because a tablist was still present. The implementation
+then passed 16 desktop/mobile embed cases. Added clipboard-target coverage passed
+on both viewports together with both existing private/publish/hide journeys (four
+focused cases). All 18 current embed scenarios therefore have passing evidence
+across the main run and the added focused cases. No full unrelated suite rerun was
+performed for this UI refinement.
+
+The link appears above Shape/Theme in a wide modal. Both copy actions remain
+available together, with distinct success state and correct manual selection on
+clipboard failure. Private/public gating, shared preview, galleries, default
+motion, fallback behavior and iframe release remain covered. Desktop/mobile
+screenshots were inspected under .local/verification/share-unified-*.png.
+Local logs: share-unified-green.log and share-unified-copy-regression.log.
+
+These are local Chromium tests using existing database/auth/media fixtures.
+Physical devices and deployed cloud flows have not been re-verified by this work.
+
+Final second-refinement checks passed: 56 unit/integration cases in six files,
+optimized production build, explicit TypeScript check and full Prettier check.
+The clean-viewer first commit additionally has four normal-globe camera/zoom
+regression passes; the unified modal has both original publish/hide journey
+passes. Build/format logs are share-unified-build.log and
+share-unified-format.log under the ignored local verification directory.

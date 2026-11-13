@@ -4,7 +4,9 @@ Status: approved; implementation explicitly authorized on 2026-11-12.
 
 ## User-confirmed behavior
 
-Owners use an enlarged Share globe modal with Share link and Embed tabs. Every
+Owners use one enlarged Share globe modal. A read-only share link and its copy
+action sit above the embed shape/theme settings and live preview; there are no
+tabs or separate link/embed screens. Every
 published globe is embeddable on any website, with no additional permission,
 token, domain list or database setting. Private globes show "Make your globe
 public first" with the existing publication action; preview and copying remain
@@ -43,7 +45,7 @@ mode, transparent background, JS SDK or independently selected globe style in v1
 - Generated HTML is a titled, lazy iframe with an absolute URL, reserved aspect
   ratio, and sandbox permissions for scripts, own origin and the profile popup.
 - Pause rendering offscreen/in hidden documents and the underlying owner globe
-  during preview. Unmount preview on tab/modal close. Preserve reduced motion,
+  during preview. Unmount preview on modal close or when the globe becomes private. Preserve reduced motion,
   complete accessible place list and WebGL fallback.
 - No database migration, dependencies, cloud provisioning, purchases or deployment.
 
@@ -57,7 +59,8 @@ fixtures. Local evidence must not be described as deployed cloud/mobile evidence
 
 ## Delivery
 
-Five dependent vertical slices are tracked under [issues](issues/). Apply the
+The initial five vertical slices and subsequent user-requested refinements are
+tracked under [issues](issues/). Apply the
 repository formatter, typecheck, relevant integration/browser tests and production
 build. Commit verified increments and push origin/main. No deployment is authorized
 by this feature request. Research: [embedding](../../research/embedding.md).
@@ -70,3 +73,11 @@ Keep photo galleries and the bottom-right GlobeAlbum link. Automatic rotation
 continues while visible, respecting reduced motion and pausing for an open
 gallery as before. This changes only embed framing, not the normal globe camera
 or controls. Implementation is the first of two separately requested commits.
+
+## User-confirmed refinement — 2026-11-13: unified sharing
+
+The second requested commit combines sharing and embedding in one consistently
+large modal. The share link is above Shape/Theme, replacing the old tabs. Link
+copying and HTML copying have independent feedback and select their respective
+read-only field if the browser clipboard is unavailable. Publishing/hiding and
+private-globe gating remain in the same modal. Closing it releases the iframe.
