@@ -243,6 +243,14 @@ test("copied HTML embeds on a second site without cookies or storage and preserv
     const frame = host.frameLocator("iframe");
     await expect(frame.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect(frame.locator(".site-footer, .site-header")).toHaveCount(0);
+    await expect(
+      frame.getByRole("button", { name: "Places", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      frame.getByRole("button", {
+        name: /Pause rotation|Start rotation|Reset globe view/,
+      }),
+    ).toHaveCount(0);
     const marker = frame.getByRole("button", { name: "Open Paris gallery" });
     await expect(marker).toBeVisible();
     expect(galleryRequests).toHaveLength(0);
@@ -487,11 +495,11 @@ test("renews an expired photo through the public gallery without exposing owner 
     },
   );
   await page.goto(`/embed/${user.username}`);
-  await page.getByRole("button", { name: "Places", exact: true }).click();
-  await page
+  const place = page
     .getByRole("navigation", { name: "Visited places" })
-    .getByRole("button", { name: /Paris/ })
-    .click();
+    .getByRole("button", { name: /Paris/ });
+  await place.focus();
+  await place.click();
   const photo = page
     .getByRole("dialog", { name: "Paris", exact: true })
     .getByRole("img", { name: "Paris memory 1", exact: true });
@@ -504,4 +512,42 @@ test("renews an expired photo through the public gallery without exposing owner 
       ),
     )
     .toBe(true);
+});
+
+test("keeps a clean embedded globe rotating without visible navigation", async ({
+  page,
+  context,
+}, testInfo) => {
+  const user = await owner(context, true);
+  await placeWithPhotos(user.globe.id);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.setViewportSize({ width: 960, height: 600 });
+  await page.goto(`/embed/${user.username}`);
+  const marker = page.getByRole("button", { name: "Open Paris gallery" });
+  await expect(marker).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Places", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", {
+      name: /Pause rotation|Start rotation|Reset globe view/,
+    }),
+  ).toHaveCount(0);
+  const link = page.getByRole("link", {
+    name: "GlobeAlbum — open full globe in a new tab",
+  });
+  await expect(link).toBeVisible();
+  const bounds = await link.boundingBox();
+  expect(bounds!.y).toBeGreaterThan(540);
+  const pin = marker.locator(".marker-core");
+  const before = await pin.boundingBox();
+  await expect
+    .poll(async () => {
+      const after = await pin.boundingBox();
+      return after && before ? Math.abs(after.x - before.x) : 0;
+    })
+    .toBeGreaterThan(3);
+  await page.screenshot({
+    path: `.local/verification/embed-clean-${testInfo.project.name}.png`,
+  });
 });

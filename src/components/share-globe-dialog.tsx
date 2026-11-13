@@ -269,7 +269,7 @@ export function ShareGlobeDialog({
               </div>
               <div className="embed-preview" data-preview-theme={theme}>
                 <div className="embed-preview-toolbar">
-                  <span>Example website</span>
+                  <span>Live preview</span>
                   <div role="group" aria-label="Preview device">
                     <Button
                       variant="ghost"
@@ -292,15 +292,6 @@ export function ShareGlobeDialog({
                   </div>
                 </div>
                 <div className="embed-preview-site" data-device={device}>
-                  <div className="example-site-nav">
-                    <span>{globe.displayName}</span>
-                    <span>Journal</span>
-                  </div>
-                  <div className="example-site-intro">
-                    <span>MY TRAVEL JOURNAL</span>
-                    <h3>A world of memories.</h3>
-                    <p>A few places I keep coming back to.</p>
-                  </div>
                   <iframe
                     title="Your globe embed preview"
                     src={embedPath(globe.username, theme)}
@@ -310,9 +301,6 @@ export function ShareGlobeDialog({
                       aspectRatio: shape === "square" ? "1 / 1" : "16 / 10",
                     }}
                   />
-                  <div className="example-site-bottom">
-                    More places. More stories.
-                  </div>
                 </div>
               </div>
             </div>

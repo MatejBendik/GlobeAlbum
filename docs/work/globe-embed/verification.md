@@ -81,3 +81,23 @@ Local final rerun logs: .local/verification/embed-final-e2e.log and
 Local screenshots are ignored runtime artifacts under .local/verification/:
 embed-builder-desktop.png, embed-builder-mobile.png, embed-host-desktop.png and
 embed-host-mobile.png.
+
+## Clean embed refinement — 2026-11-13
+
+Authorized by the user's screenshot feedback; first of two requested commits.
+The focused clean-viewer case failed against the original visible Places trigger.
+After implementation, all 14 desktop/mobile embed cases passed. Visual QA confirmed
+larger framing, unclipped initial postcards and bottom-right attribution without
+visible navigation. Normal motion rotates; reduced motion, public galleries,
+keyboard-only place navigation and the visible no-WebGL list remain supported.
+The modal's preview uses the real iframe without sample portfolio content.
+
+Local fixtures are still used for Auth, PostgreSQL and media transport. No new
+physical-device or cloud end-to-end evidence is implied by these local checks.
+
+The first refinement also passed all four desktop/mobile normal-globe zoom and
+camera-preservation regression cases. Its optimized production build, explicit
+TypeScript check and Prettier checks passed. This verifies that the closer
+camera and hidden controls are specific to embedded globes. Local logs are
+.local/verification/embed-clean-green.log, embed-clean-regression.log and
+embed-clean-build.log.

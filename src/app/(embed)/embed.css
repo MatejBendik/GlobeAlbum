@@ -20,14 +20,6 @@ body:has(.embed-root) {
   border: 0;
   border-radius: 0;
 }
-.embed-viewer .globe-controls {
-  bottom: 12px;
-}
-.embed-places-button {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-}
 .embed-attribution {
   position: absolute;
   right: 14px;
@@ -50,14 +42,20 @@ body:has(.embed-root) {
   border-radius: 12px;
   box-shadow: 0 12px 40px #0002;
 }
-.embed-places-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.embed-places h2 {
+  font-size: 15px;
   margin-bottom: 8px;
 }
-.embed-places-heading h2 {
-  font-size: 15px;
+/* Available to assistive technology and revealed only on keyboard focus. */
+.embed-places-accessible:not(:focus-within) {
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+  white-space: nowrap;
 }
 .embed-place {
   display: flex;
@@ -172,7 +170,6 @@ body:has(.embed-root) .gallery-footer {
     margin: 4px 0;
   }
 }
-.embed-places-button,
 .embed-attribution {
   z-index: 2;
 }
@@ -195,13 +192,6 @@ body:has(.embed-root) .gallery-footer {
 }
 .embed-viewer .globe-unavailable > svg:last-child {
   display: none;
-}
-@media (max-width: 380px) {
-  .embed-attribution {
-    top: 22px;
-    right: 12px;
-    bottom: auto;
-  }
 }
 /* Keep the initial postcard inside shallow responsive frames. */
 @media (max-height: 360px) {

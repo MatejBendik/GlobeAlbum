@@ -103,6 +103,7 @@ export function GlobeStage({
           reset={reset}
           places={places}
           globeStyle={globeStyle}
+          embedded={embedded}
           selectedId={selectedId}
           focusRequest={focusRequest}
           onSelect={onSelect}
@@ -122,17 +123,15 @@ export function GlobeStage({
           <div className="globe-loading-sphere" />
         </div>
       )}
-      {!hero && (
+      {!hero && !embedded && (
         <>
-          {!embedded && (
-            <div className="stage-topline">
-              <span>
-                <span className="live-dot" />
-                THE WORLD, THROUGH YOUR EYES
-              </span>
-              <span>3D VIEW</span>
-            </div>
-          )}
+          <div className="stage-topline">
+            <span>
+              <span className="live-dot" />
+              THE WORLD, THROUGH YOUR EYES
+            </span>
+            <span>3D VIEW</span>
+          </div>
           <div className="globe-controls">
             <Button
               variant="ghost"
@@ -157,15 +156,11 @@ export function GlobeStage({
               <LocateFixed />
             </Button>
           </div>
-          {!embedded && (
-            <div className="stage-caption">
-              Drag to explore <span>·</span> Scroll to zoom <span>·</span>{" "}
-              Select a place
-            </div>
-          )}
-          {!embedded && (
-            <span className="stage-coordinate">48° 51′ N &nbsp; 2° 21′ E</span>
-          )}
+          <div className="stage-caption">
+            Drag to explore <span>·</span> Scroll to zoom <span>·</span> Select
+            a place
+          </div>
+          <span className="stage-coordinate">48° 51′ N &nbsp; 2° 21′ E</span>
         </>
       )}
     </div>

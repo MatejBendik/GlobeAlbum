@@ -216,8 +216,8 @@ the approved new-tab profile link. Same-origin preview uses trusted app code;
 the sandbox is not treated as a security boundary against our own origin.
 
 Share globe uses one modal with accessible Share link/Embed tabs. Private globes
-offer explicit publication before preview/copy. A real iframe is displayed inside
-a labeled example portfolio; selected shape/theme feed preview and copied HTML.
+offer explicit publication before preview/copy. A real iframe is displayed in a plain preview frame; selected shape/theme feed
+preview and copied HTML.
 Clipboard failure selects the visible code for manual copying. Desktop/mobile
 modes adjust the example site's width. The iframe is released when leaving the
 Embed tab or closing the modal. Intersection/document visibility pause animation;
@@ -225,3 +225,10 @@ the owner globe also pauses under Share. The shared gallery keeps camera/zoom,
 arrows, keyboard and swipe and gains frame-specific small-height styling.
 Short frames also scale postcard dimensions so the initial cover stays inside
 the viewport; collision spacing remains conservative.
+
+On 2026-11-13 the user simplified the embed presentation. Its initial camera is
+closer than the ordinary workspace, and no Places, pause or reset controls appear
+in the WebGL view. Attribution stays at the bottom right on every viewport. The
+complete place navigation is visually hidden until keyboard focus, or displayed
+as the WebGL fallback. Reduced motion, gallery rotation pausing and offscreen
+render suspension are preserved. Preview has no mock portfolio text or navigation.

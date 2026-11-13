@@ -52,6 +52,7 @@ export default function GlobeRenderer({
   onSelect,
   rotating,
   active = true,
+  embedded = false,
   reset,
   width,
   height,
@@ -64,6 +65,7 @@ export default function GlobeRenderer({
   onSelect: (id: string) => void;
   rotating: boolean;
   active?: boolean;
+  embedded?: boolean;
   reset: number;
   width: number;
   height: number;
@@ -127,7 +129,8 @@ export default function GlobeRenderer({
         {
           lat: place?.latitude ?? 30,
           lng: place?.longitude ?? 16,
-          altitude: (selected ? 2.7 : 3.15) * cameraScale - 1,
+          altitude:
+            (selected ? 2.7 : 3.15) * cameraScale * (embedded ? 0.84 : 1) - 1,
         },
         animate &&
           !window.matchMedia("(prefers-reduced-motion: reduce)").matches
