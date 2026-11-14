@@ -20,6 +20,10 @@ const sessionMiddleware = auth.middleware({
 
 export default function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
+  // Crawler metadata must remain public even when Auth is unavailable.
+  if (path === "/robots.txt" || path === "/sitemap.xml") {
+    return NextResponse.next();
+  }
   // Public embeds must not depend on third-party session cookies or Auth availability.
   if (path.startsWith("/embed/") || path.startsWith("/api/embed/")) {
     return NextResponse.next();

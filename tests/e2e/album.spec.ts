@@ -435,7 +435,9 @@ test("shares current public globe previews and revokes them when hidden", async 
     const image = head.match(/property="og:image" content="([^"]+)"/)?.[1];
     if (image) {
       expect(head).toContain(`name="twitter:image" content="${image}"`);
-      expect(head).toContain('name="robots" content="noindex, nofollow"');
+      expect(head).toContain(
+        `name="robots" content="${path === "/" ? "index, follow" : "noindex, nofollow"}"`,
+      );
     }
     return image;
   }

@@ -13,6 +13,7 @@ Resume interrupted work from the [implementation checkpoint](work/mvp/progress.m
 - [Legal release notes](legal-readiness.md): public notices, data handling
   evidence and operator tasks before public beta.
 - [Verification](validation.md): observed results, R2-only processing repair and outstanding release gates.
+- [Search indexing](seo.md): public crawl metadata, landing-page indexing and profile exclusions.
 - [Stack rationale](research/stack.md), [globe/geography](research/globe-and-geography.md), [cost model](research/costs.md).
 - [Delivery tickets](work/mvp/issues/): acceptance evidence, separate from triage readiness.
 - [Glossary](../GLOSSARY.md), [decisions](adr/), [discovery history](discovery.md) and [third-party notices](third-party-notices.md).

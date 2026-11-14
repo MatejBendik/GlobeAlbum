@@ -1,9 +1,15 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { ArrowRight, ArrowUpRight, MapPin, Camera, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { navigationViewer } from "@/lib/navigation-viewer";
 import { PageHeader } from "@/components/page-header";
 import { HeroGlobe } from "@/components/hero-globe";
+
+export const metadata: Metadata = {
+  robots: { index: true, follow: true },
+  alternates: { canonical: "/" },
+};
 
 const createGlobeLabel = "Create your globe";
 const exploreExampleLabel = "Explore an example";
