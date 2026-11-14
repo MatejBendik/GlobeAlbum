@@ -53,7 +53,21 @@ Post-fix local verification on 2026-11-14, using Node 24.21.0:
 - All 56 Vitest tests and the production build passed. The build emits static
   `/robots.txt` and `/sitemap.xml` routes.
 
-Hosted verification: pending the Git-triggered production deployment.
+Hosted verification on 2026-11-14 after application commit `bd4d224` reached
+production through the existing Git integration:
+
+- `https://globealbum.com/robots.txt`: `200`, `text/plain; charset=utf-8`,
+  no redirect, with `Allow: /`, `Disallow: /api/` and the production sitemap URL.
+- `https://globealbum.com/sitemap.xml`: `200`, `application/xml`, no redirect,
+  valid sitemap markup listing only `https://globealbum.com/`.
+- `/`: `200`, `index, follow`, canonical `https://globealbum.com`, and no
+  `noindex` HTTP header. Next.js normalizes the root canonical without a trailing
+  slash; it represents the same URL as the sitemap's root entry.
+- `/sign-in`: `200`, retaining `noindex, nofollow`.
+- `/studio`: `307` to `/sign-in` for an anonymous request.
+
+These checks read the live anonymous HTTPS responses. Search Console ownership,
+sitemap submission and actual Google indexing remain unverified.
 
 ## Recommended operator follow-up
 

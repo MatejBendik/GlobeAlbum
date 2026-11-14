@@ -19,7 +19,7 @@ Verify and prepare the public beta, as a complete end-to-end user behavior.
 - [x] Deployment is explicitly authorized, with Hobby, private storage lifecycle/CORS and Production-scoped variables verified.
 - [ ] Scheduled cron execution and usage monitoring are checked before the public beta.
 - [x] Privacy and terms pages are available before sign-in, including account deletion and content reporting information.
-- [x] Local checks verify public crawl metadata and an indexable landing page while retaining user-profile exclusions.
+- [x] Local and production HTTP checks verify public crawl metadata and an indexable landing page while retaining user-profile exclusions.
 - [ ] Complete the operator review in the [legal release notes](../../../legal-readiness.md) before inviting public beta testers.
 
 ## Validation evidence
@@ -61,5 +61,8 @@ redirecting to sign-in. Local HTTP/browser checks reproduced both `307` redirect
 and the landing page's inherited `noindex`. The fix adds exact public metadata
 routes, a landing-only sitemap, an indexable landing page and its canonical URL.
 Eight SEO browser checks, both existing public-preview/revocation scenarios,
-56 Vitest tests and the production build passed. Hosted verification and Google
-Search Console submission/indexing remain separate; see [search indexing](../../../seo.md).
+56 Vitest tests and the production build passed. After commit `bd4d224` deployed,
+anonymous production HTTPS checks confirmed both metadata routes return `200`,
+the landing page is indexable with its canonical URL, sign-in retains `noindex`,
+and the editor still requires authentication. Google Search Console submission
+and actual indexing remain unverified; see [search indexing](../../../seo.md).
